@@ -1,0 +1,90 @@
+{#
+/**
+ * Header Navigation Template
+ * 
+ * DESIGN REFERENCE:
+ * - docs/product/design/01-sitemap-navigation.md (Lines 313-340)
+ * - docs/product/design/02-wireframes.md (Lines 658-692)
+ * 
+ * IMPLEMENTATION DETAILS:
+ * - Global header for web platform
+ * - Forseti logo/brand
+ * - Primary navigation links
+ * - User account dropdown
+ * - Responsive: collapses to hamburger menu on mobile
+ * 
+ * ACCESSIBILITY:
+ * - Semantic <nav> element
+ * - ARIA labels for navigation
+ * - Keyboard navigation support
+ * - See docs/product/design/05-accessibility-checklist.md (Lines 212-270)
+ */
+#}
+
+{# TODO: Implement header navigation template #}
+{# Reference: docs/product/design/01-sitemap-navigation.md (Lines 313-340) #}
+
+{# PSEUDOCODE:
+
+<header class="site-header" role="banner">
+  <div class="header-container">
+    {# Logo #}
+    <div class="header-logo">
+      <a href="/" aria-label="Forseti home">
+        <img src="{{ logo }}" alt="Forseti logo" />
+        <span class="logo-text">Forseti</span>
+      </a>
+    </div>
+    
+    {# Primary Navigation #}
+    <nav class="header-nav" role="navigation" aria-label="Main navigation">
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/safety-map" class="nav-link">Safety Map</a>
+        </li>
+        <li class="nav-item">
+          <a href="/about" class="nav-link">About</a>
+        </li>
+        <li class="nav-item">
+          <a href="/how-it-works" class="nav-link">How It Works</a>
+        </li>
+      </ul>
+    </nav>
+    
+    {# User Account #}
+    <div class="header-account">
+      {% if logged_in %}
+        <button 
+          class="account-button" 
+          aria-haspopup="true" 
+          aria-expanded="false"
+        >
+          <span class="icon-account"></span>
+          <span class="account-name">{{ user.name }}</span>
+        </button>
+        <div class="account-dropdown" role="menu" aria-hidden="true">
+          <a href="/account" role="menuitem">Dashboard</a>
+          <a href="/account/settings" role="menuitem">Settings</a>
+          <a href="/user/logout" role="menuitem">Logout</a>
+        </div>
+      {% else %}
+        <a href="/user/login" class="button-login">Login</a>
+        <a href="/user/register" class="button-register">Sign Up</a>
+      {% endif %}
+    </div>
+    
+    {# Mobile Menu Toggle #}
+    <button 
+      class="mobile-menu-toggle" 
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+    >
+      <span class="icon-menu"></span>
+    </button>
+  </div>
+</header>
+
+{# Mobile: Transform to hamburger menu at 768px breakpoint #}
+{# See docs/product/design/04-mobile-first-approach.md (Lines 63-87) #}
+
+#}

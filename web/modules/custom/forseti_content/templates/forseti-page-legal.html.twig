@@ -1,0 +1,49 @@
+{#
+/**
+ * @file
+ * Template for Legal hub page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - sections: Array of legal document sections
+ * - last_updated: Last updated date
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead text-center">{{ intro }}</p>
+      
+      <div class="row mt-5">
+        {% for section in sections %}
+          <div class="col-md-4 mb-4">
+            <div class="card card-forseti p-4 h-100">
+              <h3 class="h5 text-cyan mb-3">{{ section.title }}</h3>
+              <ul class="list-unstyled">
+                {% for link in section.links %}
+                  <li class="mb-2">
+                    <a href="{{ link.url }}" class="link-cyan">{{ link.text }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="alert alert-info mt-5">
+        <p class="mb-0">
+          {{ 'Have questions about any of these legal documents? '|t }}
+          <a href="/talk-with-forseti" class="alert-link">{{ 'Talk with Forseti'|t }}</a>
+        </p>
+      </div>
+      
+      <p class="text-muted mt-4 text-center">
+        <small>{{ 'Last Updated:'|t }} {{ last_updated }}</small>
+      </p>
+    </div>
+  </div>
+</div>

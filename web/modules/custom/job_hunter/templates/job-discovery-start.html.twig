@@ -1,0 +1,106 @@
+{#
+/**
+ * @file
+ * Template for the job discovery start page.
+ *
+ * Available variables:
+ * - user: The user entity.
+ * - profile: The job seeker profile entity.
+ * - keywords: Array of keywords extracted from the profile.
+ */
+#}
+
+<div class="job-discovery-start">
+  <div class="job-discovery-header">
+    <h1>{{ 'AI Job Discovery'|t }}</h1>
+    <p class="discovery-subtitle">{{ 'Discover opportunities that match your profile at AbbVie'|t }}</p>
+  </div>
+
+  <div class="discovery-content">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="discovery-card">
+          <h2>{{ 'Your Profile Keywords'|t }}</h2>
+          <p class="discovery-description">
+            {{ 'Based on your job seeker profile, we\'ll search for opportunities using these keywords:'|t }}
+          </p>
+          
+          {% if keywords %}
+            <div class="keywords-container">
+              {% for keyword in keywords %}
+                <span class="keyword-tag">{{ keyword }}</span>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="no-keywords">
+              <p>{{ 'No keywords found in your profile. Please update your job seeker profile with skills, job titles, and career objectives.'|t }}</p>
+              <a href="{{ path('job_hunter.user_job_seeker_view', {'user': user.id}) }}" class="btn btn-secondary">
+                {{ 'Update Profile'|t }}
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if keywords %}
+          <div class="discovery-card discovery-target">
+            <h2>{{ 'Target Company: AbbVie'|t }}</h2>
+            <div class="company-info">
+              <div class="company-logo">
+                <div class="company-logo-text">AbbVie</div>
+              </div>
+              <div class="company-details">
+                <h3>AbbVie</h3>
+                <p>{{ 'Global biopharmaceutical company focused on discovering and delivering innovative medicines.'|t }}</p>
+                <p><strong>{{ 'Career Page:'|t }}</strong> <a href="https://careers.abbvie.com/en/" target="_blank">careers.abbvie.com</a></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="discovery-actions">
+            <button id="start-discovery-btn" class="btn btn-primary btn-lg">
+              <i class="fas fa-search"></i> {{ 'Start Discovery'|t }}
+            </button>
+            <div class="discovery-status hidden" id="discovery-status">
+              <div class="spinner-border" role="status">
+                <span class="sr-only">{{ 'Searching...'|t }}</span>
+              </div>
+              <span class="status-text">{{ 'Searching AbbVie careers...'|t }}</span>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-4">
+        <div class="sidebar-info">
+          <h3>{{ 'How It Works'|t }}</h3>
+          <ol class="discovery-steps">
+            <li>{{ 'We analyze your job seeker profile'|t }}</li>
+            <li>{{ 'Extract relevant keywords and skills'|t }}</li>
+            <li>{{ 'Search AbbVie\'s career page for matching opportunities'|t }}</li>
+            <li>{{ 'Present personalized job recommendations'|t }}</li>
+          </ol>
+
+          <div class="profile-summary">
+            <h4>{{ 'Your Profile Summary'|t }}</h4>
+            <p><strong>{{ 'Name:'|t }}</strong> {{ user.getDisplayName }}</p>
+            {% if profile.field_job_title.value %}
+              <p><strong>{{ 'Current Role:'|t }}</strong> {{ profile.field_job_title.value }}</p>
+            {% endif %}
+            {% if profile.field_experience_level.value %}
+              <p><strong>{{ 'Experience Level:'|t }}</strong> {{ profile.field_experience_level.value }}</p>
+            {% endif %}
+            <p class="keyword-count"><strong>{{ 'Keywords Found:'|t }}</strong> {{ keywords|length }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results container (initially hidden) -->
+    <div class="discovery-results hidden" id="discovery-results">
+      <h2>{{ 'Job Opportunities at AbbVie'|t }}</h2>
+      <div class="results-container" id="results-container">
+        <!-- Dynamic content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>

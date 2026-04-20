@@ -1,0 +1,297 @@
+{#
+/**
+ * @file
+ * Template for Job Hunter Queue Management page.
+ *
+ * Available variables:
+ * - queue_items: Array of queue items with:
+ *   - item_id: Queue item ID
+ *   - queue_name: Machine name of the queue
+ *   - queue_label: Display name of the queue
+ *   - created: Timestamp when item was created
+ *   - expire: Expiration timestamp
+ *   - data: Unserialized queue item data
+ *   - data_preview: Human-readable preview of data
+ * - table_health: Database table health check results
+ */
+#}
+<div class="queue-management-page">
+  <div class="page-header">
+    <h1>{{ 'Queue Management'|t }}</h1>
+    <p class="subtitle">{{ 'Manage and process background queues'|t }}</p>
+  </div>
+
+  {# Database Health Check #}
+  {% if table_health %}
+  <div class="database-health-section">
+    <div class="health-status {% if table_health.overall_healthy %}health-good{% else %}health-error{% endif %}">
+      <h3>
+        {% if table_health.overall_healthy %}
+          ✅ {{ 'Database Health: All Systems Operational'|t }}
+        {% else %}
+          ❌ {{ 'Database Health: Issues Detected'|t }}
+        {% endif %}
+      </h3>
+      <details class="health-details">
+        <summary>{{ 'View Table Status'|t }} ({{ table_health.tables|length }} {{ 'tables'|t }})</summary>
+        <table class="health-check-table">
+          <thead>
+            <tr>
+              <th>{{ 'Status'|t }}</th>
+              <th>{{ 'Table Name'|t }}</th>
+              <th>{{ 'Details'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for table_name, status in table_health.tables %}
+            <tr class="{% if status.healthy %}health-row-good{% else %}health-row-error{% endif %}">
+              <td class="health-icon">
+                {% if status.healthy %}
+                  <span class="health-badge health-badge-good">✓</span>
+                {% else %}
+                  <span class="health-badge health-badge-error">✗</span>
+                {% endif %}
+              </td>
+              <td class="table-name"><code>{{ table_name }}</code></td>
+              <td class="health-message">
+                {% if not status.exists %}
+                  <span class="error-text">{{ 'Table does not exist'|t }}</span>
+                {% elseif status.missing_columns|length > 0 %}
+                  <span class="warning-text">{{ 'Missing columns'|t }}: {{ status.missing_columns|join(', ') }}</span>
+                {% else %}
+                  <span class="success-text">{{ 'OK'|t }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="health-timestamp">{{ 'Checked at'|t }}: {{ table_health.checked_at|date('Y-m-d H:i:s') }}</p>
+      </details>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Queue Processing Controls #}
+  <div class="queue-controls-section" id="queue-controls-panel">
+    <div class="queue-controls-header">
+      <h3>🎛️ {{ 'Queue Processing Dashboard'|t }}</h3>
+      <div class="queue-global-actions">
+        <button type="button" id="pause-resume-queue" class="btn-pause-resume" data-paused="false">
+          ⏸️ {{ 'Pause Processing'|t }}
+        </button>
+        <button type="button" id="run-all-queues" class="btn-run-all">
+          {{ 'Run All Queues'|t }} (<span id="total-queue-items">0</span> {{ 'items'|t }})
+        </button>
+        <button type="button" id="refresh-queue-status" class="btn-refresh">
+          🔄 {{ 'Refresh Status'|t }}
+        </button>
+        <label class="auto-refresh-toggle">
+          <input type="checkbox" id="auto-refresh-toggle" checked>
+          <span>{{ 'Auto-refresh'|t }} (<span id="auto-refresh-countdown">5</span>s)</span>
+        </label>
+      </div>
+    </div>
+    
+    <div id="queue-status-message" class="queue-status-message" style="display: none;"></div>
+    
+    <table class="queue-controls-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>{{ 'Queue'|t }}</th>
+          <th>{{ 'Pending'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Last Activity'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="queue-table-body">
+        {% for queue_id, queue in queue_status %}
+        <tr class="queue-row" data-queue-id="{{ queue_id }}">
+          <td class="queue-icon">{{ queue.icon }}</td>
+          <td class="queue-name">
+            <strong>{{ queue.name }}</strong>
+            <span class="queue-description">{{ queue.description }}</span>
+          </td>
+          <td class="queue-count">
+            <span class="queue-badge {% if queue.items > 0 %}queue-badge-pending{% else %}queue-badge-empty{% endif %}" data-count>
+              {{ queue.items }}
+            </span>
+          </td>
+          <td class="queue-status">
+            <span class="status-indicator status-idle" data-status>
+              <span class="status-dot"></span>
+              <span class="status-text">{{ 'Idle'|t }}</span>
+            </span>
+          </td>
+          <td class="queue-last-activity">
+            <span class="last-activity-text" data-last-activity>-</span>
+          </td>
+          <td class="queue-actions">
+            <button type="button" class="btn-run-queue" data-queue="{{ queue_id }}" {% if queue.items == 0 %}disabled{% endif %}>
+              ▶️ {{ 'Run'|t }}
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <div class="queue-processing-log" id="processing-log">
+      <h4>📋 {{ 'Recent Activity'|t }}</h4>
+      <div class="log-entries" id="log-entries">
+        <div class="log-entry log-info">{{ 'Waiting for activity...'|t }}</div>
+      </div>
+    </div>
+  </div>
+
+  {# Suspended Queue Items #}
+  <div class="suspended-items-section" id="suspended-items-panel">
+    <h3>⚠️ {{ 'Suspended Queue Items'|t }}</h3>
+    <p class="subtitle">{{ 'Items that exceeded the 3-retry limit and require manual intervention'|t }}</p>
+    
+    <div id="suspended-items-container">
+      <div class="loading-state">{{ 'Loading suspended items...'|t }}</div>
+    </div>
+  </div>
+
+  <hr style="margin: 2rem 0;">
+
+  {# Queue Items List #}
+  <div class="queue-items-section">
+    <h3>🔍 {{ 'Queue Item Inspector'|t }}</h3>
+    <p class="subtitle">
+      {{ 'Inspect and delete individual queue items'|t }}
+      &nbsp;|&nbsp;
+      <a href="/admin/reports/genai-debug" style="font-weight: bold; color: #0073aa;">
+        🐛 {{ 'GenAI Debug Inspector'|t }}
+      </a>
+      {{ '(view actual GenAI request/response data)'|t }}
+    </p>
+
+  {% if queue_items is empty %}
+    <div class="empty-state">
+      <div class="empty-icon">✓</div>
+      <h2>{{ 'All queues are empty'|t }}</h2>
+      <p>{{ 'There are no items currently in any queue.'|t }}</p>
+      <a href="/jobhunter" class="button">{{ 'Back to Dashboard'|t }}</a>
+    </div>
+  {% else %}
+    <div class="queue-items-list">
+      <div class="list-header">
+        <span>{{ 'Found'|t }} <strong>{{ queue_items|length }}</strong> {{ 'queue item(s)'|t }}</span>
+      </div>
+
+      {% for item in queue_items %}
+        <div class="queue-item" 
+             data-item-id="{{ item.item_id }}" 
+             data-queue-name="{{ item.queue_name }}"
+             data-item-data="{{ item.data|json_encode|e('html_attr') }}">
+          <div class="item-header">
+            <div class="item-title">
+              <span class="queue-badge">{{ item.queue_label }}</span>
+              <span class="item-id">Item #{{ item.item_id }}</span>
+            </div>
+            <div class="item-actions">
+              {% if item.queue_name in ['job_hunter_resume_tailoring', 'job_hunter_cover_letter_tailoring', 'job_hunter_genai_parsing', 'job_hunter_job_posting_parsing'] %}
+                <button class="btn-clear-genai-cache btn-secondary" title="{{ 'Clear cached GenAI response to force fresh API call'|t }}">
+                  🗑️ {{ 'Clear Cache'|t }}
+                </button>
+              {% endif %}
+              <button class="btn-suspend-item btn-warning" title="{{ 'Move this item to suspended queue (3 retry limit)'|t }}">
+                ⏸️ {{ 'Suspend'|t }}
+              </button>
+              <button class="btn-delete-item" title="{{ 'Delete this queue item'|t }}">
+                🗑️ {{ 'Delete Item'|t }}
+              </button>
+            </div>
+          </div>
+
+          <div class="item-meta">
+            <div class="meta-item">
+              <strong>{{ 'Created:'|t }}</strong>
+              {{ item.created|date('Y-m-d H:i:s') }}
+            </div>
+            {% if item.expire > 0 %}
+              <div class="meta-item">
+                <strong>{{ 'Expires:'|t }}</strong>
+                {{ item.expire|date('Y-m-d H:i:s') }}
+              </div>
+            {% endif %}
+          </div>
+
+          {% if item.data_preview %}
+            <div class="item-preview">
+              {% if item.data_preview.user %}
+                <div class="preview-item">
+                  <strong>👤 {{ 'User:'|t }}</strong>
+                  {{ item.data_preview.user }}
+                </div>
+              {% endif %}
+
+              {% if item.data_preview.file %}
+                <div class="preview-item">
+                  <strong>📄 {{ 'File:'|t }}</strong>
+                  {{ item.data_preview.file }}
+                  {% if item.data_preview.file_id %}
+                    <button class="btn-delete-file btn-mini" 
+                            data-file-id="{{ item.data_preview.file_id }}"
+                            title="{{ 'Delete this file'|t }}">
+                      🗑️
+                    </button>
+                  {% endif %}
+                </div>
+              {% endif %}
+
+              {% if item.data_preview.resume_file %}
+                <div class="preview-item">
+                  <strong>📄 {{ 'Resume:'|t }}</strong>
+                  {{ item.data_preview.resume_file }}
+                  {% if item.data_preview.resume_file_id %}
+                    <button class="btn-delete-file btn-mini" 
+                            data-file-id="{{ item.data_preview.resume_file_id }}"
+                            title="{{ 'Delete this file'|t }}">
+                      🗑️
+                    </button>
+                  {% endif %}
+                </div>
+              {% endif %}
+
+              {% if item.data_preview.company %}
+                <div class="preview-item">
+                  <strong>🏢 {{ 'Company:'|t }}</strong>
+                  {{ item.data_preview.company }}
+                </div>
+              {% endif %}
+
+              {% if item.data_preview.job_title %}
+                <div class="preview-item">
+                  <strong>💼 {{ 'Job Title:'|t }}</strong>
+                  {{ item.data_preview.job_title }}
+                </div>
+              {% endif %}
+
+              {% if item.data_preview.text_length %}
+                <div class="preview-item">
+                  <strong>📊 {{ 'Text Length:'|t }}</strong>
+                  {{ item.data_preview.text_length|number_format }} {{ 'characters'|t }}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <details class="item-data-details">
+            <summary>{{ 'View Raw Data'|t }}</summary>
+            <pre class="raw-data">{{ item.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+          </details>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  </div>{# end queue-items-section #}
+
+  <div class="page-actions">
+    <a href="/jobhunter" class="button button-secondary">{{ 'Back to Dashboard'|t }}</a>
+  </div>
+</div>

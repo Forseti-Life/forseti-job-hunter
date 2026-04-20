@@ -1,0 +1,17 @@
+users_metrics.registrations:
+  title: 'Registrations'
+  route_name: view.users_metrics_registrations.page_registrations
+  base_route: view.users_metrics_registrations.page_registrations
+  weight: 0
+
+users_metrics.registrations_by_field:
+  title: 'By Field'
+  route_name: view.users_metrics_registrations.page_by_field
+  base_route: view.users_metrics_registrations.page_registrations
+  weight: 5
+
+users_metrics.logins:
+  title: 'Logins'
+  route_name: view.users_metrics_logins.page_logins
+  base_route: view.users_metrics_registrations.page_registrations
+  weight: 10

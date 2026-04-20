@@ -1,0 +1,475 @@
+{#
+/**
+ * @file
+ * Template for the Example Entities page showing all framework entity examples.
+ *
+ * Available variables:
+ * - entities: Array of entity categories and their entities
+ */
+#}
+
+{% set total_entities = 0 %}
+{% for category, entity_list in entities %}
+  {% set total_entities = total_entities + entity_list|length %}
+{% endfor %}
+
+<div class="container mt-5 mb-5">
+  <div class="row">
+    <div class="col-12">
+      <div class="card card-forseti">
+        <div class="card-body">
+          <h1 class="text-cyan mb-4">Example Entities - Admin Batch Processing</h1>
+          
+          <div class="mb-4">
+            <div class="alert alert-warning mb-4">
+              <h5 class="text-warning mb-2"><i class="bi bi-shield-lock me-2"></i>Admin Only - One-Time Use</h5>
+              <p class="mb-2">
+                This page is for generating power calculations for all example entities documented in the framework.
+                Click "Process Entity" to evaluate individual entities, or "Process All" to automatically evaluate all entities in a category.
+              </p>
+              <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-danger btn-lg" id="process-all-entities" onclick="processAllEntities(event)">
+                  <i class="bi bi-lightning-charge-fill me-2"></i>Process All Entities
+                  <span id="total-entity-count" class="badge bg-light text-dark ms-2">{{ total_entities }}</span>
+                </button>
+                <div id="global-status" class="text-end"></div>
+              </div>
+              <div class="progress mt-3" id="global-progress" style="display: none; height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          {% for category, entity_list in entities %}
+            <div class="entity-category mb-5" data-category="{{ category|clean_class }}">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="text-cyan h4 mb-0">
+                  <i class="bi bi-folder2-open me-2"></i>{{ category }}
+                  <span class="badge bg-secondary ms-2">{{ entity_list|length }} entities</span>
+                  <span class="badge bg-success ms-2 category-complete-badge" data-category="{{ category|clean_class }}" style="display: none;">
+                    <i class="bi bi-check-circle me-1"></i>Complete
+                  </span>
+                </h2>
+                <button class="btn btn-warning btn-sm process-category-btn" 
+                        data-category="{{ category|clean_class }}"
+                        data-entity-count="{{ entity_list|length }}"
+                        onclick="processCategory('{{ category|clean_class }}', event)">
+                  <i class="bi bi-lightning-charge me-1"></i>
+                  Process All {{ entity_list|length }}
+                </button>
+              </div>
+              
+              <div class="progress mb-3 category-progress" data-category="{{ category|clean_class }}" style="display: none; height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+              </div>
+              
+              <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 entity-list">
+                {% for entity in entity_list %}
+                  <div class="col">
+                    <div class="card h-100 border-cyber entity-card" 
+                         data-entity-url="/talk-with-forseti?entity={{ entity|url_encode }}"
+                         data-entity-name="{{ entity }}"
+                         data-category="{{ category|clean_class }}">
+                      <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-white mb-3">
+                          {{ entity }}
+                          <span class="badge bg-success ms-2 entity-status" style="display: none;">
+                            <i class="bi bi-check"></i>
+                          </span>
+                          <span class="badge bg-warning ms-2 entity-processing" style="display: none;">
+                            <i class="bi bi-hourglass-split"></i>
+                          </span>
+                        </h5>
+                        <div class="mt-auto">
+                          <button class="btn btn-sm btn-cyber w-100" 
+                                  onclick="processSingleEntity('{{ entity }}', this.closest('.entity-card'))">
+                            <i class="bi bi-clipboard-check me-1"></i>
+                            Process Entity
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              
+              {# Calculate Category Average Button #}
+              <div class="mt-4 text-center">
+                <button class="btn btn-info calculate-average-btn" 
+                        data-category="{{ category }}"
+                        onclick="calculateCategoryAverage('{{ category }}', this)">
+                  <i class="bi bi-calculator me-1"></i>
+                  Calculate Category Average
+                </button>
+                <div class="mt-2 category-average-status" data-category="{{ category }}" style="display: none;"></div>
+              </div>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.entity-category {
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  padding-bottom: 2rem;
+}
+
+.entity-category:last-child {
+  border-bottom: none;
+}
+
+.border-cyber {
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.border-cyber:hover {
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.card-title {
+  font-size: 1rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.btn-cyber {
+  background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+  border: none;
+  color: #000;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-cyber:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+  color: #000;
+}
+
+.process-category-btn {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  border: none;
+  color: #000;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.process-category-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  color: #000;
+}
+
+.process-category-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+</style>
+
+<script>
+async function processEntity(entityName, cardElement) {
+  const processingBadge = cardElement.querySelector('.entity-processing');
+  const statusBadge = cardElement.querySelector('.entity-status');
+  
+  // Show processing badge
+  if (processingBadge) processingBadge.style.display = 'inline-block';
+  
+  try {
+    // Regular entity evaluation
+    const response = await fetch(`/api/batch-evaluate-entity?entity=${encodeURIComponent(entityName)}`);
+    
+    const result = await response.json();
+    
+    // Hide processing badge
+    if (processingBadge) processingBadge.style.display = 'none';
+    
+    if (result.success) {
+      // Show success badge
+      if (statusBadge) statusBadge.style.display = 'inline-block';
+      cardElement.style.opacity = '0.7';
+      return { success: true, existing: result.existing };
+    } else {
+      console.error('Failed to process entity:', result.error);
+      cardElement.style.border = '2px solid #dc3545';
+      return { success: false, error: result.error };
+    }
+  } catch (error) {
+    console.error('Error processing entity:', error);
+    if (processingBadge) processingBadge.style.display = 'none';
+    cardElement.style.border = '2px solid #dc3545';
+    return { success: false, error: error.message };
+  }
+}
+
+async function processSingleEntity(entityName, cardElement) {
+  const button = cardElement.querySelector('button');
+  const originalHtml = button.innerHTML;
+  
+  // Disable button during processing
+  button.disabled = true;
+  button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Processing...';
+  
+  const result = await processEntity(entityName, cardElement);
+  
+  // Update button based on result
+  if (result.success) {
+    if (result.existing) {
+      button.innerHTML = '<i class="bi bi-info-circle me-1"></i> Already Exists';
+      button.classList.remove('btn-cyber');
+      button.classList.add('btn-secondary');
+    } else {
+      button.innerHTML = '<i class="bi bi-check-circle me-1"></i> Completed';
+      button.classList.remove('btn-cyber');
+      button.classList.add('btn-success');
+    }
+  } else {
+    button.innerHTML = '<i class="bi bi-x-circle me-1"></i> Failed';
+    button.classList.remove('btn-cyber');
+    button.classList.add('btn-danger');
+    button.disabled = false;
+  }
+}
+
+async function processAllEntities(event) {
+  event.preventDefault();
+  
+  const button = document.getElementById('process-all-entities');
+  const globalProgress = document.getElementById('global-progress');
+  const globalProgressBar = globalProgress.querySelector('.progress-bar');
+  const globalStatus = document.getElementById('global-status');
+  
+  // Get all entity cards
+  const allEntityCards = document.querySelectorAll('.entity-card');
+  const totalEntities = allEntityCards.length;
+  
+  if (!totalEntities) return;
+  
+  // Disable button and show progress
+  button.disabled = true;
+  button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Processing All...';
+  globalProgress.style.display = 'block';
+  
+  let processedCount = 0;
+  let successCount = 0;
+  let skippedCount = 0;
+  let errorCount = 0;
+  
+  // Process each entity sequentially
+  for (const card of allEntityCards) {
+    const entityName = card.dataset.entityName;
+    
+    // Update global status
+    globalStatus.innerHTML = `Processing ${processedCount + 1}/${totalEntities}: <strong>${entityName}</strong>`;
+    
+    // Process the entity
+    const result = await processEntity(entityName, card);
+    
+    processedCount++;
+    if (result.success) {
+      if (result.existing) {
+        skippedCount++;
+      } else {
+        successCount++;
+      }
+      
+      // Update individual button
+      const entityButton = card.querySelector('button');
+      if (entityButton) {
+        entityButton.disabled = true;
+        entityButton.innerHTML = result.existing 
+          ? '<i class="bi bi-info-circle me-1"></i> Already Exists'
+          : '<i class="bi bi-check-circle me-1"></i> Completed';
+        entityButton.classList.remove('btn-cyber');
+        entityButton.classList.add(result.existing ? 'btn-secondary' : 'btn-success');
+      }
+    } else {
+      errorCount++;
+      const entityButton = card.querySelector('button');
+      if (entityButton) {
+        entityButton.classList.remove('btn-cyber');
+        entityButton.classList.add('btn-danger');
+      }
+    }
+    
+    // Update progress bar
+    const percentage = (processedCount / totalEntities) * 100;
+    globalProgressBar.style.width = `${percentage}%`;
+    globalProgressBar.textContent = `${processedCount}/${totalEntities} (${successCount} new, ${skippedCount} existing, ${errorCount} errors)`;
+    
+    // Small delay between requests
+    if (processedCount < totalEntities) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  // All done
+  button.disabled = false;
+  button.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Complete`;
+  button.classList.remove('btn-danger');
+  button.classList.add('btn-success');
+  
+  globalStatus.innerHTML = `<strong class="text-success">All entities processed!</strong><br>${successCount} new, ${skippedCount} existing, ${errorCount} errors`;
+  
+  // Calculate category averages for all categories that had successful processing
+  if (successCount > 0) {
+    globalStatus.innerHTML += '<br><br><i class="bi bi-hourglass-split me-1"></i> Calculating category averages...';
+    
+    // Get all unique categories from processed entities
+    const categories = new Set();
+    for (const card of allEntityCards) {
+      const category = card.dataset.category;
+      if (category) categories.add(category);
+    }
+    
+    // Calculate average for each category
+    for (const categoryClass of categories) {
+      const categoryDiv = document.querySelector(`.entity-category[data-category="${categoryClass}"]`);
+      if (categoryDiv) {
+        const calculateButton = categoryDiv.querySelector('.calculate-average-btn');
+        if (calculateButton) {
+          await calculateCategoryAverage(calculateButton.dataset.category, calculateButton);
+          // Small delay between category calculations
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    }
+    
+    globalStatus.innerHTML = `<strong class="text-success">All done!</strong><br>${successCount} new, ${skippedCount} existing, ${errorCount} errors<br><small>Category averages calculated</small>`;
+  }
+}
+
+async function processCategory(categoryClass, event) {
+  event.preventDefault();
+  
+  const button = event.target.closest('button');
+  const categoryDiv = document.querySelector(`.entity-category[data-category="${categoryClass}"]`);
+  const entityCards = categoryDiv.querySelectorAll('.entity-card');
+  const progressBar = categoryDiv.querySelector('.category-progress');
+  const progressBarInner = progressBar.querySelector('.progress-bar');
+  const completeBadge = document.querySelector(`.category-complete-badge[data-category="${categoryClass}"]`);
+  
+  if (!entityCards.length) return;
+  
+  // Disable button and show progress
+  button.disabled = true;
+  progressBar.style.display = 'block';
+  
+  const totalEntities = entityCards.length;
+  let processedCount = 0;
+  let successCount = 0;
+  let skippedCount = 0;
+  let errorCount = 0;
+  
+  // Process each entity sequentially
+  for (const card of entityCards) {
+    const entityName = card.dataset.entityName;
+    
+    // Update button text
+    button.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> Processing ${processedCount + 1}/${totalEntities}`;
+    
+    // Process the entity
+    const result = await processEntity(entityName, card);
+    
+    processedCount++;
+    if (result.success) {
+      if (result.existing) {
+        skippedCount++;
+      } else {
+        successCount++;
+      }
+    } else {
+      errorCount++;
+    }
+    
+    // Update progress bar
+    const percentage = (processedCount / totalEntities) * 100;
+    progressBarInner.style.width = `${percentage}%`;
+    progressBarInner.textContent = `${processedCount}/${totalEntities}`;
+    
+    // Small delay between requests to avoid overwhelming the server
+    if (processedCount < totalEntities) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  // All done
+  button.disabled = false;
+  button.innerHTML = `<i class="bi bi-check-circle me-1"></i> Complete (${successCount} new, ${skippedCount} existing, ${errorCount} errors)`;
+  button.classList.remove('btn-warning');
+  button.classList.add('btn-success');
+  
+  if (completeBadge) {
+    completeBadge.style.display = 'inline-block';
+  }
+  
+  // Automatically calculate category average after processing all entities
+  const categoryLabel = categoryDiv.querySelector('h2').textContent.trim().split('\n')[0].trim();
+  const calculateButton = categoryDiv.querySelector('.calculate-average-btn');
+  if (calculateButton && successCount > 0) {
+    // Add small delay before calculating average
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await calculateCategoryAverage(calculateButton.dataset.category, calculateButton);
+  }
+}
+
+async function calculateCategoryAverage(categoryLabel, button) {
+  const statusDiv = document.querySelector(`.category-average-status[data-category="${categoryLabel}"]`);
+  const originalHtml = button.innerHTML;
+  
+  // Disable button and show processing
+  button.disabled = true;
+  button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Calculating...';
+  
+  if (statusDiv) {
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'mt-2 category-average-status alert alert-info';
+    statusDiv.innerHTML = '<i class="bi bi-info-circle me-1"></i> Calculating average for ' + categoryLabel + '...';
+  }
+  
+  try {
+    const response = await fetch(`/api/calculate-category-average?category=${encodeURIComponent(categoryLabel)}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      button.innerHTML = '<i class="bi bi-check-circle me-1"></i> Average Calculated';
+      button.classList.remove('btn-info');
+      button.classList.add('btn-success');
+      
+      if (statusDiv) {
+        statusDiv.className = 'mt-2 category-average-status alert alert-success';
+        statusDiv.innerHTML = `
+          <i class="bi bi-check-circle me-1"></i>
+          Successfully ${result.is_new ? 'created' : 'updated'} category average for ${categoryLabel}<br>
+          <small>Averaged ${result.entities_count} entities</small>
+        `;
+      }
+    } else {
+      button.disabled = false;
+      button.innerHTML = '<i class="bi bi-x-circle me-1"></i> Failed';
+      button.classList.remove('btn-info');
+      button.classList.add('btn-danger');
+      
+      if (statusDiv) {
+        statusDiv.className = 'mt-2 category-average-status alert alert-danger';
+        statusDiv.innerHTML = '<i class="bi bi-x-circle me-1"></i> Error: ' + result.error;
+      }
+    }
+  } catch (error) {
+    button.disabled = false;
+    button.innerHTML = originalHtml;
+    
+    if (statusDiv) {
+      statusDiv.className = 'mt-2 category-average-status alert alert-danger';
+      statusDiv.innerHTML = '<i class="bi bi-x-circle me-1"></i> Error: ' + error.message;
+    }
+  }
+}
+</script>

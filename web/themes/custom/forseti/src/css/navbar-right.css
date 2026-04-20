@@ -1,0 +1,23 @@
+/* Navbar Right Region - Horizontal Layout */
+.region-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.region-navbar-right > * {
+  margin: 0;
+}
+
+/* Ensure blocks don't stack vertically */
+.region-navbar-right .block {
+  display: inline-block;
+}
+
+/* Google Login and User Menu alignment */
+#block-socialauth-authgoogle,
+#block-useraccountmenu {
+  display: inline-block;
+  vertical-align: middle;
+}

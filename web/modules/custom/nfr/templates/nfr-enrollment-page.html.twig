@@ -1,0 +1,23 @@
+<div class="container-fluid my-4">
+  <div class="row">
+    <aside class="col-lg-3 col-md-4 mb-4">
+      {{ drupal_block('nfr_navigation') }}
+    </aside>
+    
+    <main class="col-lg-9 col-md-8">
+      <div class="enrollment-progress mb-4">
+        {# Progress indicator from form will render here #}
+      </div>
+      
+      <div class="card card-forseti">
+        <div class="card-body p-4">
+          {{ content }}
+        </div>
+      </div>
+      
+      <div class="enrollment-actions mt-4">
+        {# Navigation buttons will go here #}
+      </div>
+    </main>
+  </div>
+</div>

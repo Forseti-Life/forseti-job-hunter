@@ -1,0 +1,81 @@
+{#
+/**
+ * @file
+ * Template for institutional dashboard.
+ *
+ * Available variables:
+ * - institution: The institution entity.
+ * - members: Array of institution members.
+ * - statistics: Array of institutional statistics.
+ */
+#}
+
+<div class="institutional-dashboard container my-5">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4">{{ 'Institution Dashboard'|t }}</h1>
+    </div>
+  </div>
+
+  {# Statistics Overview #}
+  <div class="row g-4 mb-5">
+    <div class="col-md-3">
+      <div class="card text-center p-4">
+        <h2 class="text-primary mb-2">{{ statistics.total_members|default('0') }}</h2>
+        <p class="text-muted mb-0">{{ 'Total Members'|t }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-4">
+        <h2 class="text-success mb-2">{{ statistics.active_assessments|default('0') }}</h2>
+        <p class="text-muted mb-0">{{ 'Active Assessments'|t }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-4">
+        <h2 class="text-info mb-2">{{ statistics.locations|default('0') }}</h2>
+        <p class="text-muted mb-0">{{ 'Monitored Locations'|t }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-4">
+        <h2 class="text-warning mb-2">{{ statistics.compliance_score|default('N/A') }}</h2>
+        <p class="text-muted mb-0">{{ 'Compliance Score'|t }}</p>
+      </div>
+    </div>
+  </div>
+
+  {# Quick Actions #}
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h3 class="card-title mb-3">{{ 'Quick Actions'|t }}</h3>
+          <div class="btn-group" role="group">
+            <a href="#" class="btn btn-primary">
+              <i class="fas fa-user-plus me-2"></i>{{ 'Add Member'|t }}
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+              <i class="fas fa-map-marked-alt me-2"></i>{{ 'Add Location'|t }}
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+              <i class="fas fa-file-alt me-2"></i>{{ 'View Reports'|t }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Recent Activity #}
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h3 class="card-title mb-3">{{ 'Recent Activity'|t }}</h3>
+          <p class="text-muted">{{ 'No recent activity to display.'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

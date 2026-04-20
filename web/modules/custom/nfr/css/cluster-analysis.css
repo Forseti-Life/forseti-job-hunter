@@ -1,0 +1,224 @@
+/**
+ * Cluster Analysis Page Styles
+ */
+
+.cluster-page-intro {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.cluster-page-intro h2 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.cluster-intro {
+  background: #e8f5e9;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+}
+
+.cluster-intro p {
+  margin: 0;
+  color: #2e7d32;
+}
+
+/* Form Styles */
+#nfr-cluster-analysis-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#nfr-cluster-analysis-form .form-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+#nfr-cluster-analysis-form .form-checkboxes .form-item {
+  margin: 0;
+}
+
+#nfr-cluster-analysis-form .form-checkboxes label {
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+#nfr-cluster-analysis-form .form-checkboxes label:hover {
+  background: #f5f5f5;
+}
+
+#nfr-cluster-analysis-form .form-checkboxes input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Results Display */
+.cluster-results {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #4caf50;
+}
+
+.cluster-results h2 {
+  margin-top: 0;
+  color: #4caf50;
+  border-bottom: 2px solid #4caf50;
+  padding-bottom: 1rem;
+}
+
+.result-summary {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+}
+
+.result-summary p {
+  margin: 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+/* Cluster Cards */
+.cluster-summaries {
+  margin-bottom: 2rem;
+}
+
+.cluster-summaries h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.cluster-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-left: 4px solid #4caf50;
+}
+
+.cluster-card:nth-child(2n) {
+  border-left-color: #2196f3;
+}
+
+.cluster-card:nth-child(3n) {
+  border-left-color: #ff9800;
+}
+
+.cluster-card:nth-child(4n) {
+  border-left-color: #9c27b0;
+}
+
+.cluster-card:nth-child(5n) {
+  border-left-color: #f44336;
+}
+
+.cluster-card h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+.cluster-size {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.cluster-centroids table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.cluster-centroids th,
+.cluster-centroids td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cluster-centroids th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cluster-centroids tr:hover {
+  background: #f8f9fa;
+}
+
+/* Cluster Quality Metrics */
+.cluster-quality {
+  background: white;
+  padding: 2rem;
+  border-radius: 6px;
+}
+
+.cluster-quality h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.cluster-quality p {
+  font-size: 1.05rem;
+  margin: 0.75rem 0;
+}
+
+.quality-note {
+  font-size: 0.95rem;
+  color: #666;
+  font-style: italic;
+  background: #f0f0f0;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #nfr-cluster-analysis-form .form-checkboxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .cluster-card {
+    padding: 1rem;
+  }
+  
+  .cluster-centroids {
+    overflow-x: auto;
+  }
+  
+  .cluster-centroids table {
+    font-size: 0.9rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .cluster-card {
+    page-break-inside: avoid;
+    border: 1px solid #ddd;
+    box-shadow: none;
+  }
+  
+  .form-actions,
+  .breadcrumb {
+    display: none;
+  }
+}

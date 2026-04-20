@@ -1,0 +1,440 @@
+/**
+ * Forseti Safety Community Styles
+ * AI-powered community safety platform for Philadelphia
+ */
+
+// Hero Section - Safety Community
+// -----------------------------------------------------------------------------
+.safety-hero {
+  background: linear-gradient(135deg, $forseti-guardian-blue 0%, $forseti-forest-dark 100%);
+  color: $forseti-text-inverse;
+  padding: 6rem 0 4rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)" /></svg>');
+    opacity: 0.3;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .hero-tagline {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .hero-mission {
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    line-height: 1.8;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn {
+      padding: 0.875rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: $border-radius;
+      box-shadow: $box-shadow;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $box-shadow-lg;
+      }
+    }
+  }
+}
+
+// Safety Status Cards
+// -----------------------------------------------------------------------------
+.safety-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 3rem 0;
+
+  .status-card {
+    background: $forseti-white-pure;
+    border-radius: $border-radius-lg;
+    padding: 2rem;
+    box-shadow: $box-shadow;
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $box-shadow-lg;
+    }
+
+    &.safe {
+      border-left-color: $forseti-safety-green;
+      .status-icon { color: $forseti-safety-green; }
+    }
+
+    &.caution {
+      border-left-color: $forseti-alert-amber;
+      .status-icon { color: $forseti-alert-amber; }
+    }
+
+    &.danger {
+      border-left-color: $forseti-danger-red;
+      .status-icon { color: $forseti-danger-red; }
+    }
+
+    .status-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: $forseti-text-primary;
+    }
+
+    .status-description {
+      color: $forseti-text-secondary;
+      line-height: 1.6;
+    }
+
+    .status-metric {
+      display: flex;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+      .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-right: 0.5rem;
+      }
+
+      .metric-label {
+        font-size: 0.875rem;
+        color: $forseti-text-muted;
+      }
+    }
+  }
+}
+
+// AI Monitoring Badge
+// -----------------------------------------------------------------------------
+.ai-monitoring-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, $forseti-guardian-blue, $forseti-info-blue);
+  color: $forseti-white-pure;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  box-shadow: $box-shadow;
+  animation: pulse-glow 2s infinite;
+
+  .ai-icon {
+    width: 24px;
+    height: 24px;
+    animation: spin 3s linear infinite;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(30, 58, 138, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(30, 58, 138, 0.5);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Safety Map Integration
+// -----------------------------------------------------------------------------
+.safety-map-container {
+  background: $forseti-white-pure;
+  border-radius: $border-radius-lg;
+  padding: 2rem;
+  margin: 3rem 0;
+  box-shadow: $box-shadow;
+
+  .map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: $forseti-text-primary;
+      margin: 0;
+    }
+
+    .map-filters {
+      display: flex;
+      gap: 0.75rem;
+
+      .filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: $border-radius;
+        border: 2px solid $forseti-calm-slate;
+        background: transparent;
+        color: $forseti-calm-slate;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover,
+        &.active {
+          background: $forseti-guardian-blue;
+          border-color: $forseti-guardian-blue;
+          color: $forseti-white-pure;
+        }
+      }
+    }
+  }
+
+  .map-embed {
+    width: 100%;
+    height: 600px;
+    border-radius: $border-radius;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Community Features Section
+// -----------------------------------------------------------------------------
+.community-features {
+  padding: 4rem 0;
+  background: $forseti-sky-light;
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+
+    .feature-card {
+      background: $forseti-white-pure;
+      border-radius: $border-radius-lg;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: $box-shadow;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-8px);
+        box-shadow: $box-shadow-lg;
+      }
+
+      .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, $forseti-guardian-blue, $forseti-info-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: $forseti-white-pure;
+
+        img {
+          max-width: 70%;
+          max-height: 70%;
+          width: auto;
+          height: auto;
+          object-fit: contain;
+        }
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: $forseti-text-primary;
+      }
+
+      p {
+        color: $forseti-text-secondary;
+        line-height: 1.7;
+      }
+    }
+  }
+}
+
+// Safety Alerts
+// -----------------------------------------------------------------------------
+.safety-alert {
+  border-radius: $border-radius;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid;
+  display: flex;
+  align-items: start;
+  gap: 1rem;
+  box-shadow: $box-shadow-sm;
+
+  &.alert-safe {
+    background: lighten($forseti-safety-green, 45%);
+    border-left-color: $forseti-safety-green;
+    color: darken($forseti-safety-green, 20%);
+  }
+
+  &.alert-warning {
+    background: lighten($forseti-alert-amber, 40%);
+    border-left-color: $forseti-alert-amber;
+    color: darken($forseti-alert-amber, 30%);
+  }
+
+  &.alert-danger {
+    background: lighten($forseti-danger-red, 40%);
+    border-left-color: $forseti-danger-red;
+    color: darken($forseti-danger-red, 20%);
+  }
+
+  .alert-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    flex: 1;
+
+    .alert-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-message {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+  }
+
+  .alert-timestamp {
+    font-size: 0.85rem;
+    opacity: 0.75;
+    white-space: nowrap;
+  }
+}
+
+// Philadelphia Focus Banner
+// -----------------------------------------------------------------------------
+.philly-focus-banner {
+  background: linear-gradient(90deg, $forseti-guardian-blue 0%, $forseti-info-blue 100%);
+  color: $forseti-white-pure;
+  padding: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+
+  .location-icon {
+    display: inline-block;
+    margin-right: 0.5rem;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+}
+
+// Responsive Design
+// -----------------------------------------------------------------------------
+@media (max-width: 768px) {
+  .safety-hero {
+    padding: 4rem 0 3rem;
+
+    h1 {
+      font-size: 2.5rem;
+    }
+
+    .hero-tagline {
+      font-size: 1.25rem;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  .safety-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .safety-map-container {
+    .map-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+
+      .map-filters {
+        width: 100%;
+        overflow-x: auto;
+      }
+    }
+
+    .map-embed {
+      height: 400px;
+    }
+  }
+}
+
+// Forseti Icon
+// -----------------------------------------------------------------------------
+.forseti-icon {
+  width: 1.8em;
+  height: 1.8em;
+  margin-right: 6px;
+  vertical-align: middle;
+  display: inline-block;
+  background: $forseti-white-pure;
+  padding: 1px;
+  border-radius: 2px;
+}
+
+.forseti-icon-list {
+  width: 1em;
+  height: 1em;
+  margin-right: 8px;
+  vertical-align: middle;
+  display: inline-block;
+}

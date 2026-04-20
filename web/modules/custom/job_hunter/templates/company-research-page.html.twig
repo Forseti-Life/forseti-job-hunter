@@ -1,0 +1,171 @@
+{#
+/**
+ * @file
+ * Template for Company Research page.
+ *
+ * Available variables:
+ * - companies: Array of company data with research information
+ * - stats: Aggregated statistics (total_companies, active_count, total_jobs, total_apps)
+ */
+#}
+
+<div class="job-hunter-home company-research-page">
+  <div class="job-hunter-header">
+    <h1>{{ 'Company Research'|t }}</h1>
+    <p class="tagline">{{ 'Research companies to tailor your applications and prepare for interviews.'|t }}</p>
+  </div>
+
+  {% if companies is empty %}
+    <div class="empty-state">
+      <div class="empty-icon">🏢</div>
+      <h2>{{ 'No Companies Yet'|t }}</h2>
+      <p>{{ 'Start by importing companies or discovering job opportunities.'|t }}</p>
+      <div class="action-buttons">
+        <a href="{{ path('job_hunter.bulk_import_companies') }}" class="button button--primary">
+          {{ 'Import Companies'|t }}
+        </a>
+        <a href="{{ path('job_hunter.job_discovery') }}" class="button">
+          {{ 'Job Discovery'|t }}
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="company-stats">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_companies }}</div>
+        <div class="stat-label">{{ 'Total Companies'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.active_count }}</div>
+        <div class="stat-label">{{ 'Active Targets'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_jobs }}</div>
+        <div class="stat-label">{{ 'Job Postings'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_apps }}</div>
+        <div class="stat-label">{{ 'Applications'|t }}</div>
+      </div>
+    </div>
+
+    <div class="companies-grid">
+      {% for company in companies %}
+        <div class="company-card {% if company.active %}active{% endif %}">
+          <div class="company-header">
+            <h3>{{ company.name }}</h3>
+            <div class="company-badges">
+              {% if company.active %}
+                <span class="badge badge-active">{{ 'Active Target'|t }}</span>
+              {% endif %}
+              {% if company.has_research %}
+                {% if company.research_stale %}
+                  <span class="badge badge-warning" title="{{ 'Research data is older than 30 days'|t }}">
+                    🔄 {{ 'Stale Research'|t }}
+                  </span>
+                {% else %}
+                  <span class="badge badge-success" title="{{ 'Research completed'|t }}">
+                    ✓ {{ 'Researched'|t }}
+                  </span>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="company-info">
+            <div class="info-row">
+              <span class="label">{{ 'Industry:'|t }}</span>
+              <span class="value">{{ company.industry }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">{{ 'Location:'|t }}</span>
+              <span class="value">{{ company.location }}</span>
+            </div>
+            {% if company.website %}
+              <div class="info-row">
+                <span class="label">{{ 'Website:'|t }}</span>
+                <span class="value">
+                  <a href="{{ company.website }}" target="_blank" rel="noopener">
+                    {{ company.website|length > 40 ? company.website|slice(0, 40) ~ '...' : company.website }}
+                  </a>
+                </span>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if company.description %}
+            <div class="company-description">
+              {{ company.description|length > 200 ? company.description|slice(0, 200) ~ '...' : company.description }}
+            </div>
+          {% endif %}
+
+          {% if company.notes %}
+            <div class="research-notes">
+              <strong>{{ 'Research Notes:'|t }}</strong>
+              <p>{{ company.notes|length > 150 ? company.notes|slice(0, 150) ~ '...' : company.notes }}</p>
+            </div>
+          {% endif %}
+
+          {# Display research data if available #}
+          {% if company.has_research %}
+            <div class="research-summary">
+              <strong>{{ 'Research Summary:'|t }}</strong>
+              <div class="research-info">
+                {% if company.ats_platform %}
+                  <div class="research-item">
+                    <span class="research-icon">🏢</span>
+                    <span class="research-label">{{ 'ATS Platform:'|t }}</span>
+                    <span class="research-value">{{ company.ats_platform }}</span>
+                  </div>
+                {% endif %}
+                {% if company.automation_readiness %}
+                  <div class="research-item">
+                    <span class="research-icon">
+                      {% if company.automation_readiness == 'ready' %}🟢
+                      {% elseif company.automation_readiness == 'partial' %}🟡
+                      {% else %}🔴{% endif %}
+                    </span>
+                    <span class="research-label">{{ 'Automation:'|t }}</span>
+                    <span class="research-value">{{ company.automation_readiness|capitalize }}</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="company-stats-inline">
+            <div class="stat-item">
+              <span class="stat-icon">📋</span>
+              <span class="stat-text">{{ company.job_count }} {{ 'jobs'|t }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">✅</span>
+              <span class="stat-text">{{ company.app_count }} {{ 'applications'|t }}</span>
+            </div>
+          </div>
+
+          <div class="company-actions">
+            <a href="{{ path('job_hunter.company_edit', {'company_id': company.id}) }}" class="button button--small">
+              {{ 'Edit Details'|t }}
+            </a>
+            <a href="{{ path('job_hunter.company_job_discovery', {'company': company.id}) }}" class="button button--small button--primary">
+              {{ 'Find Jobs'|t }}
+            </a>
+            {% if company.has_research %}
+              <a href="{{ path('company_research.results', {'research_id': company.research_id}) }}" class="button button--small button--info">
+                {{ 'View Research'|t }}
+              </a>
+            {% else %}
+              <form action="{{ path('company_research.research_form') }}" method="get" style="display: inline;">
+                <input type="hidden" name="company_name" value="{{ company.name }}">
+                <button type="submit" class="button button--small button--secondary">
+                  🔍 {{ 'Research Company'|t }}
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

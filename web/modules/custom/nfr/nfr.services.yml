@@ -1,0 +1,15 @@
+services:
+  nfr.neris_integration:
+    class: Drupal\nfr\Service\NERISIntegration
+    arguments: ['@database', '@logger.factory', '@http_client']
+  
+  nfr.cancer_registry_linkage:
+    class: Drupal\nfr\Service\CancerRegistryLinkage
+    arguments: ['@database', '@logger.factory']
+  
+  nfr.data_export:
+    class: Drupal\nfr\Service\DataExport
+    arguments: ['@database', '@logger.factory']  
+  nfr.correlation_analysis:
+    class: Drupal\nfr\Service\NFRCorrelationAnalysisService
+    arguments: ['@database', '@logger.factory']

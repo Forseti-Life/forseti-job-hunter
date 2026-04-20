@@ -1,0 +1,30 @@
+tester_styles:
+  version: 1.x
+  css:
+    theme:
+      css/tester-styles.css: {}
+
+test-runner:
+  version: 1.x
+  css:
+    theme:
+      css/tester-styles.css: {}
+  js:
+    js/test-runner.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.ajax
+
+validation:
+  version: 1.x
+  css:
+    theme:
+      css/tester-styles.css: {}
+  js:
+    js/jh-validation.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once

@@ -1,0 +1,23 @@
+uuid: cef846a9-fd04-443e-b6d0-6ab06471bcd7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group_relationship.institution-group_membership.group_roles
+    - group.relationship_type.institution-group_membership
+id: group_relationship.institution-group_membership.default
+targetEntityType: group_relationship
+bundle: institution-group_membership
+mode: default
+content:
+  group_roles:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: false
+    third_party_settings: {  }
+    weight: -4
+    region: content
+hidden:
+  entity_id: true
+  uid: true

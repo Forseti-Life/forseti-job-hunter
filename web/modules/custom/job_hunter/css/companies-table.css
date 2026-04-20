@@ -1,0 +1,117 @@
+/**
+ * Companies Overview Table Styles
+ */
+
+.companies-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.companies-table th {
+  background: #f7fafc;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.companies-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.companies-table tr:hover {
+  background: #f7fafc;
+}
+
+.companies-table .progress-bar {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.companies-table .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.companies-table .progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #2d3748;
+}
+
+.companies-table .status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.companies-table .status-active {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.companies-table .status-incomplete {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.companies-table .btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-right: 4px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #4299e1;
+  color: white;
+}
+
+.companies-table .btn:hover {
+  background: #3182ce;
+}
+
+.companies-table .btn-sm {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.no-companies {
+  padding: 40px;
+  text-align: center;
+  background: #f7fafc;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.no-companies p {
+  margin: 0;
+  color: #4a5568;
+}
+
+.no-companies a {
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.no-companies a:hover {
+  text-decoration: underline;
+}

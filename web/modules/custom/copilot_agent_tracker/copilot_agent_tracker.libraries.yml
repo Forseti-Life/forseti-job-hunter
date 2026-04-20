@@ -1,0 +1,7 @@
+waitingonkeith_autorefresh:
+  version: 1.x
+  js:
+    js/waitingonkeith-autorefresh.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

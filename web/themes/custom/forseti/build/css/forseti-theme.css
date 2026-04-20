@@ -1,0 +1,303 @@
+/* Forseti Theme - Standardized Styling */
+
+/* Navigation Bar */
+.forseti-navbar {
+  background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%) !important;
+  border-bottom: 2px solid #00d4ff;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.forseti-navbar .nav-link {
+  color: #e8e8e8 !important;
+  transition: color 0.3s ease;
+}
+
+.forseti-navbar .nav-link:hover,
+.forseti-navbar .nav-link:focus {
+  color: #00d4ff !important;
+}
+
+.forseti-navbar .navbar-toggler {
+  border-color: #00d4ff;
+}
+
+.forseti-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%2300d4ff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.forseti-navbar .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 212, 255, 0.25);
+}
+
+/* Mobile menu styles */
+@media (max-width: 991.98px) {
+  .forseti-navbar .navbar-collapse {
+    background-color: #1a1a2e;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Front page navbar - dark theme */
+.forseti-navbar-front {
+  background-color: #16213e !important;
+  border-bottom: 2px solid #00d4ff;
+}
+
+/* Text Colors */
+.text-cyan { color: #00d4ff !important; }
+.text-muted-light { color: #b8b8b8 !important; }
+.text-muted-gray { color: #909090 !important; }
+.text-danger-custom { color: #f44336 !important; }
+.text-warning-custom { color: #ff9800 !important; }
+.text-yellow-custom { color: #fdd835 !important; }
+
+/* Background Colors */
+.bg-dark-primary { background-color: #1a1a2e !important; }
+.bg-dark-alt { background-color: #16213e !important; }
+
+/* Card Styling */
+.card-forseti {
+  background: #16213e !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+}
+
+.card-forseti h4,
+.card-forseti h5 {
+  color: #00d4ff !important;
+}
+
+.card-forseti p,
+.card-forseti li {
+  color: #e8e8e8 !important;
+}
+
+/* Form Elements within card-forseti */
+.card-forseti label {
+  color: #00d4ff;
+  font-weight: 500;
+}
+
+.card-forseti input[type="text"],
+.card-forseti input[type="email"],
+.card-forseti select,
+.card-forseti textarea {
+  background-color: #1a1a2e;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #e8e8e8;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.card-forseti input[type="text"]:focus,
+.card-forseti input[type="email"]:focus,
+.card-forseti select:focus,
+.card-forseti textarea:focus {
+  background-color: #1a1a2e;
+  border-color: #00d4ff;
+  color: #e8e8e8;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+}
+
+.card-forseti .form-required {
+  color: #f44336;
+}
+
+.card-forseti .description {
+  color: #b8b8b8;
+  font-size: 0.875rem;
+}
+
+/* Submit button styling */
+.card-forseti button[type="submit"],
+.card-forseti input[type="submit"],
+.card-forseti .webform-button--submit {
+  background-color: #00d4ff;
+  border: none;
+  color: #1a1a2e;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.card-forseti .form-actions {
+  margin-top: 1.5rem;
+}
+
+.card-forseti button[type="submit"]:hover,
+.card-forseti input[type="submit"]:hover,
+.card-forseti .webform-button--submit:hover {
+  background-color: #33dcff;
+}
+
+.card-forseti button[type="submit"]:disabled,
+.card-forseti input[type="submit"]:disabled {
+  background-color: #666;
+  cursor: not-allowed;
+}
+
+
+
+/* Alert Styling */
+.alert-emergency {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid #f44336;
+  color: #f44336;
+}
+
+.alert-info-cyan {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid #00d4ff;
+  color: #00d4ff;
+}
+
+/* Link Colors */
+a.link-cyan {
+  color: #00d4ff;
+  text-decoration: none;
+}
+
+a.link-cyan:hover {
+  color: #33dcff;
+  text-decoration: underline;
+}
+
+/* Accordion Forseti Theme */
+.accordion-forseti .accordion-item {
+  background: #16213e;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  margin-bottom: 10px;
+}
+
+.accordion-forseti .accordion-button {
+  background: #16213e;
+  color: #00d4ff;
+  border: none;
+}
+
+.accordion-forseti .accordion-button:not(.collapsed) {
+  background: #1a1a2e;
+  color: #00d4ff;
+}
+
+.accordion-forseti .accordion-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+}
+
+.accordion-forseti .accordion-button::after {
+  filter: brightness(0) saturate(100%) invert(68%) sepia(82%) saturate(1974%) hue-rotate(156deg);
+}
+
+.accordion-forseti .accordion-body {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border-top: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* Talk with Forseti Section */
+.talk-with-forseti-section {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-top: 2px solid rgba(0, 212, 255, 0.3);
+  border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+.forseti-chat-preview {
+  text-align: center;
+  padding: 2rem;
+}
+
+.chat-icon-wrapper {
+  display: inline-block;
+  padding: 2rem;
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 50%;
+  border: 3px solid #00d4ff;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.forseti-chat-icon {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.6));
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+.forseti-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.forseti-features-list li {
+  padding: 0.5rem 0;
+  font-size: 1.1rem;
+  color: #e8e8e8;
+}
+
+.talk-with-forseti-section h2 {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.talk-with-forseti-section .lead {
+  color: #e8e8e8;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+/* Hero CTA Buttons Enhancement */
+.cta-buttons {
+  margin-top: 2rem;
+}
+
+.cta-buttons .btn-primary {
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  border: none;
+  color: #0f172a;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+
+.cta-buttons .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+  background: linear-gradient(135deg, #33dcff 0%, #00b8e6 100%);
+}
+
+/* Social Auth in Login/Register Forms */
+.card-forseti .social-auth-login a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-forseti .social-auth-login a:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}

@@ -1,0 +1,25 @@
+uuid: 5becef76-9b74-4098-b615-3881a039ac33
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_resource_control
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_resource_control
+field_name: field_resource_control
+entity_type: node
+bundle: evaluated_entity
+label: 'Resource Control'
+description: 'Power level (0-9) for Resource Control dimension'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

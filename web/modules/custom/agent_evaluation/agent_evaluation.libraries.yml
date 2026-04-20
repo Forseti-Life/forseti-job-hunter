@@ -1,0 +1,37 @@
+chat-interface:
+  version: 1.x
+  js:
+    js/chat-interface.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - forseti/main
+
+user-conversations-block:
+  version: 1.x
+  css:
+    theme:
+      css/user-conversations-block.css: {}
+  dependencies:
+    - core/drupal
+
+evaluated-entity:
+  version: 4.6
+  css:
+    theme:
+      css/evaluated-entity.css: {}
+  js:
+    js/power-radar-chart.js: {}
+    js/entity-evaluation-loader.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - agent_evaluation/chart-js
+
+chart-js:
+  version: 4.4.0
+  js:
+    https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js: { type: external }
+  dependencies:
+    - core/drupal

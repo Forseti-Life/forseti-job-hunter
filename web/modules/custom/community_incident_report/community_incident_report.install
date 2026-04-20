@@ -1,0 +1,252 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Community Incident Report module.
+ */
+
+use Drupal\node\Entity\NodeType;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_install().
+ */
+function community_incident_report_install() {
+  _community_incident_report_create_taxonomy();
+  _community_incident_report_create_content_type();
+  _community_incident_report_create_fields();
+  _community_incident_report_set_permissions();
+  \Drupal::logger('community_incident_report')->notice('Community Incident Report module installed.');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function community_incident_report_uninstall() {
+  // Remove nodes of this type.
+  $nids = \Drupal::entityQuery('node')
+    ->condition('type', 'community_incident')
+    ->accessCheck(FALSE)
+    ->execute();
+  if ($nids) {
+    $storage = \Drupal::entityTypeManager()->getStorage('node');
+    $nodes = $storage->loadMultiple($nids);
+    $storage->delete($nodes);
+  }
+
+  // Remove content type.
+  $node_type = NodeType::load('community_incident');
+  if ($node_type) {
+    $node_type->delete();
+  }
+
+  // Remove taxonomy terms then vocabulary.
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')
+    ->loadByProperties(['vid' => 'incident_type']);
+  foreach ($terms as $term) {
+    $term->delete();
+  }
+  $vocab = Vocabulary::load('incident_type');
+  if ($vocab) {
+    $vocab->delete();
+  }
+}
+
+/**
+ * Create the incident_type taxonomy vocabulary and default terms.
+ */
+function _community_incident_report_create_taxonomy() {
+  if (!Vocabulary::load('incident_type')) {
+    Vocabulary::create([
+      'vid' => 'incident_type',
+      'name' => 'Incident Type',
+      'description' => 'Types of community safety incidents.',
+    ])->save();
+    \Drupal::logger('community_incident_report')->notice('Created incident_type vocabulary.');
+  }
+
+  $terms = [
+    'unsafe_lighting' => 'Unsafe Lighting',
+    'suspicious_activity' => 'Suspicious Activity',
+    'hazard' => 'Hazard',
+    'other' => 'Other',
+  ];
+
+  foreach ($terms as $machine => $label) {
+    $existing = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['vid' => 'incident_type', 'name' => $label]);
+    if (empty($existing)) {
+      Term::create([
+        'vid' => 'incident_type',
+        'name' => $label,
+        'langcode' => 'en',
+      ])->save();
+    }
+  }
+}
+
+/**
+ * Create the community_incident content type.
+ */
+function _community_incident_report_create_content_type() {
+  if (NodeType::load('community_incident')) {
+    return;
+  }
+  NodeType::create([
+    'type' => 'community_incident',
+    'name' => 'Community Incident',
+    'description' => 'A community-submitted safety observation.',
+    'settings' => [
+      'node' => [
+        'options' => [
+          'status' => FALSE,
+          'promote' => FALSE,
+          'sticky' => FALSE,
+          'revision' => FALSE,
+        ],
+        'preview' => DRUPAL_DISABLED,
+        'submitted' => FALSE,
+      ],
+    ],
+  ])->save();
+  \Drupal::logger('community_incident_report')->notice('Created community_incident content type.');
+}
+
+/**
+ * Create fields for the community_incident content type.
+ */
+function _community_incident_report_create_fields() {
+  $entity_type = 'node';
+  $bundle = 'community_incident';
+
+  $fields = [
+    'field_ci_description' => [
+      'type' => 'text_long',
+      'cardinality' => 1,
+      'label' => 'Description',
+      'description' => 'Describe what you observed.',
+      'required' => TRUE,
+    ],
+    'field_ci_incident_type' => [
+      'type' => 'entity_reference',
+      'cardinality' => 1,
+      'label' => 'Incident Type',
+      'description' => 'Category of the safety incident.',
+      'required' => TRUE,
+      'settings' => [
+        'target_type' => 'taxonomy_term',
+        'handler' => 'default:taxonomy_term',
+        'handler_settings' => [
+          'target_bundles' => ['incident_type' => 'incident_type'],
+          'auto_create' => FALSE,
+        ],
+      ],
+    ],
+    'field_ci_location' => [
+      'type' => 'string',
+      'cardinality' => 1,
+      'label' => 'Location / Address',
+      'description' => 'Where did this occur? (address or cross streets)',
+      'required' => FALSE,
+      'settings' => ['max_length' => 255],
+    ],
+    'field_ci_occurred_at' => [
+      'type' => 'datetime',
+      'cardinality' => 1,
+      'label' => 'When did this occur?',
+      'description' => 'Date and time of the incident.',
+      'required' => FALSE,
+      'settings' => ['datetime_type' => 'datetime'],
+    ],
+    'field_ci_photo' => [
+      'type' => 'image',
+      'cardinality' => 1,
+      'label' => 'Photo (optional)',
+      'description' => 'Upload a photo of the hazard or area (max 5 MB).',
+      'required' => FALSE,
+      'settings' => [
+        'uri_scheme' => 'public',
+        'default_image' => [],
+        'column_groups' => [],
+      ],
+    ],
+  ];
+
+  foreach ($fields as $field_name => $config) {
+    // Create field storage if not exists.
+    if (!FieldStorageConfig::loadByName($entity_type, $field_name)) {
+      $storage_config = [
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'type' => $config['type'],
+        'cardinality' => $config['cardinality'],
+      ];
+      if (!empty($config['settings'])) {
+        // For entity_reference, settings go on storage.
+        if ($config['type'] === 'entity_reference') {
+          $storage_config['settings'] = ['target_type' => $config['settings']['target_type']];
+        }
+        elseif ($config['type'] === 'string') {
+          $storage_config['settings'] = ['max_length' => $config['settings']['max_length']];
+        }
+        elseif ($config['type'] === 'datetime') {
+          $storage_config['settings'] = ['datetime_type' => $config['settings']['datetime_type']];
+        }
+      }
+      FieldStorageConfig::create($storage_config)->save();
+    }
+
+    // Create field instance on bundle if not exists.
+    if (!FieldConfig::loadByName($entity_type, $bundle, $field_name)) {
+      $instance_config = [
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'bundle' => $bundle,
+        'label' => $config['label'],
+        'description' => $config['description'] ?? '',
+        'required' => $config['required'] ?? FALSE,
+      ];
+      if ($config['type'] === 'entity_reference') {
+        $instance_config['settings'] = [
+          'handler' => $config['settings']['handler'],
+          'handler_settings' => $config['settings']['handler_settings'],
+        ];
+      }
+      if ($config['type'] === 'image') {
+        $instance_config['settings'] = [
+          'file_extensions' => 'jpg jpeg png gif webp',
+          'max_filesize' => '5 MB',
+          'alt_field' => FALSE,
+          'alt_field_required' => FALSE,
+          'title_field' => FALSE,
+          'title_field_required' => FALSE,
+        ];
+      }
+      FieldConfig::create($instance_config)->save();
+    }
+  }
+
+  \Drupal::logger('community_incident_report')->notice('Created fields for community_incident.');
+}
+
+/**
+ * Set default role permissions.
+ */
+function _community_incident_report_set_permissions() {
+  $anon = Role::load('anonymous');
+  if ($anon) {
+    $anon->grantPermission('view community incident reports');
+    $anon->save();
+  }
+  $auth = Role::load('authenticated');
+  if ($auth) {
+    $auth->grantPermission('submit community incident reports');
+    $auth->grantPermission('view community incident reports');
+    $auth->save();
+  }
+}

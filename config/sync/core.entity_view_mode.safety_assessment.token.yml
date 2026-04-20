@@ -1,0 +1,11 @@
+uuid: 4788a8b8-730c-48be-97d8-3fe5e40f88a3
+langcode: en
+status: true
+dependencies:
+  module:
+    - safety_calculator
+id: safety_assessment.token
+label: Token
+description: null
+targetEntityType: safety_assessment
+cache: true

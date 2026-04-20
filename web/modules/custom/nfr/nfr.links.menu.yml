@@ -1,0 +1,14 @@
+nfr.dashboard:
+  title: 'NFR Dashboard'
+  route_name: nfr.dashboard
+  parent: system.admin
+  description: 'National Firefighter Registry Dashboard'
+  weight: 10
+
+nfr.admin_settings:
+  title: 'NFR Settings'
+  route_name: nfr.admin_settings
+  parent: system.admin_config
+  description: 'Configure National Firefighter Registry settings'
+  weight: 10
+

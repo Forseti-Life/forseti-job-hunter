@@ -1,0 +1,25 @@
+uuid: 6d809178-ef00-4381-9da0-727963fb13b6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_classification
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_classification
+field_name: field_sub_classification
+entity_type: node
+bundle: evaluated_entity
+label: Classification
+description: 'Sub-dimension power level (0-9) for Classification'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

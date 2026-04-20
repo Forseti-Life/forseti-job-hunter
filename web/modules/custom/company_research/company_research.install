@@ -1,0 +1,255 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Company Research module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_schema().
+ */
+function company_research_schema() {
+  $schema = [];
+
+  // Table for storing company research results.
+  $schema['company_research_results'] = [
+    'description' => 'Stores company research results including ATS detection and authentication analysis',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique research record ID',
+      ],
+      'company_name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Company name',
+      ],
+      'company_domain' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'Company domain (e.g., acme.com)',
+      ],
+      'research_date' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Timestamp when research was conducted',
+      ],
+      'careers_page_urls' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'JSON array of careers page URLs',
+      ],
+      'ats_platform' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'description' => 'Detected ATS platform name',
+      ],
+      'ats_version' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'description' => 'ATS platform version',
+      ],
+      'ats_confidence_level' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'description' => 'Detection confidence: high, medium, low',
+      ],
+      'auth_methods' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'JSON array of authentication methods',
+      ],
+      'verification_requirements' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'JSON object of verification requirements',
+      ],
+      'captcha_type' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'description' => 'Type of CAPTCHA detected',
+      ],
+      'automation_readiness' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'description' => 'Automation readiness level: ready, partial, manual',
+      ],
+      'metadata' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'JSON object with additional metadata',
+      ],
+      'created_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Creation timestamp',
+      ],
+      'updated_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Last update timestamp',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'company_name' => ['company_name'],
+      'ats_platform' => ['ats_platform'],
+      'automation_readiness' => ['automation_readiness'],
+      'research_date' => ['research_date'],
+    ],
+  ];
+
+  // Reference table for known ATS platforms.
+  $schema['company_research_ats_platforms'] = [
+    'description' => 'Reference table for known ATS platforms and detection patterns',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique platform ID',
+      ],
+      'platform_name' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'description' => 'Platform name',
+      ],
+      'platform_slug' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'description' => 'Platform slug for URL-safe identifier',
+      ],
+      'vendor' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'description' => 'Platform vendor/company',
+      ],
+      'detection_patterns' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'JSON object with detection patterns (domains, selectors, scripts)',
+      ],
+      'created_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Creation timestamp',
+      ],
+      'updated_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Last update timestamp',
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'platform_slug' => ['platform_slug'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function company_research_install() {
+  // Seed ATS platform reference data.
+  _company_research_seed_ats_platforms();
+}
+
+/**
+ * Seeds the ATS platforms reference table with known platforms.
+ */
+function _company_research_seed_ats_platforms() {
+  $platforms = [
+    [
+      'platform_name' => 'Workday',
+      'platform_slug' => 'workday',
+      'vendor' => 'Workday, Inc.',
+      'detection_patterns' => json_encode([
+        'domains' => ['workday.com'],
+        'selectors' => ['[data-automation-id*="workday"]', '.WORKDAY-theme'],
+        'scripts' => ['workday.js', 'wd-'],
+        'meta_patterns' => ['Workday'],
+      ]),
+    ],
+    [
+      'platform_name' => 'Greenhouse',
+      'platform_slug' => 'greenhouse',
+      'vendor' => 'Greenhouse Software, Inc.',
+      'detection_patterns' => json_encode([
+        'domains' => ['greenhouse.io', 'boards.greenhouse.io'],
+        'selectors' => ['#grnhse_app', '.greenhouse-application'],
+        'scripts' => ['greenhouse.io'],
+        'meta_patterns' => ['Greenhouse'],
+      ]),
+    ],
+    [
+      'platform_name' => 'Oracle Taleo',
+      'platform_slug' => 'taleo',
+      'vendor' => 'Oracle Corporation',
+      'detection_patterns' => json_encode([
+        'domains' => ['taleo.net'],
+        'selectors' => ['#taleo-', '.taleoContent'],
+        'scripts' => ['taleo.net'],
+        'meta_patterns' => ['Taleo', 'Oracle'],
+      ]),
+    ],
+    [
+      'platform_name' => 'Lever',
+      'platform_slug' => 'lever',
+      'vendor' => 'Lever, Inc.',
+      'detection_patterns' => json_encode([
+        'domains' => ['lever.co'],
+        'selectors' => ['.lever-jobs', '[data-lever]'],
+        'scripts' => ['lever.co'],
+        'meta_patterns' => ['Lever'],
+      ]),
+    ],
+    [
+      'platform_name' => 'SmartRecruiters',
+      'platform_slug' => 'smartrecruiters',
+      'vendor' => 'SmartRecruiters, Inc.',
+      'detection_patterns' => json_encode([
+        'domains' => ['smartrecruiters.com'],
+        'selectors' => ['#st-app', '.smartrecruiters'],
+        'scripts' => ['smartrecruiters.com'],
+        'meta_patterns' => ['SmartRecruiters'],
+      ]),
+    ],
+    [
+      'platform_name' => 'iCIMS',
+      'platform_slug' => 'icims',
+      'vendor' => 'iCIMS, Inc.',
+      'detection_patterns' => json_encode([
+        'domains' => ['icims.com'],
+        'selectors' => ['.icims-', '#icims-'],
+        'scripts' => ['icims.com'],
+        'meta_patterns' => ['iCIMS'],
+      ]),
+    ],
+  ];
+
+  $database = Database::getConnection();
+  $timestamp = time();
+
+  foreach ($platforms as $platform) {
+    $database->insert('company_research_ats_platforms')
+      ->fields([
+        'platform_name' => $platform['platform_name'],
+        'platform_slug' => $platform['platform_slug'],
+        'vendor' => $platform['vendor'],
+        'detection_patterns' => $platform['detection_patterns'],
+        'created_at' => $timestamp,
+        'updated_at' => $timestamp,
+      ])
+      ->execute();
+  }
+}

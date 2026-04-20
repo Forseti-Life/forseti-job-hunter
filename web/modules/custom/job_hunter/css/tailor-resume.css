@@ -1,0 +1,1034 @@
+/* Tailor Resume Styles */
+
+/* Utility Classes */
+.hidden {
+  display: none;
+}
+
+/* Main Container */
+.tailor-resume {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ================================================== */
+/* STATUS HEADER - Main control center at top */
+/* ================================================== */
+
+.tailor-resume-status-header {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-header--status-pending {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+}
+
+.status-header--status-queued {
+  background: linear-gradient(135deg, #744210 0%, #d69e2e 100%);
+}
+
+.status-header--status-processing {
+  background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
+}
+
+.status-header--status-completed {
+  background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+}
+
+.status-header--status-failed {
+  background: linear-gradient(135deg, #b71c1c 0%, #e53935 100%);
+}
+
+.status-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Job Info */
+.status-job-info h2 {
+  margin: 0;
+  font-size: 1.5em;
+  color: white;
+}
+
+.status-job-info .company-name {
+  opacity: 0.9;
+  font-size: 1.1em;
+  display: block;
+  margin: 5px 0;
+}
+
+.status-job-info .job-url-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.status-job-info .job-url-link:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+
+.status-icon {
+  font-size: 2em;
+}
+
+.status-details {
+  flex: 1;
+}
+
+.status-label {
+  display: block;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.status-description {
+  display: block;
+  opacity: 0.9;
+  font-size: 0.95em;
+}
+
+.match-score-badge {
+  background: white;
+  color: #1b5e20;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.match-score-badge .score-value {
+  display: block;
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.match-score-badge .score-label {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* Progress Steps */
+.status-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 10px 0;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.progress-step.step-active {
+  opacity: 1;
+}
+
+.step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9em;
+  transition: all 0.3s;
+}
+
+.step-active .step-dot {
+  background: white;
+  color: #1a365d;
+}
+
+.step-complete .step-dot {
+  background: #48bb78;
+  color: white;
+}
+
+.step-complete .step-dot::after {
+  content: '✓';
+  font-size: 1.1em;
+}
+
+.step-complete .step-dot {
+  font-size: 0;
+}
+
+.step-label {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-line {
+  width: 60px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 5px;
+  margin-bottom: 20px;
+  transition: background 0.3s;
+}
+
+.progress-line.line-active {
+  background: white;
+}
+
+/* Job Reference Box */
+.job-reference-box {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reference-item {
+  color: white;
+  font-size: 0.95em;
+}
+
+.reference-item strong {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.reference-item a {
+  color: white;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.reference-item a:hover {
+  opacity: 0.8;
+}
+
+/* Status Controls */
+.status-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 1.05em;
+}
+
+.btn-icon {
+  font-size: 1.1em;
+}
+
+.btn-primary {
+  background: #0073aa;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #38a169;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-outline:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-link {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+}
+
+.btn-link:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+/* Spinner for processing state */
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.secondary-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Status Message */
+.status-message {
+  margin-top: 15px;
+  padding: 12px 18px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.status-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* PDF History Section */
+.pdf-history-section {
+  margin-bottom: 20px;
+}
+
+.pdf-history-details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.pdf-history-summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pdf-history-summary:hover {
+  background: #f1f5f9;
+}
+
+.pdf-history-title {
+  font-weight: 600;
+  color: #334155;
+}
+
+.pdf-history-list {
+  padding: 0 16px 16px;
+}
+
+/* ================================================== */
+/* OLD HEADER STYLES - kept for compatibility */
+/* ================================================== */
+
+/* Header */
+.tailor-resume-header {
+  margin-bottom: 20px;
+}
+
+.tailor-resume-header h2 {
+  margin-bottom: 5px;
+}
+
+.job-target {
+  color: #666;
+  font-size: 1.1em;
+  margin: 0;
+}
+
+/* Actions Bar */
+.tailor-resume-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.tailor-resume-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
+
+.tailor-resume-actions .button--primary {
+  background-color: #0073aa;
+  color: white;
+  border: none;
+}
+
+.tailor-resume-actions .button--primary:hover {
+  background-color: #005a87;
+}
+
+.tailor-resume-actions .button--secondary {
+  background-color: #f1f1f1;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.tailor-resume-actions .button--secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.button-icon {
+  font-size: 1.1em;
+}
+
+/* Two Column Grid Layout */
+.tailor-resume-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .tailor-resume-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Components */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 15px 20px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #495057;
+  font-size: 1.1em;
+}
+
+.card-body {
+  padding: 15px;
+}
+
+/* Sections within cards */
+.section {
+  margin-bottom: 20px;
+}
+
+.section h4 {
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #333;
+}
+
+/* Job Details Definition List */
+.job-details {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 5px;
+}
+
+.job-details dt {
+  font-weight: 600;
+  color: #555;
+}
+
+.job-details dd {
+  margin: 0;
+}
+
+/* Skills List */
+.skills-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.skills-list li {
+  margin-bottom: 5px;
+}
+
+/* Keyword Tags */
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+/* Tailoring Action Section */
+.tailoring-action {
+  margin-top: 30px;
+}
+
+/* Tailored Resume Preview */
+.tailored-resume-preview {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+.tailored-resume-preview h4 {
+  margin-top: 0;
+}
+
+.tailored-resume-preview pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Development Notice */
+.development-notice {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+.development-notice ol {
+  margin: 10px 0 0 20px;
+}
+
+/* Tailoring Result (initially hidden) */
+#tailoring-result,
+#tailoring-results {
+  margin-top: 20px;
+}
+
+#tailoring-result.hidden,
+#tailoring-results.hidden {
+  display: none;
+}
+
+/* Action Buttons */
+.actions {
+  margin-top: 20px;
+}
+
+.actions .button {
+  margin-right: 10px;
+}
+
+/* Alert Styles */
+.alert {
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+/* Current Resume Section */
+.current-resume {
+  margin-bottom: 20px;
+}
+
+.current-resume h5 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.resume-content {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 5px;
+  border-left: 4px solid #28a745;
+  max-height: 400px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.resume-content h1, .resume-content h2, .resume-content h3, 
+.resume-content h4, .resume-content h5, .resume-content h6 {
+  color: #2c3e50;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.resume-content h1 {
+  font-size: 1.5rem;
+}
+
+.resume-content h2 {
+  font-size: 1.3rem;
+}
+
+.resume-content h3 {
+  font-size: 1.1rem;
+}
+
+.resume-content p {
+  margin-bottom: 10px;
+}
+
+.resume-content ul, .resume-content ol {
+  margin-bottom: 15px;
+  padding-left: 20px;
+}
+
+.resume-content li {
+  margin-bottom: 5px;
+}
+
+.breadcrumb {
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+
+.job-description,
+.job-requirements,
+.skills-required {
+  margin-bottom: 20px;
+}
+
+.job-description h5,
+.job-requirements h5,
+.skills-required h5 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.description-content,
+.requirements-content,
+.skills-content {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #007bff;
+}
+
+.tailoring-options {
+  margin-bottom: 20px;
+}
+
+.tailoring-options h5 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.form-check {
+  margin-bottom: 10px;
+}
+
+.form-check-label {
+  color: #495057;
+}
+
+.tailoring-actions button {
+  width: 100%;
+}
+
+#tailoring-status .alert {
+  margin-bottom: 0;
+}
+
+.tailored-resume-preview h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+#resume-content {
+  min-height: 200px;
+  font-family: 'Times New Roman', serif;
+  line-height: 1.6;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.resume-actions button {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .tailor-resume {
+    padding: 10px;
+  }
+  
+  .resume-actions {
+    flex-direction: column;
+  }
+  
+  .resume-actions button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+/* Loading animation */
+.fa-spinner.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+
+/* Skills Gap Analysis Section */
+.skills-gap-section {
+  margin-bottom: 30px;
+}
+
+.skills-gap-section .card {
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.skills-gap-section .card-header {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  padding: 15px 20px;
+  border-bottom: 1px solid #ffc107;
+}
+
+.skills-gap-section .card-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+  color: #664d03;
+}
+
+.skills-gap-section .card-body {
+  padding: 20px;
+}
+
+.skills-gap-group {
+  margin-bottom: 25px;
+}
+
+.skills-gap-group:last-child {
+  margin-bottom: 0;
+}
+
+.skills-gap-group h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.skill-gap-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.skill-gap-item:hover {
+  border-color: #0073aa;
+  box-shadow: 0 2px 4px rgba(0, 115, 170, 0.1);
+}
+
+.skill-gap-item.skill-added {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.skill-gap-item span {
+  font-weight: 500;
+  color: #333;
+}
+
+.add-skill-btn {
+  padding: 6px 14px;
+  background: #0073aa;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.add-skill-btn:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+}
+
+.add-skill-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.skill-added-indicator {
+  padding: 6px 14px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.skills-gap-actions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.skills-gap-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+#add-all-must-have-skills {
+  background: #dc3545;
+  color: white;
+}
+
+#add-all-must-have-skills:hover {
+  background: #c82333;
+}
+
+#add-all-skills {
+  background: #28a745;
+  color: white;
+}
+
+#add-all-skills:hover {
+  background: #218838;
+}
+
+.skills-gap-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.skills-gap-actions button.btn-success {
+  background: #4caf50 !important;
+}
+
+/* Refresh Skills Gap button */
+#refresh-skills-gap {
+  background: transparent;
+  border: 2px solid #6c757d;
+  color: #6c757d;
+}
+
+#refresh-skills-gap:hover {
+  background: #6c757d;
+  color: white;
+}
+
+/* Responsive for skills gap */
+@media (max-width: 768px) {
+  .skill-gap-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .add-skill-btn,
+  .skill-added-indicator {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .skills-gap-actions {
+    flex-direction: column;
+  }
+  
+  .skills-gap-actions button {
+    width: 100%;
+  }
+}
+/* ================================================================
+   Side-by-side resume comparison (AC-1)
+   ================================================================ */
+.resume-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.resume-column {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.resume-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.resume-column-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.resume-column--tailored .resume-column-header {
+  background: #e8f4fd;
+}
+
+.resume-column-body {
+  padding: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* AC-4: Confidence score badge */
+.confidence-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* AC-3: Save-to-profile form inline */
+.save-resume-form {
+  display: inline;
+}
+
+/* AC-1: Stack columns on narrow viewports */
+@media (max-width: 767px) {
+  .resume-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}

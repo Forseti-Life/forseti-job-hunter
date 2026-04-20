@@ -1,0 +1,249 @@
+/**
+ * @file
+ * Professional Breadcrumb Styles for St. Louis Integration
+ */
+
+.professional-breadcrumb {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-bottom: 1px solid rgba(100, 181, 246, 0.2);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+
+  // Subtle animated background
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.1), transparent);
+    animation: breadcrumbShimmer 3s infinite;
+    z-index: 1;
+  }
+
+  .breadcrumb-container {
+    position: relative;
+    z-index: 2;
+  }
+
+  .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+  }
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #b0bec5;
+    
+    &.active {
+      color: #64b5f6;
+      font-weight: 600;
+    }
+
+    &:not(:last-child) {
+      margin-right: 0.75rem;
+    }
+  }
+
+  .breadcrumb-link {
+    color: #90caf9;
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover,
+    &:focus {
+      color: #ffffff;
+      background: rgba(100, 181, 246, 0.2);
+      border-color: rgba(100, 181, 246, 0.3);
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(100, 181, 246, 0.2);
+    }
+
+    &.home-link {
+      background: rgba(100, 181, 246, 0.15);
+      border-color: rgba(100, 181, 246, 0.2);
+      
+      i {
+        font-size: 1rem;
+        color: #64b5f6;
+      }
+
+      &:hover,
+      &:focus {
+        background: rgba(100, 181, 246, 0.3);
+        border-color: rgba(100, 181, 246, 0.5);
+        
+        i {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .breadcrumb-current {
+    color: #64b5f6;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    background: rgba(100, 181, 246, 0.1);
+    border: 1px solid rgba(100, 181, 246, 0.2);
+    border-radius: 4px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #64b5f6, #42a5f5);
+      border-radius: 0 0 4px 4px;
+    }
+  }
+
+  .breadcrumb-separator {
+    color: #546e7a;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin: 0 0.25rem;
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+
+  // Hover effect on the entire breadcrumb item
+  .breadcrumb-item:hover .breadcrumb-separator i {
+    transform: translateX(2px);
+  }
+}
+
+// Animation for the shimmer effect
+@keyframes breadcrumbShimmer {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .professional-breadcrumb {
+    padding: 0.75rem 0;
+    margin-bottom: 1.5rem;
+
+    .breadcrumb {
+      font-size: 0.8rem;
+      gap: 0.25rem;
+    }
+
+    .breadcrumb-item {
+      font-size: 0.8rem;
+      
+      &:not(:last-child) {
+        margin-right: 0.5rem;
+      }
+    }
+
+    .breadcrumb-link,
+    .breadcrumb-current {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    .breadcrumb-separator {
+      margin: 0 0.15rem;
+      font-size: 0.6rem;
+    }
+  }
+}
+
+// Dark theme integration
+@media (prefers-color-scheme: dark) {
+  .professional-breadcrumb {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+    border-color: rgba(100, 181, 246, 0.3);
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .professional-breadcrumb {
+    .breadcrumb-link {
+      border: 2px solid #64b5f6;
+      
+      &:hover,
+      &:focus {
+        border-color: #ffffff;
+        background: #64b5f6;
+        color: #000000;
+      }
+    }
+
+    .breadcrumb-current {
+      border: 2px solid #64b5f6;
+      background: #64b5f6;
+      color: #000000;
+    }
+  }
+}
+
+// Focus management for accessibility
+.professional-breadcrumb {
+  .breadcrumb-link:focus {
+    outline: 2px solid #64b5f6;
+    outline-offset: 2px;
+  }
+}
+
+// Print styles
+@media print {
+  .professional-breadcrumb {
+    background: none !important;
+    border: 1px solid #000000;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    page-break-inside: avoid;
+
+    .breadcrumb-link,
+    .breadcrumb-current {
+      background: none !important;
+      color: #000000 !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    .breadcrumb-separator {
+      color: #000000 !important;
+    }
+
+    &::before {
+      display: none;
+    }
+  }
+}

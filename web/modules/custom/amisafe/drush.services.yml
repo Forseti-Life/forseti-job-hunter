@@ -1,0 +1,6 @@
+services:
+  amisafe.commands:
+    class: \Drupal\amisafe\Commands\H3PrecomputationCommands
+    arguments: ['@amisafe.h3_precomputation']
+    tags:
+      - { name: drush.command }

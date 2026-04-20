@@ -1,0 +1,30 @@
+{#
+/**
+ * @file
+ * NFR Documentation Page Template
+ *
+ * Available variables:
+ * - title: Page title
+ * - content: Rendered markdown content
+ * - file_info: Information about the file
+ */
+#}
+<div class="container-fluid my-4">
+  <div class="row">
+    <aside class="col-lg-3 col-md-4 mb-4">
+      {{ drupal_block('nfr_navigation') }}
+    </aside>
+    
+    <main class="col-lg-9 col-md-8">
+      <div class="nfr-documentation-page">
+        <nav class="breadcrumb-nav">
+          <a href="/nfr/documentation">← {{ 'Back to Documentation Index'|t }}</a>
+        </nav>
+
+        <article class="markdown-content">
+          {{ content|raw }}
+        </article>
+      </div>
+    </main>
+  </div>
+</div>

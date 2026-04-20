@@ -1,0 +1,13 @@
+uuid: 56ba9f91-0b57-49c7-acfe-6f78352a381d
+langcode: en
+status: true
+dependencies: {  }
+id: default
+label: 'Forseti Analytics'
+weight: 0
+tag_container_ids:
+  - G-41QXRELBPB
+advanced_settings: {  }
+dimensions_metrics: {  }
+conditions: {  }
+events: {  }

@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Contains company_research.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function company_research_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.company_research':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Company Research module automates the discovery of company career pages, identifies their Application Tracking System (ATS) platform, and analyzes authentication requirements for account creation.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Researching Companies') . '</dt>';
+      $output .= '<dd>' . t('Enter a company name to automatically discover their careers pages, detect which ATS platform they use (Workday, Greenhouse, Taleo, etc.), and analyze their authentication methods.') . '</dd>';
+      $output .= '<dt>' . t('Automation Assessment') . '</dt>';
+      $output .= '<dd>' . t('Get an automation readiness score to understand how easily you can automate job applications for that company.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function company_research_theme() {
+  return [
+    'company_research_results' => [
+      'variables' => [
+        'company_name' => NULL,
+        'results' => NULL,
+      ],
+      'template' => 'company-research-results',
+    ],
+  ];
+}

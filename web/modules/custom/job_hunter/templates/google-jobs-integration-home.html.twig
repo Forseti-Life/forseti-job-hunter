@@ -1,0 +1,231 @@
+{#
+/**
+ * @file
+ * Template for Google Jobs Integration home page.
+ *
+ * Available variables:
+ * - stats: Statistics array with integration metrics.
+ * - recent_jobs: Array of recent job postings with sync status.
+ * - documentation_url: URL to the integration documentation.
+ */
+#}
+
+<div class="google-jobs-integration-home">
+  
+  {# Header Section #}
+  <div class="integration-header">
+    <h1>Google for Jobs Integration</h1>
+    <p class="lead">
+      Enhance your job postings' visibility in Google Search with Schema.org structured data.
+    </p>
+    <div class="header-actions">
+      <a href="{{ documentation_url }}" class="btn btn-primary">
+        <i class="bi bi-book"></i> View Integration Guide
+      </a>
+      <button class="btn btn-secondary" id="refresh-stats">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Statistics
+      </button>
+    </div>
+  </div>
+
+  {# Statistics Dashboard #}
+  <div class="statistics-dashboard row">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="bi bi-briefcase"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.total_jobs }}</h3>
+          <p>Total Job Postings</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stat-card stat-enabled">
+        <div class="stat-icon">
+          <i class="bi bi-toggle-on"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.enabled_count }}</h3>
+          <p>Google Jobs Enabled</p>
+          <small>{{ stats.total_jobs > 0 ? ((stats.enabled_count / stats.total_jobs) * 100)|round(1) : 0 }}%</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stat-card stat-valid">
+        <div class="stat-icon">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.valid_count }}</h3>
+          <p>Valid Structured Data</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stat-card stat-invalid">
+        <div class="stat-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.invalid_count }}</h3>
+          <p>Needs Attention</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Performance Metrics #}
+  <div class="performance-metrics row mt-4">
+    <div class="col-md-4">
+      <div class="metric-card">
+        <h4><i class="bi bi-google"></i> Indexed by Google</h4>
+        <div class="metric-value">{{ stats.indexed_count }}</div>
+        <div class="metric-detail">
+          {{ stats.enabled_count > 0 ? ((stats.indexed_count / stats.enabled_count) * 100)|round(1) : 0 }}% of enabled jobs
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="metric-card">
+        <h4><i class="bi bi-eye"></i> Total Impressions</h4>
+        <div class="metric-value">{{ stats.total_impressions|number_format }}</div>
+        <div class="metric-detail">
+          From Google Search results
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="metric-card">
+        <h4><i class="bi bi-cursor"></i> Total Clicks</h4>
+        <div class="metric-value">{{ stats.total_clicks|number_format }}</div>
+        <div class="metric-detail">
+          CTR: {{ stats.ctr }}%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Recent Job Postings #}
+  <div class="recent-jobs-section mt-5">
+    <h2>Recent Job Postings</h2>
+    
+    {% if recent_jobs %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Company</th>
+              <th>Posted</th>
+              <th>Status</th>
+              <th>Indexing</th>
+              <th>Performance</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in recent_jobs %}
+              <tr data-job-id="{{ job.id }}">
+                <td>
+                  <a href="{{ job.view_url }}">{{ job.title }}</a>
+                </td>
+                <td>{{ job.company }}</td>
+                <td>{{ job.created|date('M d, Y') }}</td>
+                <td>
+                  {% if job.enabled %}
+                    <span class="badge badge-sync-{{ job.validation_status }}">
+                      {{ job.validation_status|capitalize }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">Disabled</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-index-{{ job.indexing_status }}">
+                    {{ job.indexing_status|replace({'_': ' '})|capitalize }}
+                  </span>
+                </td>
+                <td>
+                  <small>
+                    <i class="bi bi-eye"></i> {{ job.impressions }}<br>
+                    <i class="bi bi-cursor"></i> {{ job.clicks }}
+                  </small>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary btn-validate" 
+                            data-job-id="{{ job.id }}"
+                            title="Validate Structured Data">
+                      <i class="bi bi-check2-square"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-generate" 
+                            data-job-id="{{ job.id }}"
+                            title="Generate Structured Data">
+                      <i class="bi bi-code-square"></i>
+                    </button>
+                    <button class="btn btn-outline-{{ job.enabled ? 'danger' : 'success' }} btn-toggle" 
+                            data-job-id="{{ job.id }}"
+                            data-enabled="{{ job.enabled }}"
+                            title="{{ job.enabled ? 'Disable' : 'Enable' }} Google Jobs">
+                      <i class="bi bi-toggle-{{ job.enabled ? 'on' : 'off' }}"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No job postings found. 
+        <a href="/jobhunter/jobs/paste">Create your first job posting</a> to get started with Google for Jobs integration.
+      </div>
+    {% endif %}
+  </div>
+
+  {# Quick Actions #}
+  <div class="quick-actions mt-4">
+    <h3>Quick Actions</h3>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="action-card">
+          <i class="bi bi-file-earmark-plus"></i>
+          <h4>Add New Job</h4>
+          <p>Create a new job posting with automatic Google Jobs integration.</p>
+          <a href="/jobhunter/jobs/paste" class="btn btn-primary">Add Job</a>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="action-card">
+          <i class="bi bi-check-all"></i>
+          <h4>Validate All Jobs</h4>
+          <p>Run validation on all enabled job postings.</p>
+          <button class="btn btn-primary" id="validate-all">Validate All</button>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="action-card">
+          <i class="bi bi-book"></i>
+          <h4>Integration Guide</h4>
+          <p>Learn how to optimize your job postings for Google.</p>
+          <a href="{{ documentation_url }}" class="btn btn-primary">Read Guide</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Status Messages Container #}
+  <div id="status-messages" class="mt-3"></div>
+
+</div>

@@ -1,0 +1,15 @@
+{
+  "name": "job-hunter-playwright",
+  "version": "1.0.0",
+  "description": "Playwright automation bridge for job_hunter Drupal module",
+  "main": "apply.js",
+  "scripts": {
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "minimist": "^1.2.8",
+    "playwright": "^1.41.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

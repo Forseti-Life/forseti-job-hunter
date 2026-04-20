@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Theme override for a breadcrumb trail.
+ *
+ * Available variables:
+ * - breadcrumb: Breadcrumb trail items.
+ */
+#}
+{{ attach_library('forseti/professional_breadcrumb') }}
+{% if breadcrumb %}
+  <nav class="breadcrumb-wrapper professional-breadcrumb" role="navigation" aria-labelledby="system-breadcrumb">
+    <div class="container">
+      <div class="breadcrumb-container">
+        <h2 id="system-breadcrumb" class="visually-hidden">{{ 'Breadcrumb'|t }}</h2>
+        <ol class="breadcrumb">
+          {% for item in breadcrumb %}
+            <li class="breadcrumb-item{{ loop.last ? ' active' : '' }}">
+              {% if item.url %}
+                {% if loop.first %}
+                  <a href="{{ item.url }}" class="breadcrumb-link home-link">
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <span class="sr-only">{{ item.text }}</span>
+                  </a>
+                {% else %}
+                  <a href="{{ item.url }}" class="breadcrumb-link">
+                    {{ item.text }}
+                  </a>
+                {% endif %}
+              {% else %}
+                <span class="breadcrumb-current">
+                  {{ item.text }}
+                </span>
+              {% endif %}
+              {% if not loop.last %}
+                <span class="breadcrumb-separator" aria-hidden="true">
+                  <i class="fas fa-chevron-right"></i>
+                </span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+  </nav>
+{% endif %}

@@ -1,0 +1,25 @@
+uuid: 84ab92d4-b86d-461f-8926-b69804f7782c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_data_storage
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_data_storage
+field_name: field_sub_data_storage
+entity_type: node
+bundle: evaluated_entity
+label: 'Data Storage'
+description: 'Sub-dimension power level (0-9) for Data Storage'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

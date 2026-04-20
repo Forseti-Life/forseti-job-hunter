@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Template for Job Hunter navigation block.
+ *
+ * Available variables:
+ * - navigation: Array of navigation items, each with:
+ *   - title: Link title
+ *   - subtitle: Optional subtitle text
+ *   - url: URL object
+ *   - icon: Icon identifier
+ *   - weight: Sort weight
+ *   - classes: Optional additional CSS classes
+ */
+#}
+<nav class="job-hunter-navigation">
+  <h2 class="visually-hidden">{{ 'Job Hunter Navigation'|t }}</h2>
+  <ul class="job-hunter-nav-list">
+    {% for key, item in navigation %}
+      <li class="nav-item nav-item--{{ key }}{% if item.classes %} {{ item.classes }}{% endif %}">
+        <a href="{{ item.url }}" class="nav-link">
+          <span class="nav-icon nav-icon--{{ item.icon }}"></span>
+          <span class="nav-text">
+            <span class="nav-label">{{ item.title }}</span>
+            {% if item.subtitle %}
+              <span class="nav-subtitle">{{ item.subtitle }}</span>
+            {% endif %}
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>

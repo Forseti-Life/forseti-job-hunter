@@ -1,0 +1,103 @@
+/**
+ * @file
+ * Styles for Users Metrics summary cards.
+ */
+
+.users-metrics-summary-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.users-metrics-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: 0.75rem 1.25rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
+}
+
+.users-metrics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgb(0, 0, 0, 0.12);
+}
+
+.users-metrics-card__value {
+  color: #333;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.users-metrics-card__label {
+  margin-top: 0.25rem;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #666;
+  font-size: 0.75rem;
+}
+
+/* Card type variations */
+.users-metrics-card--total {
+  border-top: 3px solid #006fb0;
+}
+
+.users-metrics-card--total .users-metrics-card__value {
+  color: #006fb0;
+}
+
+.users-metrics-card--average {
+  border-top: 3px solid #579b17;
+}
+
+.users-metrics-card--average .users-metrics-card__value {
+  color: #579b17;
+}
+
+.users-metrics-card--peak {
+  border-top: 3px solid #f07c33;
+}
+
+.users-metrics-card--peak .users-metrics-card__value {
+  color: #f07c33;
+}
+
+.users-metrics-card--days {
+  border-top: 3px solid #9c27b0;
+}
+
+.users-metrics-card--days .users-metrics-card__value {
+  color: #9c27b0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .users-metrics-summary-cards {
+    justify-content: center;
+  }
+
+  .users-metrics-card {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 100px;
+  }
+
+  .users-metrics-card__value {
+    font-size: 1.5rem;
+  }
+
+  .users-metrics-card__label {
+    font-size: 0.65rem;
+  }
+}

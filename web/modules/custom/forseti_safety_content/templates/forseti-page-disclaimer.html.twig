@@ -1,0 +1,50 @@
+{#
+/**
+ * @file
+ * Template for Disclaimer page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - warnings: Array of warning items
+ * - no_guarantees: No guarantees section
+ * - user_responsibility: User responsibility section
+ * - liability_limitation: Liability limitation section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-danger mb-4">
+        <h4 class="mb-3"><strong>{{ 'IMPORTANT DISCLAIMERS'|t }}</strong></h4>
+        <p>{{ 'Please read these disclaimers carefully before using Forseti services.'|t }}</p>
+      </div>
+      
+      {% for warning in warnings %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ warning.icon }} {{ warning.title }}</h4>
+          <p class="mb-0">{{ warning.content }}</p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ no_guarantees.title }}</h2>
+      <p>{{ no_guarantees.content }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ user_responsibility.title }}</h2>
+      <p>{{ user_responsibility.content }}</p>
+      
+      <div class="alert alert-warning mt-4">
+        <h4>{{ liability_limitation.title }}</h4>
+        <p class="mb-0">{{ liability_limitation.content }}</p>
+      </div>
+      
+      <div class="alert alert-info mt-5">
+        <p class="mb-0">
+          {{ 'For the complete legal terms, see our '|t }}
+          <a href="/terms-of-service" class="alert-link">{{ 'Terms of Service'|t }}</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+uuid: 3e20fa0b-ec87-45f0-ba57-6978f9a43332
+langcode: en
+status: true
+dependencies: {  }
+id: family
+label: Family
+description: 'A group representing a family unit for coordinated safety monitoring'
+new_revision: true
+creator_membership: true
+creator_wizard: false
+creator_roles:
+  - family-family-admin

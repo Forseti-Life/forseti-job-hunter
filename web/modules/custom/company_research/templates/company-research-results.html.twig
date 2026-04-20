@@ -1,0 +1,268 @@
+{#
+/**
+ * @file
+ * Theme implementation for company research results.
+ *
+ * Available variables:
+ * - company_name: Company name
+ * - results: Research results array
+ */
+#}
+
+<div class="company-research-results">
+  <header class="results-header">
+    <h1>{{ company_name }}</h1>
+    <div class="research-date">
+      Research Date: {{ results.research_date|date('F j, Y g:i A') }}
+    </div>
+  </header>
+
+  {% if results.company_domain %}
+  <section class="company-info">
+    <h2>Company Information</h2>
+    <p><strong>Domain:</strong> <a href="https://www.{{ results.company_domain }}" target="_blank">{{ results.company_domain }}</a></p>
+  </section>
+  {% endif %}
+
+  <section class="careers-pages">
+    <h2>Careers Pages</h2>
+    {% if results.careers_page_urls and results.careers_page_urls|length > 0 %}
+      <ul class="careers-list">
+        {% for page in results.careers_page_urls %}
+          <li>
+            <a href="{{ page.url }}" target="_blank" rel="noopener">{{ page.url }}</a>
+            <span class="page-type badge">({{ page.type }})</span>
+            {% if page.accessible %}
+              <span class="accessibility badge badge-success">✓ Accessible</span>
+            {% else %}
+              <span class="accessibility badge badge-warning">✗ Not Accessible</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="no-results">No careers pages found.</p>
+    {% endif %}
+  </section>
+
+  {% if results.ats_platform %}
+  <section class="ats-detection">
+    <h2>ATS Platform</h2>
+    <div class="ats-info card">
+      <div class="platform-name"><strong>{{ results.ats_platform }}</strong></div>
+      {% if results.ats_version %}
+        <div class="platform-version">Version: {{ results.ats_version }}</div>
+      {% endif %}
+      <div class="confidence-badge badge badge-{{ results.ats_confidence_level }}">
+        Confidence: {{ results.ats_confidence_level|upper }}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if results.auth_methods %}
+  <section class="authentication">
+    <h2>Authentication</h2>
+    <div class="auth-methods card">
+      <h3>Supported Methods</h3>
+      <ul>
+        {% for method in results.auth_methods %}
+          <li>{{ method|replace({'_': ' '})|title }}</li>
+        {% endfor %}
+      </ul>
+
+      {% if results.captcha_type %}
+        <div class="captcha-info">
+          <h3>Bot Prevention</h3>
+          <p><strong>CAPTCHA Type:</strong> {{ results.captcha_type }}</p>
+        </div>
+      {% endif %}
+
+      <div class="verification">
+        <h3>Verification Requirements</h3>
+        <ul>
+          {% if results.verification_requirements.email_required %}
+            <li>✓ Email verification required</li>
+          {% else %}
+            <li>✗ Email verification not required</li>
+          {% endif %}
+          {% if results.verification_requirements.phone_required %}
+            <li>✓ Phone verification required</li>
+          {% else %}
+            <li>✗ Phone verification not required</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if results.automation_readiness %}
+  <section class="automation-readiness">
+    <h2>Automation Readiness</h2>
+    <div class="readiness-badge badge-large badge-{{ results.automation_readiness }}">
+      {{ results.automation_readiness|upper }}
+    </div>
+    <p class="readiness-description">
+      {% if results.automation_readiness == 'ready' %}
+        This company is ready for automation. Job application processes can be automated.
+      {% elseif results.automation_readiness == 'partial' %}
+        This company has partial automation support. Some features can be automated, but others require manual intervention.
+      {% else %}
+        This company requires manual processing. Automation is not currently feasible.
+      {% endif %}
+    </p>
+  </section>
+  {% endif %}
+
+  <div class="actions">
+    <a href="{{ path('company_research.research_form') }}" class="button">Research Another Company</a>
+  </div>
+</div>
+
+<style>
+.company-research-results {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.results-header {
+  background: #f5f5f5;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.results-header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.research-date {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+section h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+}
+
+.careers-list {
+  list-style: none;
+  padding: 0;
+}
+
+.careers-list li {
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: #f9f9f9;
+  border-left: 3px solid #007bff;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.badge-success {
+  background: #28a745;
+  color: white;
+}
+
+.badge-warning {
+  background: #ffc107;
+  color: #333;
+}
+
+.badge-high {
+  background: #28a745;
+  color: white;
+}
+
+.badge-medium {
+  background: #ffc107;
+  color: #333;
+}
+
+.badge-low {
+  background: #dc3545;
+  color: white;
+}
+
+.badge-large {
+  font-size: 1.5rem;
+  padding: 1rem 2rem;
+  display: inline-block;
+  margin: 1rem 0;
+}
+
+.badge-ready {
+  background: #28a745;
+  color: white;
+}
+
+.badge-partial {
+  background: #ffc107;
+  color: #333;
+}
+
+.badge-manual {
+  background: #dc3545;
+  color: white;
+}
+
+.card {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #555;
+}
+
+.card ul {
+  margin: 0.5rem 0;
+}
+
+.no-results {
+  color: #666;
+  font-style: italic;
+}
+
+.actions {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: #0056b3;
+}
+</style>

@@ -1,0 +1,15 @@
+{#
+/**
+ * @file
+ * Theme override for the main menu when displayed in the footer.
+ */
+#}
+{% if items %}
+  <ul class="footer-menu">
+    {% for item in items %}
+      <li>
+        <a href="{{ item.url }}">{{ item.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

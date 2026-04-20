@@ -1,0 +1,163 @@
+{#
+/**
+ * @file
+ * Template for Job Hunter home page.
+ *
+ * Available variables:
+ * - user_profile: User profile URLs
+ *   - view_url: URL to view profile
+ *   - edit_url: URL to edit profile
+ * - job_discovery: Job discovery URLs
+ *   - start_url: URL to start job discovery
+ * - dashboard: Dashboard URLs
+ *   - main_url: Main dashboard URL
+ *   - companies_url: Companies overview URL
+ * - statistics: User statistics
+ *   - total_applications: Total applications count
+ *   - active_applications: Active applications count
+ *   - companies_tracked: Companies tracked count
+ *   - jobs_saved: Jobs saved count
+ * - navigation: Rendered navigation block
+ */
+#}
+<div class="job-hunter-layout">
+  <!-- Template Version: 2.0 - Queue Dashboard Update - Feb 5, 2026 -->
+  <aside class="job-hunter-sidebar">
+    {# DEBUG: Navigation variable exists: {{ navigation is defined ? 'YES' : 'NO' }} #}
+    {% if navigation is not empty %}
+      {{ navigation }}
+    {% else %}
+      <div class="debug-message debug-warning">
+        Navigation block not passed to template
+      </div>
+    {% endif %}
+  </aside>
+  
+  <main class="job-hunter-content">
+    <div class="job-hunter-home">
+  <div class="job-hunter-header">
+    <h1>{{ 'Job Hunter'|t }}</h1>
+    <p class="tagline">{{ 'Your AI-Powered Job Application Automation Platform'|t }}</p>
+  </div>
+
+  <div class="job-hunter-stats">
+    <h2>{{ 'Your Activity'|t }}</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ statistics.jobs_saved }}</div>
+        <div class="stat-label">{{ 'Jobs Saved'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ statistics.total_applications }}</div>
+        <div class="stat-label">{{ 'Total Applications'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ statistics.active_applications }}</div>
+        <div class="stat-label">{{ 'Active Applications'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ statistics.companies_tracked }}</div>
+        <div class="stat-label">{{ 'Companies Tracked'|t }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job-hunter-quick-actions">
+    <h2>{{ 'Quick Actions'|t }}</h2>
+    <div class="actions-grid">
+      <div class="action-card">
+        <div class="action-icon">👤</div>
+        <h3>{{ 'My Profile'|t }}</h3>
+        <p>{{ 'Manage your resume and job preferences'|t }}</p>
+        <a href="{{ user_profile.view_url }}" class="button button--primary">{{ 'View Profile'|t }}</a>
+        <a href="{{ user_profile.edit_url }}" class="button button--secondary">{{ 'Edit Profile'|t }}</a>
+      </div>
+
+      <div class="action-card">
+        <div class="action-icon">🔍</div>
+        <h3>{{ 'Job Discovery'|t }}</h3>
+        <p>{{ 'Find and save jobs from your target companies'|t }}</p>
+        <a href="{{ job_discovery.start_url }}" class="button button--primary">{{ 'Start Discovery'|t }}</a>
+      </div>
+
+      <div class="action-card">
+        <div class="action-icon">📊</div>
+        <h3>{{ 'Dashboard'|t }}</h3>
+        <p>{{ 'Track your applications and progress'|t }}</p>
+        <a href="{{ dashboard.main_url }}" class="button button--primary">{{ 'View Dashboard'|t }}</a>
+      </div>
+
+      <div class="action-card">
+        <div class="action-icon">🏢</div>
+        <h3>{{ 'Companies'|t }}</h3>
+        <p>{{ 'Manage target companies and credentials'|t }}</p>
+        <a href="{{ dashboard.companies_url }}" class="button button--primary">{{ 'View Companies'|t }}</a>
+      </div>
+    </div>
+  </div>
+
+  {# Queue Status Section - Read-only for all authenticated users #}
+  {% if queue_status %}
+  <div class="queue-status-section" id="queue-status-panel">
+    <div class="queue-status-header">
+      <h3>📊 {{ 'Background Processing Status'|t }}</h3>
+      <p class="queue-status-subtitle">{{ 'View the status of your background processing tasks'|t }}</p>
+    </div>
+    
+    <table class="queue-status-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>{{ 'Queue'|t }}</th>
+          <th>{{ 'Pending Items'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="queue-table-body">
+        {% for queue_id, queue in queue_status %}
+        <tr class="queue-row" data-queue-id="{{ queue_id }}">
+          <td class="queue-icon">{{ queue.icon }}</td>
+          <td class="queue-name">
+            <strong>{{ queue.name }}</strong>
+            <span class="queue-description">{{ queue.description }}</span>
+          </td>
+          <td class="queue-count">
+            <span class="queue-badge {% if queue.items > 0 %}queue-badge-pending{% else %}queue-badge-empty{% endif %}" data-count>
+              {{ queue.items }}
+            </span>
+          </td>
+          <td class="queue-status">
+            <span class="status-indicator status-idle" data-status>
+              <span class="status-dot"></span>
+              <span class="status-text">{{ 'Idle'|t }}</span>
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="job-hunter-features">
+    <h2>{{ 'Features'|t }}</h2>
+    <div class="features-grid">
+      <div class="feature-item">
+        <h4>🤖 {{ 'AI Resume Tailoring'|t }}</h4>
+        <p>{{ 'Automatically tailor your resume for each job posting using Claude AI'|t }}</p>
+      </div>
+      <div class="feature-item">
+        <h4>🌐 {{ 'Job Scraping'|t }}</h4>
+        <p>{{ 'Automatically discover new job postings from your target companies'|t }}</p>
+      </div>
+      <div class="feature-item">
+        <h4>📝 {{ 'Application Tracking'|t }}</h4>
+        <p>{{ 'Keep track of all your applications in one place'|t }}</p>
+      </div>
+      <div class="feature-item">
+        <h4>⚡ {{ 'Automated Submission'|t }}</h4>
+        <p>{{ 'Automatically submit applications to supported platforms (coming soon)'|t }}</p>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,22 @@
+uuid: 05055c3a-cfba-495b-81f0-7dfa3d55f60d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_network_bandwidth_desc
+    - node.type.evaluated_entity
+  module:
+    - text
+id: node.evaluated_entity.field_sub_network_bandwidth_desc
+field_name: field_sub_network_bandwidth_desc
+entity_type: node
+bundle: evaluated_entity
+label: 'Network Bandwidth Description'
+description: 'AI-provided description for Network Bandwidth sub-dimension'
+required: false
+translatable: true
+default_value: null
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

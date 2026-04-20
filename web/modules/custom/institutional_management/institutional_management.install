@@ -1,0 +1,260 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Institutional Management module.
+ */
+
+use Drupal\group\Entity\GroupType;
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_install().
+ */
+function institutional_management_install() {
+  // Create Institution group type
+  _institutional_management_create_institution_group_type();
+  
+  // Create Family group type
+  _institutional_management_create_family_group_type();
+  
+  // Create group roles (must be after group types)
+  _institutional_management_create_group_roles();
+  
+  // Update group types with creator roles
+  _institutional_management_update_creator_roles();
+  
+  // Set permissions for authenticated users
+  _institutional_management_set_permissions();
+  
+  \Drupal::messenger()->addStatus(t('Institutional Management module installed successfully. Institution and Family group types are now available.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function institutional_management_uninstall() {
+  // Intentionally do NOT remove group types on uninstall
+  // as they may contain user data
+  \Drupal::messenger()->addStatus(t('Institutional Management module uninstalled. Group types (Institution and Family) have been preserved.'));
+}
+
+/**
+ * Create Institution group type.
+ */
+function _institutional_management_create_institution_group_type() {
+  try {
+    // Check if it already exists
+    $existing = GroupType::load('institution');
+    if ($existing) {
+      \Drupal::logger('institutional_management')->info('Institution group type already exists, skipping creation.');
+      \Drupal::messenger()->addStatus(t('Institution group type already exists.'));
+      return;
+    }
+
+    // Create the Institution group type
+    $group_type = GroupType::create([
+      'id' => 'institution',
+      'label' => 'Institution',
+      'description' => 'A group representing an organization or institution with multiple members and locations',
+      'creator_membership' => TRUE,
+      'creator_wizard' => FALSE,
+      'creator_roles' => [],
+    ]);
+    
+    $group_type->save();
+    
+    \Drupal::logger('institutional_management')->info('Institution group type created successfully.');
+    \Drupal::messenger()->addStatus(t('Institution group type created successfully.'));
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('institutional_management')->warning('Institution group type creation: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Create Family group type.
+ */
+function _institutional_management_create_family_group_type() {
+  try {
+    // Check if it already exists
+    $existing = GroupType::load('family');
+    if ($existing) {
+      \Drupal::logger('institutional_management')->info('Family group type already exists, skipping creation.');
+      \Drupal::messenger()->addStatus(t('Family group type already exists.'));
+      return;
+    }
+
+    // Create the Family group type
+    $group_type = GroupType::create([
+      'id' => 'family',
+      'label' => 'Family',
+      'description' => 'A group representing a family unit for coordinated safety monitoring',
+      'creator_membership' => TRUE,
+      'creator_wizard' => FALSE,
+      'creator_roles' => [],
+    ]);
+    
+    $group_type->save();
+    
+    \Drupal::logger('institutional_management')->info('Family group type created successfully.');
+    \Drupal::messenger()->addStatus(t('Family group type created successfully.'));
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('institutional_management')->warning('Family group type creation: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Create group roles for Institution and Family groups.
+ */
+function _institutional_management_create_group_roles() {
+  // Family roles
+  _institutional_management_create_group_role('family', 'family-admin', 'Family Administrator', [
+    'administer group',
+    'delete group',
+    'edit group',
+    'leave group',
+    'view group',
+    'administer members',
+  ]);
+  
+  _institutional_management_create_group_role('family', 'family-member', 'Family Member', [
+    'leave group',
+    'view group',
+  ]);
+  
+  // Institution roles
+  _institutional_management_create_group_role('institution', 'institution-admin', 'Institution Administrator', [
+    'administer group',
+    'delete group',
+    'edit group',
+    'leave group',
+    'view group',
+    'administer members',
+  ]);
+  
+  _institutional_management_create_group_role('institution', 'institution-member', 'Institution Member', [
+    'leave group',
+    'view group',
+  ]);
+}
+
+/**
+ * Helper to create a single group role.
+ */
+function _institutional_management_create_group_role($group_type_id, $role_id, $label, $permissions) {
+  try {
+    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+    
+    // Check if role already exists
+    $existing = $group_role_storage->load("{$group_type_id}-{$role_id}");
+    if ($existing) {
+      \Drupal::logger('institutional_management')->info('Group role @role already exists', ['@role' => $role_id]);
+      return;
+    }
+    
+    // Create the role
+    $group_role = $group_role_storage->create([
+      'id' => "{$group_type_id}-{$role_id}",
+      'label' => $label,
+      'weight' => $role_id === 'admin' || strpos($role_id, 'admin') !== false ? -10 : 0,
+      'internal' => FALSE,
+      'audience' => 'member',
+      'scope' => 'individual',
+      'group_type' => $group_type_id,
+      'permissions' => $permissions,
+    ]);
+    
+    $group_role->save();
+    
+    \Drupal::logger('institutional_management')->info('Created group role @role for @type', [
+      '@role' => $role_id,
+      '@type' => $group_type_id,
+    ]);
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('institutional_management')->error('Failed to create group role @role: @message', [
+      '@role' => $role_id,
+      '@message' => $e->getMessage(),
+    ]);
+  }
+}
+
+/**
+ * Update group types with creator roles.
+ */
+function _institutional_management_update_creator_roles() {
+  try {
+    // Update Family group type
+    $family_type = \Drupal\group\Entity\GroupType::load('family');
+    if ($family_type) {
+      $family_type->set('creator_roles', ['family-family-admin']);
+      $family_type->save();
+      \Drupal::logger('institutional_management')->info('Updated Family group type with creator roles');
+    }
+    
+    // Update Institution group type
+    $institution_type = \Drupal\group\Entity\GroupType::load('institution');
+    if ($institution_type) {
+      $institution_type->set('creator_roles', ['institution-institution-admin']);
+      $institution_type->save();
+      \Drupal::logger('institutional_management')->info('Updated Institution group type with creator roles');
+    }
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('institutional_management')->error('Failed to update creator roles: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Set permissions for authenticated users.
+ */
+function _institutional_management_set_permissions() {
+  try {
+    $authenticated_role = Role::load('authenticated');
+    
+    if ($authenticated_role) {
+      // Grant permissions to create both group types
+      $permissions = [
+        'create institution group',
+        'create family group',
+      ];
+      
+      foreach ($permissions as $permission) {
+        if (!\Drupal::service('user.permissions')->getPermissions()[$permission] ?? FALSE) {
+          \Drupal::logger('institutional_management')->warning('Permission "@permission" does not exist yet', ['@permission' => $permission]);
+          continue;
+        }
+        $authenticated_role->grantPermission($permission);
+      }
+      
+      $authenticated_role->save();
+      
+      \Drupal::logger('institutional_management')->info('Permissions granted to authenticated users.');
+    }
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('institutional_management')->error('Failed to set permissions: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function institutional_management_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'install' || $phase == 'runtime') {
+    // Check if Group module is enabled
+    if (!\Drupal::moduleHandler()->moduleExists('group')) {
+      $requirements['institutional_management_group'] = [
+        'title' => t('Institutional Management - Group module'),
+        'description' => t('The Institutional Management module requires the Group module to be enabled.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  return $requirements;
+}

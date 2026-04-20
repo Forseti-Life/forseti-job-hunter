@@ -1,0 +1,154 @@
+agent_evaluation.evaluate_form:
+  path: '/agent-power-framework/evaluate'
+  defaults:
+    _form: '\Drupal\agent_evaluation\Form\EvaluateEntityForm'
+    _title: 'Evaluate an Agent'
+  requirements:
+    _permission: 'use ai conversation'
+
+agent_evaluation.create_evaluation:
+  path: '/api/agent-evaluation/create'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\EvaluationController::createEvaluation'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'POST'
+    _format: 'json'
+
+# Removed duplicate ai-conversation/settings route - use ai_conversation.settings instead
+
+agent_evaluation.update_prompt:
+  path: '/admin/ai-conversation/update-prompt'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\AdminController::updateSystemPrompt'
+    _title: 'Update System Prompt'
+  requirements:
+    _permission: 'administer site configuration'
+
+agent_evaluation.get_node10:
+  path: '/admin/ai-conversation/get-node10'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\UtilityController::getNode10Content'
+    _title: 'Get Node 10 Content'
+  requirements:
+    _permission: 'administer site configuration'
+
+agent_evaluation.claude_demo:
+  path: '/clauddemo'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::claudeDemo'
+    _title: 'Claude Demo'
+  requirements:
+    _permission: 'use ai conversation'
+
+agent_evaluation.chat_interface:
+  path: '/node/{node}/chat'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::chatInterface'
+    _title: 'AI Chat'
+  requirements:
+    _permission: 'use ai conversation'
+    _entity_access: 'node.view'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+agent_evaluation.send_message:
+  path: '/ai-conversation/send-message'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::sendMessage'
+  requirements:
+    _permission: 'use ai conversation'
+    _csrf_token: 'TRUE'
+
+agent_evaluation.get_stats:
+  path: '/ai-conversation/stats'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::getStats'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'GET'
+
+agent_evaluation.trigger_summary:
+  path: '/node/{node}/trigger-summary'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::triggerSummaryUpdate'
+    _title: 'Trigger Summary Update'
+  requirements:
+    _permission: 'use ai conversation'
+    _entity_access: 'node.view'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+agent_evaluation.start_chat:
+  path: '/ai-chat'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ChatController::startChat'
+    _title: 'AI Chat'
+  requirements:
+    _permission: 'use ai conversation'
+
+# REST API Endpoints for Mobile App
+
+agent_evaluation.api_create:
+  path: '/api/ai-conversation/create'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::createConversation'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'POST'
+    _format: 'json'
+
+agent_evaluation.api_send_message:
+  path: '/api/ai-conversation/{conversation_id}/message'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::sendMessage'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'POST'
+    _format: 'json'
+    conversation_id: \d+
+
+agent_evaluation.api_get_history:
+  path: '/api/ai-conversation/{conversation_id}/history'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::getHistory'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'GET'
+    _format: 'json'
+    conversation_id: \d+
+
+agent_evaluation.api_get_conversations:
+  path: '/api/ai-conversation/conversations'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::getUserConversations'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'GET'
+    _format: 'json'
+
+agent_evaluation.api_delete:
+  path: '/api/ai-conversation/{conversation_id}'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::deleteConversation'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'DELETE'
+    _format: 'json'
+    conversation_id: \d+
+
+agent_evaluation.api_get_stats:
+  path: '/api/ai-conversation/{conversation_id}/stats'
+  defaults:
+    _controller: '\Drupal\agent_evaluation\Controller\ApiController::getConversationStats'
+  requirements:
+    _permission: 'use ai conversation'
+    _method: 'GET'
+    _format: 'json'
+    conversation_id: \d+

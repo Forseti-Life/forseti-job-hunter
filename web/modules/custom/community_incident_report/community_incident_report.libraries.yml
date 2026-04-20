@@ -1,0 +1,8 @@
+community_incident_report/community-layer:
+  version: VERSION
+  js:
+    js/community-incident-layer.js: { minified: false }
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - amisafe/crime-map

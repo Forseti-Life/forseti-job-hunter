@@ -1,0 +1,21 @@
+uuid: cc817aad-a601-44da-9a83-e5c6c7d79ca8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_conversation_reference
+    - node.type.community_suggestion
+id: node.community_suggestion.field_conversation_reference
+field_name: field_conversation_reference
+entity_type: node
+bundle: community_suggestion
+label: Conversation
+description: 'Reference to the conversation where this suggestion was made'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings: {  }
+field_type: entity_reference

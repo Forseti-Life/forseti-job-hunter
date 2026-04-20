@@ -1,0 +1,19 @@
+uuid: db744ada-2c40-4c78-b1b1-d18d3b1ffb4a
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_sub_financial_desc
+field_name: field_sub_financial_desc
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

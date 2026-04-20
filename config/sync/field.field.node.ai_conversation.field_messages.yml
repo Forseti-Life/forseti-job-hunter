@@ -1,0 +1,22 @@
+uuid: 1e6dbc8e-ef26-4e67-b5e2-c9b2f6525f58
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_messages
+    - node.type.ai_conversation
+  module:
+    - text
+id: node.ai_conversation.field_messages
+field_name: field_messages
+entity_type: node
+bundle: ai_conversation
+label: Messages
+description: 'Conversation messages'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

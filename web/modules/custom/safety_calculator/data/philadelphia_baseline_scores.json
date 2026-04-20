@@ -1,0 +1,903 @@
+{
+  "city": "Philadelphia",
+  "state": "Pennsylvania",
+  "assessment_date": "2026-01-12",
+  "assessment_version": "1.0",
+  "overall_score": 64,
+  "dimension": "safe",
+  "dimension_name": "Safe - Security & Protection",
+  "scores": {
+    "police": {
+      "score": 50,
+      "service": "Police / Law Enforcement",
+      "notes": "4th largest department in US with 6,000+ officers. Challenges with response times and crime rates. Community relations vary significantly by neighborhood."
+    },
+    "fire": {
+      "score": 70,
+      "service": "Fire Department / Fire Rescue",
+      "notes": "Largest in Pennsylvania, 63 stations citywide. Well-equipped with specialized divisions. Good coverage across the city."
+    },
+    "ems": {
+      "score": 60,
+      "service": "Emergency Medical Services (EMS/Ambulance)",
+      "notes": "One of busiest EMS divisions in country. Part of Fire Department, integrated response. High call volume can affect response times."
+    },
+    "dispatch": {
+      "score": 60,
+      "service": "Emergency Dispatch / 911 Services",
+      "notes": "Handles high volume of calls. Generally functional but can experience delays during peak times."
+    },
+    "emergency_management": {
+      "score": 70,
+      "service": "Emergency Management / Disaster Response",
+      "notes": "Coordinated city-wide response system. Recent pandemic response demonstrated capabilities."
+    },
+    "public_health": {
+      "score": 70,
+      "service": "Public Health Emergency Response",
+      "notes": "Philadelphia Department of Public Health is well-established. Good disease surveillance and outbreak response."
+    },
+    "poison_control": {
+      "score": 80,
+      "service": "Poison Control Centers",
+      "notes": "Access to Mid-Atlantic regional center. 24/7 availability and professional service."
+    },
+    "mental_health_crisis": {
+      "score": 50,
+      "service": "Mental Health Crisis Teams",
+      "notes": "Developing Crisis Response Teams (CRT). Limited coverage compared to need."
+    },
+    "road_services": {
+      "score": 60,
+      "service": "Emergency Road / Highway Services",
+      "notes": "Streets Department responds to emergencies. Infrastructure aging in some areas."
+    },
+    "public_works": {
+      "score": 60,
+      "service": "Public Works Emergency Response",
+      "notes": "Water Department and other utilities have emergency protocols. Variable response based on neighborhood."
+    },
+    "utilities": {
+      "score": 70,
+      "service": "Utility Emergency Services",
+      "notes": "PECO (electric/gas) and Water Department have emergency response. Generally reliable restoration times."
+    },
+    "search_rescue": {
+      "score": 70,
+      "service": "Search and Rescue (SAR)",
+      "notes": "Marine Unit and specialized rescue teams. Good coordination with regional resources."
+    },
+    "hazmat": {
+      "score": 80,
+      "service": "Hazardous Materials (HAZMAT) Response",
+      "notes": "Specialized Fire Department HAZMAT unit. Well-trained for industrial city environment."
+    },
+    "bomb_squad": {
+      "score": 70,
+      "service": "Bomb Squad / Explosive Ordnance Disposal",
+      "notes": "Philadelphia Police Bomb Squad is well-equipped. Handles numerous suspicious package calls."
+    },
+    "coast_guard": {
+      "score": 60,
+      "service": "Coast Guard / Maritime Emergency Services",
+      "notes": "US Coast Guard Station Philadelphia on Delaware River. Limited compared to coastal cities."
+    },
+    "emergency_shelters": {
+      "score": 50,
+      "service": "Emergency Shelters",
+      "notes": "Office of Emergency Management coordinates shelters. Capacity challenges during major events."
+    },
+    "food_water_distribution": {
+      "score": 60,
+      "service": "Emergency Food / Water Distribution",
+      "notes": "Multiple agencies can mobilize resources. Distribution can be uneven across neighborhoods."
+    },
+    "emergency_housing": {
+      "score": 50,
+      "service": "Emergency Housing Assistance",
+      "notes": "Office of Homeless Services provides emergency housing. High demand exceeds available resources."
+    },
+    "crisis_counseling": {
+      "score": 60,
+      "service": "Crisis Counseling Services",
+      "notes": "Community Behavioral Health provides services. Access varies by insurance and neighborhood."
+    },
+    "neighborhood_safety": {
+      "score": 50,
+      "service": "Neighborhood Safety Perception",
+      "notes": "Varies widely by neighborhood. Some areas very safe, others experience higher crime. Overall perception mixed."
+    },
+    "domestic_violence": {
+      "score": 60,
+      "service": "Domestic Violence Support Services",
+      "notes": "Women Against Abuse and other organizations provide support. Hospital-based programs exist. Need exceeds capacity."
+    },
+    "child_protection": {
+      "score": 60,
+      "service": "Child Protection Services",
+      "notes": "Department of Human Services oversees. System strained with high caseloads. Some reforms implemented."
+    },
+    "elder_abuse_prevention": {
+      "score": 60,
+      "service": "Elder Abuse Prevention",
+      "notes": "Adult Protective Services available. Philadelphia Corporation for Aging provides oversight. Growing need with aging population."
+    },
+    "cybersecurity": {
+      "score": 50,
+      "service": "Cybersecurity and Digital Safety",
+      "notes": "Limited public resources for individual cybersecurity education. Some library programs. Growing awareness needed."
+    },
+    "fraud_protection": {
+      "score": 60,
+      "service": "Fraud and Scam Protection",
+      "notes": "Consumer protection through Attorney General office. Senior fraud prevention programs. Police have fraud units."
+    },
+    "workplace_safety": {
+      "score": 60,
+      "service": "Workplace Safety Standards",
+      "notes": "OSHA enforcement present. Labor Department oversight. Workplace injuries reported and investigated."
+    },
+    "building_safety": {
+      "score": 50,
+      "service": "Building and Housing Code Enforcement",
+      "notes": "Licenses & Inspections department exists but enforcement inconsistent. Backlog of violations. Some dangerous structures remain."
+    },
+    "traffic_safety": {
+      "score": 50,
+      "service": "Traffic Safety Programs",
+      "notes": "Vision Zero initiative in place. High pedestrian fatality rate. Speed cameras and traffic calming efforts ongoing."
+    },
+    "animal_control": {
+      "score": 60,
+      "service": "Animal Control Services",
+      "notes": "ACCT Philly provides services. Stray animal issues in some areas. Adoption and rescue programs active."
+    },
+    "legal_aid": {
+      "score": 60,
+      "service": "Access to Legal Aid and Protection",
+      "notes": "Philadelphia Legal Assistance, Community Legal Services provide free aid. Defender Association for criminal defense. Wait times can be long."
+    }
+  },
+  "energized_scores": {
+    "housing_quality": {
+      "score": 50,
+      "notes": "Housing quality varies widely. Many older homes need repairs. Code enforcement inconsistent."
+    },
+    "housing_affordability": {
+      "score": 40,
+      "notes": "Rent burden high for many. Property taxes increasing. Gentrification displacing residents."
+    },
+    "housing_stability": {
+      "score": 50,
+      "notes": "Eviction rates high in some neighborhoods. Housing instability significant issue. Some protection programs exist."
+    },
+    "housing_options": {
+      "score": 60,
+      "notes": "Diverse housing stock. Row homes, apartments, single family. Options vary by price point."
+    },
+    "food_access": {
+      "score": 60,
+      "notes": "Supermarkets in most areas but food deserts exist. Corner stores fill gaps. Farmers markets growing."
+    },
+    "food_quality": {
+      "score": 60,
+      "notes": "Quality varies by store and neighborhood. Fresh food available in some areas, limited in others."
+    },
+    "food_affordability": {
+      "score": 50,
+      "notes": "Food costs high relative to median income. SNAP participation significant. Inflation affecting affordability."
+    },
+    "food_security": {
+      "score": 50,
+      "notes": "Food insecurity affects many households. Food banks active. Summer meal gaps for children."
+    },
+    "employment_availability": {
+      "score": 60,
+      "notes": "Job market recovering. Healthcare and education strong. Service jobs abundant but low-wage."
+    },
+    "wage_adequacy": {
+      "score": 40,
+      "notes": "Wages lag cost of living for many. Minimum wage workers struggle. Wealth inequality significant."
+    },
+    "job_benefits": {
+      "score": 50,
+      "notes": "Benefits vary widely. Many service jobs lack benefits. Healthcare and government sectors better."
+    },
+    "job_security": {
+      "score": 50,
+      "notes": "Job market recovering post-pandemic. Some sectors unstable. Gig economy growing."
+    },
+    "water_access": {
+      "score": 80,
+      "notes": "Clean water accessible to all. Philadelphia Water Department provides service. Affordability assistance available."
+    },
+    "electricity_access": {
+      "score": 80,
+      "notes": "Universal electricity access. PECO generally reliable. Assistance programs for low-income."
+    },
+    "heating_cooling": {
+      "score": 60,
+      "notes": "Many older buildings lack central AC. Heating generally adequate. Energy costs a burden for some."
+    },
+    "internet_access": {
+      "score": 60,
+      "notes": "Comcast dominates market. Digital divide exists. Some low-cost internet programs available."
+    },
+    "savings_capacity": {
+      "score": 40,
+      "notes": "Many households lack emergency savings. High cost of living vs. wages. Financial stress common."
+    },
+    "debt_management": {
+      "score": 50,
+      "notes": "High debt burdens. Consumer debt counseling available. Bankruptcy rates significant."
+    },
+    "financial_security": {
+      "score": 40,
+      "notes": "Economic insecurity widespread. Paycheck to paycheck common. Wealth gap significant."
+    },
+    "banking_access": {
+      "score": 70,
+      "notes": "Banks available in most areas. Some banking deserts exist. Credit unions offer alternatives."
+    },
+    "transportation_affordability": {
+      "score": 60,
+      "notes": "SEPTA fares add up for regular riders. Car ownership expensive. Some discounted fare programs."
+    },
+    "transportation_reliability": {
+      "score": 50,
+      "notes": "SEPTA delays common. Service cuts have impacted reliability. Infrastructure aging."
+    },
+    "transportation_options": {
+      "score": 70,
+      "notes": "Bus, subway, trolley, regional rail. Bike infrastructure growing. Uber/Lyft available."
+    },
+    "transportation_safety": {
+      "score": 60,
+      "notes": "Generally safe. Some stations feel unsafe. Traffic safety concerns with speeding."
+    },
+    "childcare_availability": {
+      "score": 40,
+      "notes": "Childcare expensive and hard to find. Wait lists common. Quality varies. Some subsidies available."
+    },
+    "eldercare_availability": {
+      "score": 50,
+      "notes": "Home care services limited. Nursing homes available but expensive. Philadelphia Corporation for Aging helps coordinate."
+    },
+    "healthcare_affordability": {
+      "score": 50,
+      "notes": "Costs high even with insurance. Uninsured face significant barriers. Sliding scale clinics help."
+    },
+    "emergency_resources": {
+      "score": 60,
+      "notes": "Emergency financial assistance limited. Some nonprofit programs. Application processes can be complex."
+    },
+    "energy_affordability": {
+      "score": 50,
+      "notes": "Heating and cooling costs burden many. Assistance programs exist. Energy efficiency varies by housing age."
+    },
+    "basic_needs": {
+      "score": 50,
+      "notes": "Many struggle to meet basic needs. Cost of living high relative to wages. Safety net programs help but gaps exist."
+    }
+  },
+  "connected_scores": {
+    "neighborhood_cohesion": {
+      "score": 60,
+      "notes": "Strong neighborhood identity in many areas. Varies significantly by neighborhood - some have tight-knit communities while others are more transient. Block captains and community associations active in many areas."
+    },
+    "community_engagement": {
+      "score": 60,
+      "notes": "Active civic associations, community meetings, and neighborhood events. Strong tradition of community organizing. Participation varies by neighborhood and demographic group."
+    },
+    "social_support": {
+      "score": 60,
+      "notes": "Extended family networks common in many neighborhoods. Faith-based organizations provide support. Community organizations offer assistance programs. Social isolation exists in some populations."
+    },
+    "cultural_diversity": {
+      "score": 70,
+      "notes": "One of the most diverse cities in the US. Rich cultural heritage with distinct neighborhoods (Chinatown, Italian Market, etc.). Ongoing challenges with racial segregation and equity."
+    },
+    "public_spaces": {
+      "score": 70,
+      "notes": "Extensive park system (Fairmount Park is one of largest urban parks). Free Library system with 54 branches. Community centers throughout the city. Recreation centers in many neighborhoods."
+    },
+    "digital_connectivity": {
+      "score": 50,
+      "notes": "Digital divide exists with ~15% lacking home internet. Free WiFi in many public spaces. Digital literacy programs available but limited. Efforts to expand connectivity underway."
+    },
+    "youth_programs": {
+      "score": 60,
+      "notes": "Police Athletic League, Boys & Girls Clubs, YMCA programs available. After-school programs through schools and nonprofits. Summer camps and recreation programs. Accessibility varies by neighborhood."
+    },
+    "neighbor_interaction": {
+      "score": 60,
+      "notes": "Varies by neighborhood type. Row homes foster connections. Some areas more isolated. Block parties common in some neighborhoods."
+    },
+    "neighborhood_identity": {
+      "score": 70,
+      "notes": "Strong neighborhood identities (Fishtown, Northern Liberties, etc.). Pride of place in many areas. Historic neighborhoods maintain character."
+    },
+    "community_meetings": {
+      "score": 60,
+      "notes": "Registered Community Organizations (RCOs) active. Attendance varies. Some neighborhoods very engaged."
+    },
+    "community_events": {
+      "score": 70,
+      "notes": "Street festivals, block parties common. Cultural celebrations throughout year. Summer concert series in parks."
+    },
+    "family_connections": {
+      "score": 70,
+      "notes": "Many multi-generational families live near each other. Strong family ties in many communities. Extended family support common."
+    },
+    "friendship_networks": {
+      "score": 60,
+      "notes": "Social networks exist but vary by age and lifestyle. Young professionals build new networks. Long-term residents have established connections."
+    },
+    "professional_networks": {
+      "score": 60,
+      "notes": "Chamber of Commerce active. Industry associations present. Networking events common in certain sectors."
+    },
+    "cultural_events": {
+      "score": 70,
+      "notes": "Many cultural festivals (Puerto Rican Day, Odunde, etc.). Museums offer diverse programming. Cultural centers active."
+    },
+    "interfaith_connection": {
+      "score": 60,
+      "notes": "Interfaith groups exist but not widespread. Religious diversity present. Some collaboration on social issues."
+    },
+    "third_places": {
+      "score": 60,
+      "notes": "Cafes, diners, corner stores serve as gathering spots. Some neighborhood staples. Development changing landscape."
+    },
+    "park_spaces": {
+      "score": 70,
+      "notes": "Fairmount Park system extensive. Recreation centers in many neighborhoods. Parks generally well-used and maintained."
+    },
+    "online_community": {
+      "score": 70,
+      "notes": "Active neighborhood Facebook groups. Nextdoor popular. Reddit r/philadelphia engaged. Local blogs and forums."
+    },
+    "digital_inclusion": {
+      "score": 50,
+      "notes": "Digital divide affects participation. Older adults less connected online. Language barriers exist."
+    },
+    "teen_spaces": {
+      "score": 50,
+      "notes": "Teen centers exist but limited. Recreation centers offer some programming. Need for more teen-specific spaces."
+    },
+    "senior_programs": {
+      "score": 60,
+      "notes": "Senior centers in many neighborhoods. Philadelphia Corporation for Aging coordinates. Varies by location."
+    },
+    "intergenerational": {
+      "score": 50,
+      "notes": "Some intentional programming but limited. Churches bring generations together. Schools offer some programs."
+    },
+    "faith_community": {
+      "score": 70,
+      "notes": "Strong faith-based community presence. Churches, mosques, temples active. Social services often provided."
+    },
+    "clubs_organizations": {
+      "score": 60,
+      "notes": "Many hobby groups, sports leagues, social clubs. Meetup groups active. Access varies by interest area."
+    },
+    "support_groups": {
+      "score": 60,
+      "notes": "Recovery groups widespread (AA, NA). Grief support available. Health condition groups exist. Some access barriers."
+    },
+    "isolation_prevention": {
+      "score": 50,
+      "notes": "Some outreach programs exist. Senior isolation significant issue. Mental health system strained."
+    },
+    "newcomer_integration": {
+      "score": 60,
+      "notes": "Some welcome programs exist. Immigrant organizations help integration. Varies by neighborhood receptiveness."
+    },
+    "language_connection": {
+      "score": 60,
+      "notes": "ESL programs available. Some multilingual resources. Language barriers still significant in services."
+    },
+    "disability_inclusion": {
+      "score": 50,
+      "notes": "Accessibility improving but incomplete. Some inclusive programs. Transportation access challenging."
+    }
+  },
+  "free_scores": {
+    "personal_autonomy": {
+      "score": 70,
+      "notes": "Generally high personal freedom. Some economic constraints. Social tolerance varies."
+    },
+    "career_choice": {
+      "score": 60,
+      "notes": "Job market offers variety. Some sectors limited by credentials. Economic barriers restrict choices for some."
+    },
+    "education_choice": {
+      "score": 60,
+      "notes": "Public, charter, private options. Quality varies. Affordability limits choice for many."
+    },
+    "housing_choice": {
+      "score": 50,
+      "notes": "Affordability major barrier. Discrimination persists despite laws. Some neighborhoods more accessible."
+    },
+    "civil_liberties": {
+      "score": 70,
+      "notes": "Generally protected. Concerns about police practices. Legal representation varies by income."
+    },
+    "free_speech": {
+      "score": 80,
+      "notes": "Strong tradition of political activism. Protests common and generally protected. Press freedom maintained."
+    },
+    "free_press": {
+      "score": 70,
+      "notes": "Independent journalism exists. Consolidation concerns. Local coverage declining in some areas."
+    },
+    "assembly_rights": {
+      "score": 70,
+      "notes": "Right to assemble generally respected. Permit process required. Some restrictions during emergencies."
+    },
+    "privacy_rights": {
+      "score": 60,
+      "notes": "Surveillance cameras present but regulated. Data privacy concerns exist. Some protections in place."
+    },
+    "discrimination": {
+      "score": 50,
+      "notes": "Significant discrimination persists. Legal protections exist. Enforcement inconsistent."
+    },
+    "equal_treatment": {
+      "score": 50,
+      "notes": "Disparities in criminal justice, education, health. Equity initiatives underway."
+    },
+    "hate_crime_response": {
+      "score": 60,
+      "notes": "Hate crimes tracked and prosecuted. Community response varies. Prevention programs exist."
+    },
+    "workplace_discrimination": {
+      "score": 60,
+      "notes": "Discrimination protections exist. Philadelphia Commission on Human Relations investigates. Still occurs despite protections."
+    },
+    "economic_freedom": {
+      "score": 50,
+      "notes": "Opportunities exist but barriers significant. Wealth inequality high. Economic mobility challenging."
+    },
+    "business_startup": {
+      "score": 60,
+      "notes": "Licensing requirements exist. Some streamlining efforts. Costs can be prohibitive."
+    },
+    "entrepreneurship": {
+      "score": 60,
+      "notes": "PIDC and other organizations support small business. Barriers to entry exist. Growing startup scene."
+    },
+    "property_rights": {
+      "score": 70,
+      "notes": "Property rights protected. Eminent domain exists but limited. Zoning disputes occur."
+    },
+    "movement_freedom": {
+      "score": 70,
+      "notes": "Can move freely within city. Transportation access varies. Some areas feel restricted by safety concerns."
+    },
+    "pedestrian_freedom": {
+      "score": 60,
+      "notes": "Walkable in many areas. Sidewalk conditions vary. Safety concerns in some neighborhoods."
+    },
+    "transit_freedom": {
+      "score": 60,
+      "notes": "SEPTA provides access but gaps exist. Frequency varies. Late night service limited."
+    },
+    "information_access": {
+      "score": 70,
+      "notes": "Free Library provides access. Internet access varies. Digital divide exists."
+    },
+    "public_records": {
+      "score": 60,
+      "notes": "Right to know law exists. Response times vary. Some records hard to obtain."
+    },
+    "government_transparency": {
+      "score": 50,
+      "notes": "Required meetings public. Budget transparency improving. Implementation varies."
+    },
+    "voting_access": {
+      "score": 70,
+      "notes": "Mail-in voting available. Drop boxes provided. Some access issues in certain neighborhoods."
+    },
+    "political_participation": {
+      "score": 60,
+      "notes": "Can run for office and campaign. Barriers for under-resourced candidates. Civic engagement varies."
+    },
+    "legal_representation": {
+      "score": 60,
+      "notes": "Defender Association and legal aid exist. Overburdened system. Quality varies."
+    },
+    "due_process": {
+      "score": 60,
+      "notes": "Rights protected in theory. Bail system creates inequity. Court backlogs delay justice."
+    },
+    "consumer_rights": {
+      "score": 60,
+      "notes": "Consumer protection laws exist. Attorney General investigates. Enforcement limited."
+    },
+    "tenant_rights": {
+      "score": 50,
+      "notes": "Tenant protections exist. Eviction process favors landlords. Legal aid helps some."
+    },
+    "worker_rights": {
+      "score": 60,
+      "notes": "Union presence strong in some sectors. Right to organize protected. At-will employment common."
+    }
+  },
+  "capable_scores": {
+    "education_quality": {
+      "score": 50,
+      "notes": "Quality varies widely by school. Some excellent schools. Many struggle with resources."
+    },
+    "early_childhood": {
+      "score": 60,
+      "notes": "Head Start and pre-K programs available. Quality varies. Universal pre-K expansion ongoing."
+    },
+    "elementary_quality": {
+      "score": 50,
+      "notes": "Teaching quality varies. Some strong programs. Budget constraints affect all."
+    },
+    "secondary_quality": {
+      "score": 50,
+      "notes": "Magnet schools strong. Neighborhood schools struggle. Graduation rates improving."
+    },
+    "special_education": {
+      "score": 50,
+      "notes": "Services required by law but implementation varies. Long IEP processes. Resources stretched."
+    },
+    "gifted_programs": {
+      "score": 60,
+      "notes": "Central High, Masterman, other magnet schools exist. Access competitive. Not all neighborhoods well-served."
+    },
+    "higher_education": {
+      "score": 70,
+      "notes": "Many colleges and universities. Major asset. Affordability and completion challenges."
+    },
+    "community_college": {
+      "score": 70,
+      "notes": "Community College of Philadelphia accessible. Affordable. Good programs. Retention challenges."
+    },
+    "university_access": {
+      "score": 70,
+      "notes": "Multiple universities. Local options strong. Financial aid varies."
+    },
+    "financial_aid": {
+      "score": 60,
+      "notes": "Federal aid available. State grants exist. Still leaves gaps for many."
+    },
+    "vocational_training": {
+      "score": 60,
+      "notes": "Career and Technical Education programs. Community College trades programs. Need exceeds capacity."
+    },
+    "apprenticeships": {
+      "score": 60,
+      "notes": "Building trades apprenticeships available. Some sectors offer programs. Access can be challenging."
+    },
+    "certification_programs": {
+      "score": 60,
+      "notes": "Various certifications available through colleges and training centers. Industry credentials accessible."
+    },
+    "digital_skills": {
+      "score": 50,
+      "notes": "Some programs through libraries and nonprofits. Digital divide affects access. Growing need."
+    },
+    "coding_programs": {
+      "score": 60,
+      "notes": "Bootcamps exist. Community College offers courses. Cost can be barrier."
+    },
+    "basic_computer": {
+      "score": 60,
+      "notes": "Free Library offers classes. Senior centers provide training. Demand exceeds supply."
+    },
+    "libraries_resources": {
+      "score": 80,
+      "notes": "Free Library system excellent. Many branches. Great programming. Maker spaces available."
+    },
+    "library_programs": {
+      "score": 80,
+      "notes": "Extensive workshops, classes, storytimes. Job search help. Digital literacy training."
+    },
+    "online_learning": {
+      "score": 60,
+      "notes": "Internet access limits some. Free resources available. Self-directed learning growing."
+    },
+    "lifelong_learning": {
+      "score": 70,
+      "notes": "Many opportunities through Community College, libraries, nonprofits. Growing sector."
+    },
+    "adult_education": {
+      "score": 60,
+      "notes": "GED programs available. Literacy programs exist. Wait lists common."
+    },
+    "esl_programs": {
+      "score": 70,
+      "notes": "Widely available through libraries, schools, nonprofits. Quality programs. Capacity issues."
+    },
+    "professional_development": {
+      "score": 60,
+      "notes": "Varies by employer and sector. Some industries strong. Many lack access."
+    },
+    "financial_literacy": {
+      "score": 50,
+      "notes": "Some nonprofit programs. Not universally taught in schools. Banking access helps but limited reach."
+    },
+    "health_literacy": {
+      "score": 50,
+      "notes": "Health education varies. Some community health worker programs. Medical information can be confusing."
+    },
+    "civic_education": {
+      "score": 50,
+      "notes": "Civics taught in schools but depth varies. Philadelphia Citizen promotes civic engagement."
+    },
+    "career_counseling": {
+      "score": 50,
+      "notes": "Available in some schools and through Philadelphia Works. Access inconsistent. Private services expensive."
+    },
+    "tutoring": {
+      "score": 50,
+      "notes": "Some free tutoring through nonprofits. Private tutoring expensive. School-based support limited."
+    },
+    "arts_education": {
+      "score": 60,
+      "notes": "CAPA and other programs. Budget cuts reduced access. Community programs supplement."
+    },
+    "stem_programs": {
+      "score": 60,
+      "notes": "Franklin Institute and other organizations offer programs. School STEM varies. Growing focus area."
+    }
+  },
+  "useful_scores": {
+    "employment_meaning": {
+      "score": 50,
+      "notes": "Purpose varies by job type. Service sector often lacks meaning. Healthcare and education higher."
+    },
+    "work_purpose": {
+      "score": 50,
+      "notes": "Many service jobs lack purpose connection. Healthcare and education workers report higher purpose. Varies widely."
+    },
+    "job_satisfaction": {
+      "score": 50,
+      "notes": "Satisfaction varies widely. Low wages affect many. Some sectors report higher fulfillment."
+    },
+    "social_enterprise": {
+      "score": 60,
+      "notes": "Growing sector. Benefit corporations emerging. Impact investing increasing."
+    },
+    "volunteer_opportunities": {
+      "score": 70,
+      "notes": "Many opportunities through nonprofits. Hands On Philadelphia coordinates. Access good."
+    },
+    "nonprofit_engagement": {
+      "score": 70,
+      "notes": "Strong nonprofit sector. Many ways to engage. Volunteer matching services exist."
+    },
+    "volunteer_matching": {
+      "score": 60,
+      "notes": "Platforms like Volunteer Match used. Some organizations use Catchafire. Could be better coordinated."
+    },
+    "skill_volunteering": {
+      "score": 60,
+      "notes": "Pro bono legal, medical, design services available. Catchafire and other platforms connect skills."
+    },
+    "civic_participation": {
+      "score": 50,
+      "notes": "Voter turnout moderate. RCO participation varies. Many don't engage in civic processes."
+    },
+    "advisory_boards": {
+      "score": 50,
+      "notes": "City boards exist. Nonprofit boards active. Diversity improving. Access varies."
+    },
+    "public_comment": {
+      "score": 60,
+      "notes": "Public meetings allow comment. Virtual options expanded. Participation still limited."
+    },
+    "activism": {
+      "score": 70,
+      "notes": "Strong activist tradition. Many issue-based organizations. Protests and organizing common."
+    },
+    "mentorship": {
+      "score": 60,
+      "notes": "Various mentorship programs. Quality varies. Matching can be challenging."
+    },
+    "youth_mentoring": {
+      "score": 60,
+      "notes": "Big Brothers Big Sisters, PAL, other programs. Many youth lack mentors. Demand exceeds supply."
+    },
+    "professional_mentoring": {
+      "score": 60,
+      "notes": "Varies by industry. Some formal programs. Often informal and inconsistent."
+    },
+    "peer_mentoring": {
+      "score": 60,
+      "notes": "Recovery community strong. Some educational programs. Effective where exists."
+    },
+    "community_projects": {
+      "score": 60,
+      "notes": "Neighborhood improvement projects common. Clean and green programs. Community organizing active."
+    },
+    "community_gardens": {
+      "score": 70,
+      "notes": "Philadelphia Horticultural Society supports many gardens. Popular and growing. Benefits community."
+    },
+    "neighborhood_cleanup": {
+      "score": 60,
+      "notes": "Cleanup days common. Community organizations coordinate. Ongoing challenge with illegal dumping."
+    },
+    "placemaking": {
+      "score": 60,
+      "notes": "Mural Arts and other programs. Neighborhood activation projects. Growing focus."
+    },
+    "creative_expression": {
+      "score": 70,
+      "notes": "Arts scene vibrant. Many outlets for creative expression. Public art valued."
+    },
+    "public_art": {
+      "score": 80,
+      "notes": "Mural Arts program world-renowned. Sculpture and installations throughout city. Major cultural asset."
+    },
+    "performance_spaces": {
+      "score": 70,
+      "notes": "Theaters, music venues, community spaces. Range of options. Some neighborhood gaps."
+    },
+    "teaching_opportunities": {
+      "score": 60,
+      "notes": "Formal and informal teaching opportunities. Libraries host classes. Skill-sharing growing."
+    },
+    "caregiving_support": {
+      "score": 50,
+      "notes": "Support for caregivers limited. Respite care scarce. Growing recognition of need."
+    },
+    "elder_wisdom": {
+      "score": 60,
+      "notes": "Some intergenerational programs. Oral history projects. Underutilized resource."
+    },
+    "youth_leadership": {
+      "score": 50,
+      "notes": "Some programs exist (Youth United for Change). Youth voice often marginalized. Growing attention."
+    },
+    "environmental_stewardship": {
+      "score": 60,
+      "notes": "Watershed groups active. Tree planting programs. Environmental education growing."
+    },
+    "legacy_building": {
+      "score": 50,
+      "notes": "Opportunities through endowments, naming. Not accessible to most. Community legacy projects rare."
+    },
+    "social_innovation": {
+      "score": 60,
+      "notes": "Social enterprises emerging. Benefit corporations present. Impact investing growing."
+    }
+  },
+  "whole_scores": {
+    "healthcare_access": {
+      "score": 60,
+      "notes": "Major hospitals and health centers. Insurance affects access. Some areas underserved."
+    },
+    "primary_care": {
+      "score": 60,
+      "notes": "Health centers and hospitals provide care. Primary care shortage in some areas. Long wait times."
+    },
+    "specialists": {
+      "score": 60,
+      "notes": "Major teaching hospitals offer specialists. Wait times long. Insurance affects access."
+    },
+    "emergency_care": {
+      "score": 70,
+      "notes": "Excellent trauma centers. ERs crowded. Costs high for uninsured."
+    },
+    "mental_health": {
+      "score": 50,
+      "notes": "Shortage of providers. Long wait lists. Stigma persists. System strained."
+    },
+    "therapy_counseling": {
+      "score": 50,
+      "notes": "Mental health providers shortage. Long wait lists. Some sliding scale options. Stigma persists."
+    },
+    "psychiatry": {
+      "score": 40,
+      "notes": "Severe shortage of psychiatrists. Months-long waits. Crisis system strained."
+    },
+    "crisis_mental_health": {
+      "score": 50,
+      "notes": "Crisis response centers exist. 988 hotline available. System overwhelmed."
+    },
+    "substance_support": {
+      "score": 50,
+      "notes": "Opioid crisis strains system. Some good programs. Need exceeds capacity."
+    },
+    "addiction_treatment": {
+      "score": 50,
+      "notes": "Treatment available but need exceeds capacity. Medication-assisted treatment expanding. Recovery homes exist."
+    },
+    "recovery_support": {
+      "score": 60,
+      "notes": "Strong recovery community. Many support groups. Peer specialists available."
+    },
+    "harm_reduction": {
+      "score": 60,
+      "notes": "Safehouse proposed. Narcan distribution. Clean syringe programs. Controversial but expanding."
+    },
+    "preventive_care": {
+      "score": 50,
+      "notes": "Available but underutilized. Screenings offered through health centers. Awareness varies."
+    },
+    "health_screenings": {
+      "score": 60,
+      "notes": "Free and low-cost screenings available. Mobile units reach some areas. Uptake varies."
+    },
+    "vaccinations": {
+      "score": 70,
+      "notes": "Childhood vaccines accessible. Adult vaccines available. Pharmacy access helps."
+    },
+    "health_education": {
+      "score": 50,
+      "notes": "Some programs through health centers. Schools vary. Community health workers help."
+    },
+    "dental_care": {
+      "score": 50,
+      "notes": "Dental deserts exist. Limited Medicaid providers. School-based programs help children."
+    },
+    "vision_care": {
+      "score": 60,
+      "notes": "Eye care available but affordability issue. Some free screening programs. Glasses assistance limited."
+    },
+    "hearing_care": {
+      "score": 50,
+      "notes": "Hearing tests available. Hearing aids expensive. Some assistance programs."
+    },
+    "recreation_fitness": {
+      "score": 60,
+      "notes": "Rec centers offer programs. Parks available. Gyms cost-prohibitive for many."
+    },
+    "fitness_facilities": {
+      "score": 60,
+      "notes": "Gyms and rec centers available. Cost barrier for commercial gyms. Free options in parks."
+    },
+    "outdoor_recreation": {
+      "score": 70,
+      "notes": "Excellent park system. Trails and recreation areas. Well-used community asset."
+    },
+    "healthy_food": {
+      "score": 50,
+      "notes": "Food deserts exist. Farmers markets growing. Affordability major issue."
+    },
+    "nutrition_education": {
+      "score": 50,
+      "notes": "Some programs through hospitals and health centers. Not widespread. Food insecurity affects nutrition."
+    },
+    "environmental_health": {
+      "score": 60,
+      "notes": "Air quality concerns in some areas. Old infrastructure issues. Environmental justice attention growing."
+    },
+    "air_quality": {
+      "score": 60,
+      "notes": "Generally acceptable. Refinery and traffic pollution concerns. Monitoring exists."
+    },
+    "water_safety": {
+      "score": 70,
+      "notes": "Water quality generally good. Lead pipe replacement ongoing. Old infrastructure concerns."
+    },
+    "environmental_hazards": {
+      "score": 50,
+      "notes": "Lead paint in older homes. Some contaminated sites. Asbestos exposure risk."
+    },
+    "identity_acceptance": {
+      "score": 60,
+      "notes": "Generally accepting city. LGBTQ+ friendly. Some populations face discrimination."
+    },
+    "disability_services": {
+      "score": 50,
+      "notes": "Services mandated but access challenging. Waitlists for supports. Funding gaps."
+    }
+  },
+  "metadata": {
+    "total_services": 19,
+    "data_sources": [
+      "City of Philadelphia official websites",
+      "Philadelphia Police Department",
+      "Philadelphia Fire Department",
+      "Public health department data"
+    ],
+    "scoring_methodology": "Qualitative assessment based on department size, coverage, response times, public reporting, and regional comparisons"
+  }
+}

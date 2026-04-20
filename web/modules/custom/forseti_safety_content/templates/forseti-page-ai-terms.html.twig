@@ -1,0 +1,82 @@
+{#
+/**
+ * @file
+ * Template for AI Terms of Use page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - ai_capabilities: AI capabilities section
+ * - limitations: AI limitations section
+ * - conversation_guidelines: Conversation guidelines (dos and donts)
+ * - data_usage: AI data usage section
+ * - intellectual_property: IP section
+ * - human_oversight: Human oversight section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead">{{ intro }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ ai_capabilities.title }}</h2>
+      <ul>
+        {% for item in ai_capabilities.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="alert alert-warning mt-4">
+        <h4>{{ limitations.title }}</h4>
+        <ul class="mb-0">
+          {% for item in limitations.items %}
+            <li>{{ item|raw }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ conversation_guidelines.title }}</h2>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ conversation_guidelines.dos.title }}</h5>
+            <ul>
+              {% for item in conversation_guidelines.dos.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ conversation_guidelines.donts.title }}</h5>
+            <ul>
+              {% for item in conversation_guidelines.donts.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ data_usage.title }}</h2>
+      <p>{{ data_usage.content }}</p>
+      <ul>
+        {% for item in data_usage.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ intellectual_property.title }}</h2>
+      <p>{{ intellectual_property.content }}</p>
+      
+      <div class="alert alert-info mt-4">
+        <h4>{{ human_oversight.title }}</h4>
+        <p class="mb-0">{{ human_oversight.content }}</p>
+      </div>
+    </div>
+  </div>
+</div>

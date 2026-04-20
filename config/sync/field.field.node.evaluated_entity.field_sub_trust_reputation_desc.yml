@@ -1,0 +1,22 @@
+uuid: 4939e246-0e39-4cb7-bf5b-021637198726
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_trust_reputation_desc
+    - node.type.evaluated_entity
+  module:
+    - text
+id: node.evaluated_entity.field_sub_trust_reputation_desc
+field_name: field_sub_trust_reputation_desc
+entity_type: node
+bundle: evaluated_entity
+label: 'Trust & Reputation Description'
+description: 'AI-provided description for Trust & Reputation sub-dimension'
+required: false
+translatable: true
+default_value: null
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

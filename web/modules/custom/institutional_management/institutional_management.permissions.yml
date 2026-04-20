@@ -1,0 +1,20 @@
+access institutional dashboard:
+  title: 'Access institutional dashboard'
+  description: 'View the institutional management dashboard'
+
+manage institution:
+  title: 'Manage institution'
+  description: 'Create and manage institutional groups and settings'
+
+manage institution members:
+  title: 'Manage institution members'
+  description: 'Add, remove, and manage institutional members and roles'
+
+view institution reports:
+  title: 'View institution reports'
+  description: 'Access institutional compliance reports and analytics'
+
+administer institutional management:
+  title: 'Administer institutional management'
+  description: 'Full administrative access to institutional management features'
+  restrict access: true

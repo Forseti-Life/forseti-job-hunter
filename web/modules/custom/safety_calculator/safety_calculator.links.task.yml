@@ -1,0 +1,5 @@
+safety_calculator.user_individual_metrics:
+  route_name: safety_calculator.individual_metrics_profile
+  base_route: entity.user.canonical
+  title: 'Individual Metrics'
+  weight: 30

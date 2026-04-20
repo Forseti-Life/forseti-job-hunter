@@ -1,0 +1,101 @@
+{#
+/**
+ * @file
+ * Template for the job application profile dashboard.
+ *
+ * Available variables:
+ * - header: Page header content
+ * - completeness: Profile completeness widget
+ * - stats: Profile statistics
+ * - sections: Profile sections summary
+ * - actions: Action buttons
+ */
+#}
+
+{# Apply the same professional card layout as the user profile #}
+<div class="user-profile-page">
+  <div class="container">
+    {# Professional header #}
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="user-profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user-tie fa-4x"></i>
+          </div>
+          <div class="profile-name-info">
+            <h1 class="profile-name">Job Application Profile</h1>
+            <p class="profile-subtitle">Manage your professional information for job applications</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      {# Left Column - Profile Summary #}
+      <div class="col-lg-4">
+        {# Profile Completeness Card #}
+        <div class="user-info-card">
+          <h3 class="card-title">
+            <i class="fas fa-chart-pie"></i>
+            Profile Completeness
+          </h3>
+          <div class="user-info-content">
+            {{ completeness }}
+          </div>
+        </div>
+
+        {# Profile Stats Card #}
+        <div class="user-info-card">
+          <h3 class="card-title">
+            <i class="fas fa-info-circle"></i>
+            Profile Overview
+          </h3>
+          <div class="user-info-content">
+            {{ stats }}
+          </div>
+        </div>
+      </div>
+
+      {# Right Column - Profile Sections & Actions #}
+      <div class="col-lg-8">
+        {# Profile Sections Card #}
+        <div class="user-info-card">
+          <h3 class="card-title">
+            <i class="fas fa-list-check"></i>
+            Profile Sections
+          </h3>
+          <div class="user-info-content">
+            {{ sections }}
+          </div>
+        </div>
+
+        {# Actions Card #}
+        <div class="user-info-card">
+          <h3 class="card-title">
+            <i class="fas fa-tools"></i>
+            Quick Actions
+          </h3>
+          <div class="user-info-content">
+            <div class="profile-actions-grid">
+              {{ actions }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Action Buttons - Match the user profile layout #}
+    <div class="row mt-5">
+      <div class="col-12 text-center">
+        <a href="{{ path('job_hunter.user_profile_edit', {'user': user.id()}) }}" class="btn btn-primary btn-lg">
+          <i class="fas fa-edit"></i>
+          Edit Profile
+        </a>
+        <a href="{{ path('job_hunter.dashboard') }}" class="btn btn-outline-primary btn-lg">
+          <i class="fas fa-briefcase"></i>
+          View Job Applications
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

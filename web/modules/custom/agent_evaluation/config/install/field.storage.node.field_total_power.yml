@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_total_power
+field_name: field_total_power
+entity_type: node
+type: integer
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

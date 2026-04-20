@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Users Metrics module.
+ */
+
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Symfony\Component\Yaml\Yaml;
+
+/**
+ * Implements hook_requirements().
+ */
+function users_metrics_requirements($phase) {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    $module_handler = \Drupal::moduleHandler();
+
+    // Check if dblog module is enabled for login metrics.
+    if (!$module_handler->moduleExists('dblog')) {
+      $requirements['users_metrics_dblog'] = [
+        'title' => t('Users Metrics - Login Statistics'),
+        'value' => t('Database Logging module not enabled'),
+        'description' => t('The Database Logging (dblog) module is required to track user login statistics. @link to enable login metrics.', [
+          '@link' => Link::fromTextAndUrl(
+            t('Enable the module'),
+            Url::fromRoute('system.modules_list', [], ['fragment' => 'edit-modules-core'])
+          )->toString(),
+        ]),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+    else {
+      $requirements['users_metrics_dblog'] = [
+        'title' => t('Users Metrics - Login Statistics'),
+        'value' => t('Database Logging module enabled'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Update a view configuration from the module's config/install directory.
+ *
+ * @param string $view_name
+ *   The view machine name (without 'views.view.' prefix).
+ */
+function _users_metrics_update_view($view_name) {
+  $config_name = 'views.view.' . $view_name;
+  $module_path = \Drupal::service('extension.path.resolver')->getPath('module', 'users_metrics');
+  $config_file = $module_path . '/config/install/' . $config_name . '.yml';
+
+  if (!file_exists($config_file)) {
+    return;
+  }
+
+  $config_data = Yaml::parse(file_get_contents($config_file));
+  $config = \Drupal::configFactory()->getEditable($config_name);
+
+  // Preserve UUID if view already exists.
+  $uuid = $config->get('uuid');
+  $config->setData($config_data)->save();
+
+  if ($uuid) {
+    $config->set('uuid', $uuid)->save();
+  }
+}
+
+/**
+ * Update all Users Metrics views.
+ */
+function _users_metrics_update_all_views() {
+  _users_metrics_update_view('users_metrics_registrations');
+  _users_metrics_update_view('users_metrics_logins');
+}
+
+/**
+ * Add weekend highlighting to charts.
+ */
+function users_metrics_update_10022() {
+  // No view changes needed, just clear caches for JS/CSS updates.
+  _users_metrics_update_all_views();
+  return t('Added weekend highlighting to charts.');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function users_metrics_uninstall() {
+  \Drupal::configFactory()->getEditable('views.view.users_metrics_registrations')->delete();
+  \Drupal::configFactory()->getEditable('views.view.users_metrics_logins')->delete();
+  \Drupal::configFactory()->getEditable('users_metrics.settings')->delete();
+}

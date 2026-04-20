@@ -1,0 +1,87 @@
+{#
+/**
+ * @file
+ * Theme override to display the front page with animated header.
+ */
+#}
+
+{{ attach_library('forseti/animated-header') }}
+
+<div class="page-wrapper">
+  {# Animated Header Section - Full Height Home Header #}
+  <div id="large-header" class="large-header home-header">
+    <canvas id="demo-canvas"></canvas>
+    <h1 class="main-title">
+      <span class="highlight">Forseti</span> <span class="thin">Life</span>
+    </h1>
+    <p class="main-subtitle">
+      AI-Powered Safety Monitoring for Philadelphia - Building Safer Communities Through Intelligence
+    </p>
+    <div class="hero-cta">
+      <a href="/home#safety-map" class="btn btn-primary">View Safety Map</a>
+      <a href="/mobile-app" class="btn btn-outline-light">Forseti Mobile</a>
+      <a href="/about" class="btn btn-outline-light">Learn More</a>
+    </div>
+  </div>
+
+  {# Navigation - Using Radix Navbar Component #}
+  {% block page_navigation %}
+    {% embed 'radix:navbar' with {
+      navbar_container_type: null,
+      navbar_expand: 'lg',
+      navbar_theme: 'dark',
+      navbar_utility_classes: [
+        'forseti-navbar',
+        'forseti-navbar-front',
+      ],
+    } %}
+      {% block branding %}
+        {% if page.navbar_branding %}
+          {{ page.navbar_branding }}
+        {% endif %}
+      {% endblock %}
+
+      {% block left %}
+        {% if page.navbar_left %}
+          <div class="me-auto">
+            {{ page.navbar_left }}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      {% block right %}
+        {% if page.navbar_right %}
+          <div class="ms-auto">
+            {{ page.navbar_right }}
+          </div>
+        {% endif %}
+      {% endblock %}
+    {% endembed %}
+  {% endblock %}
+
+  {# Main Content #}
+  <main class="main-content">
+    {% if page.header %}
+      <div class="header-region">
+        <div class="container">
+          {{ page.header }}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          {% if page.content %}
+            {{ page.content }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {# Footer #}
+  {% if page.footer %}
+    {{ page.footer }}
+  {% endif %}
+</div>

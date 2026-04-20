@@ -1,0 +1,195 @@
+global-styling:
+  css:
+    theme:
+      css/job_hunter.css: {}
+  dependencies:
+    - core/drupal
+
+utils:
+  js:
+    js/utils.js: {}
+  dependencies:
+    - core/drupal
+
+home-page:
+  css:
+    theme:
+      css/job_hunter.css: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+
+job-hunter-home:
+  css:
+    theme:
+      css/job-hunter-home.css: {}
+  dependencies:
+    - core/drupal
+
+job-hunter-navigation:
+  css:
+    theme:
+      css/job-hunter-navigation.css: {}
+  dependencies:
+    - core/drupal
+
+documentation:
+  css:
+    theme:
+      css/documentation.css: {}
+  dependencies:
+    - core/drupal
+
+companies_table:
+  css:
+    theme:
+      css/companies-table.css: {}
+  js:
+    js/companies-table.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+user_profile:
+  css:
+    theme:
+      css/user-profile-custom.css: {}
+  js:
+    js/user-profile.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+company_profile:
+  css:
+    theme:
+      css/company-profile.css: {}
+  dependencies:
+    - core/drupal
+
+job_discovery:
+  css:
+    theme:
+      css/job-discovery.css: {}
+  js:
+    js/job-discovery.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/drupal.ajax
+    - core/once
+    - job_hunter/job-hunter-home
+    - job_hunter/utils
+
+tailor_resume:
+  css:
+    theme:
+      css/tailor-resume.css: {}
+  js:
+    js/tailor-resume.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/drupal.ajax
+    - core/once
+    - job_hunter/job-hunter-home
+
+queue-controls:
+  css:
+    theme:
+      css/queue-controls.css: {}
+  js:
+    js/queue-controls.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - job_hunter/utils
+
+company-research:
+  css:
+    theme:
+      css/company-research.css: {}
+  js:
+    js/company-research.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - job_hunter/job-hunter-home
+    - core/once
+
+target-companies:
+  css:
+    theme:
+      css/target-companies.css: {}
+  js:
+    js/target-companies.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+job-search-results:
+  version: 1.0.2
+  js:
+    js/job-search-results.js: {}
+  css:
+    theme:
+      css/job-search-results.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+queue-management:
+  css:
+    theme:
+      css/queue-management.css: {}
+  js:
+    js/queue-management.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+google_jobs_integration:
+  css:
+    theme:
+      css/google-jobs-integration.css: {}
+  js:
+    js/google-jobs-integration.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+job-application-dashboard:
+  css:
+    theme:
+      css/job-application-dashboard.css: {}
+  dependencies:
+    - core/drupal
+
+opportunity-management:
+  css:
+    theme:
+      css/opportunity-management.css: {}
+  js:
+    js/opportunity-management.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+user-profile-styling:
+  css:
+    theme:
+      css/profile.css: {}
+  dependencies:
+    - core/drupal
+
+error-queue-styling:
+  css:
+    theme:
+      css/error-queue.css: {}
+  dependencies:
+    - core/drupal

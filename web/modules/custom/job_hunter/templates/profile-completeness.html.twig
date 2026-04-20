@@ -1,0 +1,66 @@
+{#
+  @file
+  Template for displaying user profile completeness progress.
+
+  Variables:
+  - completeness:      Integer 0-100 completeness percentage.
+  - is_complete:       Boolean — true when completeness == 100.
+  - validation_errors: Legacy array of validation error message strings (kept for BC).
+  - missing_fields:    Array of items that are not yet completed. Each item has:
+                         - 'id'    : machine name of the field
+                         - 'label' : human-readable field label
+                         - 'link'  : URL path to the profile edit section for this field
+#}
+
+{{ attach_library('job_hunter/user-profile-styling') }}
+
+<div class="profile-completeness-container">
+  <div class="completeness-header">
+    <h2>{{ 'Profile Completeness'|t }}</h2>
+    <p class="completeness-subtitle">
+      {% if is_complete %}
+        {{ 'Your profile is complete and ready for job matching.'|t }}
+      {% else %}
+        {{ 'Complete your profile to unlock job matching and applications.'|t }}
+      {% endif %}
+    </p>
+  </div>
+
+  {# Progress bar #}
+  <div class="completeness-progress">
+    <div class="progress-track">
+      <div class="progress-bar{% if is_complete %} complete{% endif %}" style="width: {{ completeness }}%">
+        <span class="progress-text">{{ completeness }}%</span>
+      </div>
+    </div>
+  </div>
+
+  {# Missing-field checklist with direct edit links #}
+  {% if missing_fields %}
+    <div class="completeness-checklist">
+      <h3>{{ 'Complete these sections to improve your profile'|t }}</h3>
+      <ul class="missing-fields-list">
+        {% for field in missing_fields %}
+          <li class="missing-field-item missing-field--{{ field.id }}">
+            <span class="missing-field-icon" aria-hidden="true">○</span>
+            <a href="{{ field.link }}" class="missing-field-link">{{ field.label|t }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="completeness-cta">
+        <a href="/jobhunter/profile/edit" class="button button--primary">{{ 'Edit Profile'|t }}</a>
+      </p>
+    </div>
+  {% endif %}
+
+  {# Status messaging #}
+  {% if is_complete %}
+    <div class="alert alert-success profile-ready">
+      <p>✓ {{ 'Your profile is complete and ready for job matching and applications.'|t }}</p>
+    </div>
+  {% elseif completeness >= 60 %}
+    <div class="alert alert-info profile-nearly-complete">
+      <p>{{ 'Almost there — complete the remaining sections to unlock all features.'|t }}</p>
+    </div>
+  {% endif %}
+</div>

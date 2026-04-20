@@ -1,0 +1,65 @@
+{#
+/**
+ * @file
+ * Template for Accessibility Statement page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - commitment: Commitment section
+ * - standards: Standards section
+ * - features: Array of accessibility features
+ * - limitations: Known limitations section
+ * - feedback: Feedback section
+ * - assistive_tech: Tested assistive tech info
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-info-cyan">
+        <h4 class="text-cyan">{{ commitment.title }}</h4>
+        <p class="mb-0">{{ commitment.content }}</p>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ standards.title }}</h2>
+      <ul>
+        {% for item in standards.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'Accessibility Features'|t }}</h2>
+      <div class="row">
+        {% for feature in features %}
+          <div class="col-md-6 mb-3">
+            <div class="card card-forseti p-3 h-100">
+              <h5>{{ feature.icon }} {{ feature.title }}</h5>
+              <p class="mb-0">{{ feature.description }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="alert alert-warning mt-4">
+        <h4>{{ limitations.title }}</h4>
+        <p>{{ limitations.intro }}</p>
+        <ul>
+          {% for item in limitations.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <p class="mb-0"><em>{{ limitations.working_on_it }}</em></p>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ feedback.title }}</h2>
+      <p>{{ feedback.content|raw }}</p>
+      
+      <div class="card card-forseti p-3 mt-4">
+        <h4>{{ assistive_tech.title }}</h4>
+        <p class="mb-0">{{ assistive_tech.content }}</p>
+      </div>
+    </div>
+  </div>
+</div>

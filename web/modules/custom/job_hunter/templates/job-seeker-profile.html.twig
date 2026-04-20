@@ -1,0 +1,254 @@
+<div class="job-seeker-profile">
+  <div class="profile-header">
+    <h2>Job Seeker Profile</h2>
+    {% if edit_url %}
+      <a href="{{ edit_url }}" class="button button--primary">Edit Profile</a>
+    {% endif %}
+  </div>
+  
+  {% if profile %}
+    {# Contact Information #}
+    <div class="profile-section">
+      <h3>Contact Information</h3>
+      {% set contact = consolidated.contact_info ?? {} %}
+      <dl class="profile-data">
+        <dt>Full Name</dt>
+        <dd>{{ contact.full_name ?? user.getDisplayName() }}</dd>
+        
+        {% if contact.headline %}
+          <dt>Professional Headline</dt>
+          <dd>{{ contact.headline }}</dd>
+        {% endif %}
+        
+        {% if contact.credentials %}
+          <dt>Credentials</dt>
+          <dd>{{ contact.credentials|join(', ') }}</dd>
+        {% endif %}
+        
+        <dt>Email</dt>
+        <dd>{{ contact.email ?? user.getEmail() }}</dd>
+        
+        {% if contact.phone %}
+          <dt>Phone</dt>
+          <dd>{{ contact.phone }}</dd>
+        {% endif %}
+        
+        {% if contact.location %}
+          <dt>Location</dt>
+          <dd>{{ contact.location.city }}{% if contact.location.state %}, {{ contact.location.state }}{% endif %}</dd>
+        {% endif %}
+      </dl>
+    </div>
+    
+    {# Executive Profile / Professional Summary #}
+    {% if consolidated.executive_profile %}
+      <div class="profile-section">
+        <h3>Executive Profile</h3>
+        <div class="profile-text">{{ consolidated.executive_profile|nl2br }}</div>
+      </div>
+    {% endif %}
+    
+    {# Strategic Differentiators #}
+    {% if consolidated.strategic_differentiators %}
+      <div class="profile-section">
+        <h3>Strategic Differentiators</h3>
+        <ul class="differentiators-list">
+          {% for diff in consolidated.strategic_differentiators %}
+            <li>
+              <strong>{{ diff.title }}</strong>
+              {% if diff.description %}<br>{{ diff.description }}{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    {# Professional Experience #}
+    {% if consolidated.professional_experience %}
+      <div class="profile-section">
+        <h3>Professional Experience</h3>
+        {% for job in consolidated.professional_experience %}
+          <div class="experience-item">
+            <h4>{{ job.title }} at {{ job.company }}</h4>
+            <p class="job-meta">{{ job.start_date }} - {{ job.end_date ?? 'Present' }} | {{ job.location }}</p>
+            {% if job.company_context %}
+              <p class="company-context"><em>{{ job.company_context }}</em></p>
+            {% endif %}
+            {% if job.responsibility_categories %}
+              {% for cat in job.responsibility_categories %}
+                <h5>{{ cat.category }}</h5>
+                <ul>
+                  {% for achievement in cat.achievements %}
+                    <li>{{ achievement.text }}</li>
+                  {% endfor %}
+                </ul>
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {# Education #}
+    {% if consolidated.education %}
+      <div class="profile-section">
+        <h3>Education</h3>
+        {% for edu in consolidated.education %}
+          <div class="education-item">
+            <h4>{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}</h4>
+            <p>{{ edu.institution }}</p>
+            <p class="edu-dates">{{ edu.start_date }} - {{ edu.end_date }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {# Technical Expertise #}
+    {% if consolidated.technical_expertise.categories %}
+      <div class="profile-section">
+        <h3>Technical Expertise</h3>
+        {% for cat in consolidated.technical_expertise.categories %}
+          <div class="skill-category">
+            <h4>{{ cat.name }}</h4>
+            {% if cat.skills %}
+              <p>{{ cat.skills|join(', ') }}</p>
+            {% endif %}
+            {% if cat.subcategories %}
+              {% for sub in cat.subcategories %}
+                <p><strong>{{ sub.industry }}:</strong> {{ sub.skills|join(', ') }}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {# Leadership Philosophy #}
+    {% if consolidated.leadership_philosophy %}
+      <div class="profile-section">
+        <h3>Leadership Philosophy</h3>
+        <div class="profile-text">
+          {% for item in consolidated.leadership_philosophy %}
+            {% if item is iterable %}
+              <ul>
+                {% for sub in item %}
+                  <li>{{ sub }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p>{{ item }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+    
+    {# Demonstration Projects #}
+    {% if consolidated.demonstration_projects %}
+      <div class="profile-section">
+        <h3>Demonstration Projects</h3>
+        {% for proj in consolidated.demonstration_projects %}
+          <div class="project-item">
+            <h4>{{ proj.name }}</h4>
+            {% if proj.url %}<p><a href="{{ proj.url }}" target="_blank">{{ proj.url }}</a></p>{% endif %}
+            {% if proj.description %}<p>{{ proj.description }}</p>{% endif %}
+            {% if proj.technologies %}<p><strong>Technologies:</strong> {{ proj.technologies|join(', ') }}</p>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {# Job Search Preferences #}
+    {% set prefs = consolidated.job_search_preferences ?? {} %}
+    {% if prefs %}
+      <div class="profile-section">
+        <h3>Job Search Preferences</h3>
+        <dl class="profile-data">
+          {% if prefs.experience_years %}
+            <dt>Years of Experience</dt>
+            <dd>{{ prefs.experience_years }}</dd>
+          {% endif %}
+          {% if prefs.education_level %}
+            <dt>Education Level</dt>
+            <dd>{{ prefs.education_level }}</dd>
+          {% endif %}
+          {% if prefs.work_authorization %}
+            <dt>Work Authorization</dt>
+            <dd>{{ prefs.work_authorization }}</dd>
+          {% endif %}
+          {% if prefs.remote_preference %}
+            <dt>Remote Preference</dt>
+            <dd>{{ prefs.remote_preference }}</dd>
+          {% endif %}
+          {% if prefs.salary_min or prefs.salary_max %}
+            <dt>Salary Expectation</dt>
+            <dd>${{ prefs.salary_min ?? '0' }} - ${{ prefs.salary_max ?? 'Open' }}</dd>
+          {% endif %}
+          {% if prefs.available_start_date %}
+            <dt>Available Start Date</dt>
+            <dd>{{ prefs.available_start_date }}</dd>
+          {% endif %}
+          {% if prefs.relocation_willing is defined %}
+            <dt>Willing to Relocate</dt>
+            <dd>{{ prefs.relocation_willing ? 'Yes' : 'No' }}</dd>
+          {% endif %}
+          {% if prefs.references_available is defined %}
+            <dt>References Available</dt>
+            <dd>{{ prefs.references_available ? 'Yes' : 'No' }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    {% endif %}
+    
+    {# Online Presence #}
+    {% set websites = consolidated.contact_info.websites ?? [] %}
+    {% if websites or consolidated.contact_info.linkedin %}
+      <div class="profile-section">
+        <h3>Online Presence</h3>
+        <ul class="links-list">
+          {% for site in websites %}
+            <li><a href="{{ site.url }}" target="_blank">{{ site.type|capitalize }}: {{ site.url }}</a></li>
+          {% endfor %}
+          {% if consolidated.contact_info.linkedin %}
+            <li>LinkedIn Followers: {{ consolidated.contact_info.linkedin.followers }}</li>
+          {% endif %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    {# Demographics (EEO) #}
+    {% set demo = consolidated.demographics ?? {} %}
+    {% if demo.gender or demo.race_ethnicity or demo.veteran_status or demo.disability_status %}
+      <div class="profile-section">
+        <h3>Demographics (EEO)</h3>
+        <dl class="profile-data">
+          {% if demo.gender %}
+            <dt>Gender</dt>
+            <dd>{{ demo.gender }}</dd>
+          {% endif %}
+          {% if demo.race_ethnicity %}
+            <dt>Race/Ethnicity</dt>
+            <dd>{{ demo.race_ethnicity }}</dd>
+          {% endif %}
+          {% if demo.veteran_status %}
+            <dt>Veteran Status</dt>
+            <dd>{{ demo.veteran_status }}</dd>
+          {% endif %}
+          {% if demo.disability_status %}
+            <dt>Disability Status</dt>
+            <dd>{{ demo.disability_status }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    {% endif %}
+    
+    <div class="profile-actions">
+      {% if edit_url %}
+        <a href="{{ edit_url }}" class="button button--primary">Edit Profile</a>
+      {% endif %}
+    </div>
+    
+  {% else %}
+    <p>No profile found. {% if edit_url %}<a href="{{ edit_url }}">Create your profile</a>{% endif %}</p>
+  {% endif %}
+</div>

@@ -1,0 +1,28 @@
+<div class="documentation-home">
+  <div class="documentation-hero">
+    <h1>Job Application Automation Documentation</h1>
+    <p class="subtitle">Comprehensive guides for using and developing the Job Application Automation system</p>
+  </div>
+  
+  <div class="documentation-grid">
+    {% for link in doc_links %}
+      <div class="doc-card">
+        <div class="doc-icon">{{ link['#icon'] }}</div>
+        <h2 class="doc-title">{{ link['#title'] }}</h2>
+        <p class="doc-description">{{ link['#description'] }}</p>
+        <a href="{{ link['#url'] }}" class="doc-link">
+          View Documentation →
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+  
+  <div class="documentation-footer">
+    <h3>Quick Links</h3>
+    <ul>
+      <li><a href="/jobhunter">← Back to Dashboard</a></li>
+      <li><a href="/jobhunter/settings">Module Settings</a></li>
+      <li><a href="/admin/reports/dblog">System Logs</a></li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+jobhunter_tester.home:
+  path: '/jobhunter_testing'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterValidationController::validationDashboard'
+    _title: 'Job Hunter Validation Dashboard'
+  requirements:
+    _permission: 'administer site configuration'
+
+jobhunter_tester.test_page:
+  path: '/jobhunter_testing/routes'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterTesterController::testPage'
+    _title: 'Route Testing'
+  requirements:
+    _permission: 'administer site configuration'
+
+jobhunter_tester.unit_tests:
+  path: '/jobhunter_testing/unit-tests'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterTesterController::unitTestsPage'
+    _title: 'Job Hunter Unit Tests'
+  requirements:
+    _permission: 'administer site configuration'
+
+jobhunter_tester.run_tests:
+  path: '/jobhunter_testing/run-tests'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterTesterController::runTests'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer site configuration'
+  options:
+    _csrf_request_header_mode: 'true'
+
+jobhunter_tester.validation:
+  path: '/jobhunter_testing/validation'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterValidationController::validationDashboard'
+    _title: 'Job Hunter Validation Dashboard'
+  requirements:
+    _permission: 'administer site configuration'
+
+jobhunter_tester.validation.test_route:
+  path: '/jobhunter_testing/validation/test-route'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterValidationController::testRoute'
+  requirements:
+    _permission: 'administer site configuration'
+
+jobhunter_tester.validation.check_tables:
+  path: '/jobhunter_testing/validation/check-tables'
+  defaults:
+    _controller: '\Drupal\jobhunter_tester\Controller\JobHunterValidationController::checkTables'
+  requirements:
+    _permission: 'administer site configuration'

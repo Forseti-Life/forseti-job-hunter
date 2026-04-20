@@ -1,0 +1,76 @@
+{#
+/**
+ * @file
+ * Template for Mobile App page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - subtitle: Page subtitle
+ * - beta_alert: Beta testing alert section
+ * - intro: Intro section with title and description
+ * - app_display: App display card content
+ * - features_title: Features section title
+ * - features: Array of feature items
+ * - cta: Call-to-action section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      <p class="text-center mb-4 text-muted-light">{{ subtitle }}</p>
+      
+      <div class="alert alert-success text-center mb-4">
+        <h3 class="text-success mb-3">{{ beta_alert.title|raw }}</h3>
+        <p class="lead mb-3">{{ beta_alert.description }}</p>
+        <a href="{{ beta_alert.link_url }}" 
+           class="btn btn-success btn-lg mb-2" 
+           style="background-color: #28a745; border-color: #28a745;">
+          {{ beta_alert.button_text }}
+        </a>
+        <p class="text-muted mb-0">
+          <small><i class="fas fa-lock"></i> {{ beta_alert.note }}</small>
+        </p>
+      </div>
+      
+      <div class="row align-items-center mb-4">
+        <div class="col-lg-6">
+          <h2 class="text-cyan">{{ intro.title }}</h2>
+          <p class="text-muted-light">{{ intro.description }}</p>
+        </div>
+        <div class="col-lg-6 text-center">
+          <div class="card card-forseti p-4">
+            <div class="mb-3">
+              <img src="{{ app_display.logo }}" alt="Forseti Mobile App" class="app-logo">
+            </div>
+            <div class="text-muted">
+              <p class="mb-2">{{ app_display.android_icon|raw }}</p>
+              <p class="mb-2">{{ app_display.ios_icon|raw }}</p>
+              <p class="mt-3"><strong class="text-success">{{ app_display.status }}</strong></p>
+              <p class="text-muted"><small>{{ app_display.availability }}</small></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="mb-3 text-cyan">{{ features_title }}</h2>
+      
+      <div class="row">
+        {% for feature in features %}
+          <div class="col-md-6 mb-3">
+            <div class="card card-forseti p-3 h-100">
+              <h4>{{ feature.icon|raw }} {{ feature.title }}</h4>
+              <p>{{ feature.description }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="alert alert-info-cyan mt-4">
+        <h4 class="text-cyan">{{ cta.title|raw }}</h4>
+        <p>{{ cta.description }}</p>
+        <a href="{{ cta.button_url }}" class="btn btn-primary">{{ cta.button_text }}</a>
+      </div>
+    </div>
+  </div>
+</div>

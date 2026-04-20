@@ -1,0 +1,348 @@
+{#
+/**
+ * @file
+ * Template for the My Jobs pipeline view.
+ *
+ * Available variables:
+ * - jobs: Array of saved jobs for the current page (each has workflow_status, display_platform, match_score)
+ * - pipeline_stages: Keyed by stage slug; each entry has label, count, jobs
+ * - companies: Array of company names for filtering
+ * - filter_company: Current company filter value
+ * - filter_status: Current workflow_status filter value
+ * - user_has_skills: Boolean — TRUE if the current user has skills recorded in their profile
+ * - return_url: Current page URL for post-action redirects
+ * - current_page: Current page number (0-indexed)
+ * - total_pages: Total number of pages
+ * - total_jobs: Total job count matching filters
+ */
+#}
+
+<div class="my-jobs-page">
+  <h1>{{ 'My Jobs'|t }}</h1>
+  <p>{{ 'Track your saved jobs through the application pipeline.'|t }}</p>
+
+  <div class="page-actions">
+    <a href="/jobhunter/job/paste" class="button button--primary">
+      {{ '+ Add Job Posting'|t }}
+    </a>
+    <a href="/jobhunter/my-jobs/archive" class="button button--secondary">
+      {{ 'Archived Jobs'|t }}
+    </a>
+  </div>
+
+  {# Filter Form #}
+  <div class="jobs-filters">
+    <form method="get" action="/jobhunter/my-jobs" class="filter-form">
+      <div class="filter-row">
+        <div class="filter-field">
+          <label for="filter_company">{{ 'Company'|t }}</label>
+          <select name="filter_company" id="filter_company">
+            <option value="">{{ 'All Companies'|t }}</option>
+            {% for company in companies %}
+              <option value="{{ company }}"{{ company == filter_company ? ' selected' : '' }}>
+                {{ company }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="filter_status">{{ 'Status'|t }}</label>
+          <select name="filter_status" id="filter_status">
+            <option value="">{{ 'All Statuses'|t }}</option>
+            <option value="profile_pending"{{ filter_status == 'profile_pending' ? ' selected' : '' }}>{{ 'Profile Pending'|t }}</option>
+            <option value="tailoring_pending"{{ filter_status == 'tailoring_pending' ? ' selected' : '' }}>{{ 'Tailoring Pending'|t }}</option>
+            <option value="tailoring_processing"{{ filter_status == 'tailoring_processing' ? ' selected' : '' }}>{{ 'Tailoring Processing'|t }}</option>
+            <option value="approval_pending"{{ filter_status == 'approval_pending' ? ' selected' : '' }}>{{ 'Approval Pending'|t }}</option>
+            <option value="application_pending"{{ filter_status == 'application_pending' ? ' selected' : '' }}>{{ 'Application Pending'|t }}</option>
+            <option value="pending_response"{{ filter_status == 'pending_response' ? ' selected' : '' }}>{{ 'Pending Response'|t }}</option>
+            <option value="interview"{{ filter_status == 'interview' ? ' selected' : '' }}>{{ 'Interview'|t }}</option>
+            <option value="closed"{{ filter_status == 'closed' ? ' selected' : '' }}>{{ 'Closed'|t }}</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="button button--primary">{{ 'Filter'|t }}</button>
+          <a href="/jobhunter/my-jobs" class="button button--secondary">{{ 'Clear'|t }}</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {# Bulk Archive Form wraps checkboxes + pipeline display #}
+  <form method="post"
+        action="{{ path('job_hunter.my_jobs_bulk_archive') }}"
+        class="bulk-archive-form">
+    <input type="hidden" name="return_to" value="{{ return_url }}" />
+
+    {% if jobs|length > 0 %}
+      <div class="bulk-actions bulk-actions--top">
+        <button type="submit" class="button button--warning"
+                onclick="return confirm('{{ 'Archive all selected jobs?'|t }}')">
+          {{ 'Archive selected'|t }}
+        </button>
+      </div>
+
+      {# Pipeline stage groups (AC-1) #}
+      <div class="pipeline-view">
+        {% for stage_key, stage in pipeline_stages %}
+          {% if stage.count > 0 or stage.jobs|length > 0 %}
+            <section class="pipeline-stage pipeline-stage--{{ stage_key }}" aria-label="{{ stage.label|t }}">
+              <h2 class="pipeline-stage__header">
+                {{ stage.label|t }}
+                <span class="pipeline-stage__count badge badge--neutral"
+                      aria-label="{{ 'Total: @count'|t({'@count': stage.count}) }}">
+                  {{ stage.count }}
+                </span>
+              </h2>
+
+              {% if stage.jobs|length > 0 %}
+                <table class="jobs-table">
+                  <thead>
+                    <tr>
+                      <th class="col-select">
+                        <span class="visually-hidden">{{ 'Select'|t }}</span>
+                      </th>
+                      <th>{{ 'Job Title'|t }}</th>
+                      <th>{{ 'Company'|t }}</th>
+                      <th>{{ 'Match'|t }}</th>
+                      <th>{{ 'Actions'|t }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for job in stage.jobs %}
+                      {% set extracted = job.extracted_data %}
+                      {% set job_title = extracted.position.title|default(job.job_title)|default('Job #' ~ job.id) %}
+                      {% set company_name = extracted.company.name|default(job.company_name)|default('Unknown') %}
+                      {% set wf = job.workflow_status|default('profile_pending') %}
+
+                      <tr class="job-row job-row--{{ wf }}{% if job.follow_up_overdue %} job-row--follow-up-overdue{% endif %}">
+                        <td class="col-select">
+                          <input type="checkbox" name="job_ids[]" value="{{ job.id }}"
+                                 aria-label="{{ 'Select %title'|t({'%title': job_title}) }}" />
+                        </td>
+                        <td>
+                          <a href="{{ path('job_hunter.job_view', {'job_id': job.id}) }}">{{ job_title }}</a>
+                          {% if job.follow_up_overdue %}
+                            <span class="follow-up-overdue" title="{{ 'Follow-up date has passed'|t }}">⏰ {{ 'Follow up overdue'|t }}</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ company_name }}</td>
+                        <td class="col-match">
+                          {% if user_has_skills %}
+                            <span class="match-score-badge match-score-badge--{{ job.match_score >= 70 ? 'high' : (job.match_score >= 40 ? 'mid' : 'low') }}"
+                                  data-match-score="{{ job.match_score }}">{{ job.match_score }}% {{ 'match'|t }}</span>
+                          {% else %}
+                            <span class="match-score-badge match-score-badge--no-skills" data-match-score="0"><a href="/jobhunter/profile">{{ 'Complete profile'|t }}</a></span>
+                          {% endif %}
+                        </td>
+                        <td class="operations">
+                          {% if wf == 'profile_pending' %}
+                            <a href="/jobhunter/profile" class="button button--small button--primary">{{ 'Complete Profile'|t }}</a>
+                          {% elseif wf == 'tailoring_pending' %}
+                            <a href="/jobhunter/tailor-resume/{{ job.id }}" class="button button--small button--primary">{{ 'Tailor Resume'|t }}</a>
+                          {% elseif wf == 'tailoring_processing' %}
+                            <span class="status-text status-text--muted">{{ 'Processing...'|t }}</span>
+                          {% elseif wf == 'approval_pending' %}
+                            <a href="{{ path('job_hunter.generate_tailored_resume_pdf_redirect', {'job_id': job.id}, {'query': {'return_to': return_url}}) }}"
+                               class="button button--small button--primary"
+                               onclick="return confirm('{{ 'Generate PDF now?'|t }}')">
+                              {{ 'Generate PDF'|t }}
+                            </a>
+                          {% elseif wf == 'application_pending' %}
+                            <a href="{{ path('job_hunter.application_submission_job', {'job_id': job.id}) }}" class="button button--small button--primary">
+                              {{ 'Apply'|t }}
+                            </a>
+                          {% elseif wf == 'pending_response' %}
+                            <span class="status-text status-text--muted">{{ 'Awaiting response'|t }}</span>
+                          {% elseif wf == 'interview' %}
+                            <a href="{{ path('job_hunter.interview_prep', {'job_id': job.id}) }}" class="button button--small button--primary">{{ 'Prepare for Interview'|t }}</a>
+                          {% else %}
+                            <span class="status-text status-text--muted">&mdash;</span>
+                          {% endif %}
+
+                          <a href="{{ path('job_hunter.job_view', {'job_id': job.id}) }}" class="button button--small button--secondary">{{ 'View'|t }}</a>
+                          <a href="{{ path('job_hunter.job_archive', {'job_id': job.id}, {'query': {'return_to': return_url}}) }}"
+                             class="button button--small button--warning"
+                             onclick="return confirm('{{ 'Archive this job?'|t }}')">
+                            {{ 'Archive'|t }}
+                          </a>
+                          <button type="button"
+                                  class="button button--small button--info btn-notes-toggle"
+                                  data-job-id="{{ job.id }}"
+                                  data-load-url="{{ job.notes_load_url }}"
+                                  data-save-url="{{ job.notes_save_url }}"
+                                  data-token="{{ job.notes_csrf_token }}">
+                            {{ 'Notes'|t }}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="job-notes-panel job-notes-panel--{{ job.id }}" style="display:none">
+                        <td colspan="5">
+                          <div class="application-notes-inline">
+                            <div class="notes-field-row-inline">
+                              <input type="text" class="notes-manager-name" placeholder="{{ 'Hiring Manager Name'|t }}" maxlength="255" />
+                              <input type="email" class="notes-contact-email" placeholder="{{ 'Contact Email'|t }}" maxlength="255" />
+                              <input type="date" class="notes-last-contact-date" />
+                            </div>
+                            <div class="notes-field-row-inline">
+                              <textarea class="notes-text" rows="3" maxlength="2000" placeholder="{{ 'Notes (optional, max 2000 chars)'|t }}"></textarea>
+                            </div>
+                            <div class="notes-actions-inline">
+                              <button type="button" class="button button--small button--primary btn-notes-save-inline">{{ 'Save Notes'|t }}</button>
+                              <span class="notes-status-inline"></span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% endif %}
+            </section>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="bulk-actions bulk-actions--bottom">
+        <button type="submit" class="button button--warning"
+                onclick="return confirm('{{ 'Archive all selected jobs?'|t }}')">
+          {{ 'Archive selected'|t }}
+        </button>
+      </div>
+
+    {% else %}
+      {# AC-5: Empty state #}
+      <div class="empty-state">
+        {% if filter_status or filter_company %}
+          <p>{{ 'No jobs match the current filters.'|t }}
+            <a href="/jobhunter/my-jobs">{{ 'Clear filters'|t }}</a>
+          </p>
+        {% else %}
+          <p>
+            {{ 'No job postings saved yet.'|t }}
+            <a href="/jobhunter/job/paste">{{ 'Add your first job'|t }}</a>
+            {{ 'or'|t }}
+            <a href="/jobhunter/job-discovery">{{ 'search for jobs'|t }}</a>
+            {{ 'to get started.'|t }}
+          </p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </form>
+
+  {# AC-6: Pagination #}
+  {% if total_pages > 1 %}
+    <nav class="pager" aria-label="{{ 'Pagination'|t }}">
+      <ul class="pager__items">
+        {% if current_page > 0 %}
+          <li class="pager__item pager__item--previous">
+            <a href="?page={{ current_page - 1 }}{% if filter_company %}&filter_company={{ filter_company|url_encode }}{% endif %}{% if filter_status %}&filter_status={{ filter_status }}{% endif %}" rel="prev">
+              &lsaquo; {{ 'Previous'|t }}
+            </a>
+          </li>
+        {% endif %}
+        <li class="pager__item pager__item--current">
+          {{ 'Page %current of %total'|t({'%current': current_page + 1, '%total': total_pages}) }}
+        </li>
+        {% if current_page < total_pages - 1 %}
+          <li class="pager__item pager__item--next">
+            <a href="?page={{ current_page + 1 }}{% if filter_company %}&filter_company={{ filter_company|url_encode }}{% endif %}{% if filter_status %}&filter_status={{ filter_status }}{% endif %}" rel="next">
+              {{ 'Next'|t }} &rsaquo;
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+</div>
+
+<style>
+.application-notes-inline { padding: 12px 16px; background: #f8f9fa; border-radius: 6px; }
+.notes-field-row-inline { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.notes-field-row-inline input[type="text"],
+.notes-field-row-inline input[type="email"],
+.notes-field-row-inline input[type="date"] { flex: 1; min-width: 150px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9em; }
+.notes-field-row-inline textarea { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9em; resize: vertical; }
+.notes-actions-inline { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.notes-status-inline { font-size: 0.85em; }
+.notes-status-inline.success { color: #065f46; }
+.notes-status-inline.error { color: #991b1b; }
+.btn-notes-toggle { background: #6b7280; color: #fff; }
+.btn-notes-toggle:hover { background: #4b5563; }
+.btn-notes-toggle.active { background: #667eea; }
+.col-match { white-space: nowrap; width: 90px; text-align: center; }
+.match-score-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
+.match-score-badge--high { background: #d1fae5; color: #065f46; }
+.match-score-badge--mid  { background: #fef3c7; color: #92400e; }
+.match-score-badge--low  { background: #fee2e2; color: #991b1b; }
+.match-score-badge--no-skills { background: #f3f4f6; color: #6b7280; font-weight: 400; }
+.match-score-badge--no-skills a { color: #4b5563; text-decoration: underline; font-size: 0.85em; }
+.follow-up-overdue { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 12px; font-size: 0.78em; font-weight: 600; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; white-space: nowrap; }
+</style>
+
+<script>
+(function() {
+  document.querySelectorAll('.btn-notes-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var jobId = btn.dataset.jobId;
+      var panel = document.querySelector('.job-notes-panel--' + jobId);
+      if (!panel) { return; }
+      var isOpen = panel.style.display !== 'none';
+      if (isOpen) {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+        return;
+      }
+      fetch(btn.dataset.loadUrl, { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          panel.querySelector('.notes-manager-name').value = d.manager_name || '';
+          panel.querySelector('.notes-contact-email').value = d.contact_email || '';
+          panel.querySelector('.notes-last-contact-date').value = d.last_contact_date || '';
+          panel.querySelector('.notes-text').value = d.notes || '';
+          panel.style.display = '';
+          btn.classList.add('active');
+        })
+        .catch(function() {
+          panel.style.display = '';
+          btn.classList.add('active');
+        });
+      var saveBtn = panel.querySelector('.btn-notes-save-inline');
+      if (!saveBtn.dataset.wired) {
+        saveBtn.dataset.wired = '1';
+        saveBtn.addEventListener('click', function() {
+          var statusEl = panel.querySelector('.notes-status-inline');
+          var saveUrl = btn.dataset.saveUrl + '?token=' + encodeURIComponent(btn.dataset.token);
+          var payload = {
+            manager_name: panel.querySelector('.notes-manager-name').value,
+            contact_email: panel.querySelector('.notes-contact-email').value,
+            last_contact_date: panel.querySelector('.notes-last-contact-date').value,
+            notes: panel.querySelector('.notes-text').value
+          };
+          saveBtn.disabled = true;
+          fetch(saveUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+          })
+          .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+          .then(function(res) {
+            saveBtn.disabled = false;
+            statusEl.className = 'notes-status-inline ' + (res.status === 200 ? 'success' : 'error');
+            statusEl.textContent = res.status === 200 ? (res.data.message || 'Notes saved.') : (res.data.error || 'Save failed.');
+            setTimeout(function() { statusEl.className = 'notes-status-inline'; statusEl.textContent = ''; }, 4000);
+          })
+          .catch(function() {
+            saveBtn.disabled = false;
+            statusEl.className = 'notes-status-inline error';
+            statusEl.textContent = 'Network error.';
+          });
+        });
+      }
+    });
+  });
+})();
+</script>

@@ -1,0 +1,178 @@
+/**
+ * @file
+ * Styles for Population Benchmarks page.
+ */
+
+.population-benchmarks {
+  max-width: 1400px;
+}
+
+/* Dimension Score Cards */
+.dimension-scores-section .card {
+  transition: all 0.3s ease;
+}
+
+.dimension-scores-section .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+}
+
+/* Accordion Styling */
+.accordion-button:not(.collapsed) {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
+
+.accordion-button:not(.collapsed)::after {
+  filter: brightness(0) invert(1);
+}
+
+/* Metric Cards */
+.metric-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.metric-card:hover {
+  border-left-color: #0d6efd;
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Stat Boxes */
+.stat-box {
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.stat-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Sliders */
+.dimension-slider {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.form-range:disabled {
+  opacity: 0.6;
+}
+
+.form-range-sm {
+  height: 0.5rem;
+}
+
+/* Distribution Visualization */
+.distribution-viz {
+  padding: 0.5rem;
+  background: linear-gradient(to right, 
+    rgba(13, 110, 253, 0.1) 0%, 
+    rgba(13, 110, 253, 0.5) 50%, 
+    rgba(13, 110, 253, 0.1) 100%
+  );
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* Badge Styling */
+.accordion-button .badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Reference Links */
+.metric-card a {
+  color: #0d6efd;
+  transition: color 0.2s ease;
+}
+
+.metric-card a:hover {
+  color: #0a58ca;
+  text-decoration: underline !important;
+}
+
+/* Search Box */
+#benchmarks-search {
+  border: 2px solid #dee2e6;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+#benchmarks-search:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Print Styles */
+@media print {
+  .accordion-collapse {
+    display: block !important;
+    height: auto !important;
+  }
+  
+  .accordion-button {
+    display: none;
+  }
+  
+  #benchmarks-search,
+  #print-summary,
+  .navbar,
+  .footer {
+    display: none !important;
+  }
+  
+  .metric-card {
+    page-break-inside: avoid;
+  }
+  
+  .accordion-item {
+    border: 1px solid #dee2e6 !important;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .dimension-scores-section .col-sm-6 {
+    min-width: 100%;
+  }
+  
+  .stat-box {
+    margin-bottom: 1rem;
+  }
+  
+  .metric-card .row {
+    flex-direction: column;
+  }
+  
+  .metric-card .col-md-5,
+  .metric-card .col-md-7 {
+    max-width: 100%;
+  }
+}
+
+/* Animation for accordion expand */
+.accordion-collapse {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Nested accordion spacing */
+.accordion .accordion {
+  margin-top: 1rem;
+}
+
+.accordion .accordion .accordion-item {
+  border-left: 3px solid #ffc107;
+}
+
+/* Category folder icon animation */
+.accordion-button .fa-folder-open {
+  transition: transform 0.2s ease;
+}
+
+.accordion-button:not(.collapsed) .fa-folder-open {
+  transform: rotate(15deg);
+}

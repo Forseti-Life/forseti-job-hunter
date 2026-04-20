@@ -1,0 +1,12 @@
+/**
+ * @file
+ * DEPRECATED: All profile edit form styles have been migrated to the
+ * forseti theme SCSS component:
+ *   themes/custom/forseti/src/scss/components/_job-hunter-profile.scss
+ *
+ * This file is intentionally empty. It remains in place for the library
+ * definition in job_hunter.libraries.yml to avoid 404 errors until the
+ * library entry is fully removed in a future cleanup pass.
+ *
+ * @see _job-hunter-profile.scss for the centralized BEM component.
+ */

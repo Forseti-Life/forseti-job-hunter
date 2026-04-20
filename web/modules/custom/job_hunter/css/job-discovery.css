@@ -1,0 +1,599 @@
+/**
+ * @file
+ * Job Discovery CSS styles
+ */
+
+/* Utility Classes */
+.hidden {
+  display: none;
+}
+
+.job-discovery-start {
+  /* Width and padding controlled by .job-hunter-content */
+  background: #f8f9fa;
+  min-height: 80vh;
+}
+
+.job-discovery-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+  background: linear-gradient(135deg, #3498db, #2c3e50);
+  color: white;
+  border-radius: 10px;
+}
+
+.job-discovery-header h1 {
+  color: white;
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+  font-weight: 300;
+}
+
+.discovery-subtitle {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  margin-bottom: 0;
+}
+
+.discovery-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.discovery-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-left: 5px solid #3498db;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.discovery-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.discovery-card h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.discovery-description {
+  color: #5a6c7d;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.keywords-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.keyword-tag {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-block;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+}
+
+.keyword-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(52, 152, 219, 0.4);
+}
+
+.company-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.company-logo {
+  flex-shrink: 0;
+}
+
+.company-logo img {
+  max-width: 120px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.company-logo-text {
+  background: linear-gradient(135deg, #0066cc, #004499);
+  color: white;
+  padding: 20px 15px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.company-details h3 {
+  margin-bottom: 0.8rem;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.company-details p {
+  color: #5a6c7d;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.company-details a {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.company-details a:hover {
+  text-decoration: underline;
+}
+
+.discovery-actions {
+  text-align: center;
+  margin: 3rem 0;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+#start-discovery-btn {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 50px;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+#start-discovery-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+#start-discovery-btn:active {
+  transform: translateY(0);
+}
+
+.discovery-status {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #e8f5e8;
+  border-radius: 8px;
+  border: 1px solid #27ae60;
+}
+
+.discovery-status .spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: #27ae60;
+  border-right-color: transparent;
+}
+
+.status-text {
+  font-weight: 500;
+  color: #27ae60;
+}
+
+.sidebar-info {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-top: 4px solid #e74c3c;
+}
+
+.sidebar-info h3, .sidebar-info h4 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.discovery-steps {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.discovery-steps li {
+  margin-bottom: 0.8rem;
+  color: #5a6c7d;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.profile-summary {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #ecf0f1;
+}
+
+.profile-summary p {
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+  color: #5a6c7d;
+}
+
+.profile-summary strong {
+  color: #2c3e50;
+}
+
+.keyword-count {
+  font-weight: bold !important;
+  color: #3498db !important;
+  font-size: 1rem !important;
+}
+
+.no-keywords {
+  text-align: center;
+  padding: 3rem;
+  color: #e74c3c;
+  background: #fdf2f2;
+  border-radius: 8px;
+  border: 1px solid #fadbd8;
+}
+
+.no-keywords p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.discovery-results {
+  margin-top: 4rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.discovery-results h2 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.results-container {
+  margin-top: 2rem;
+}
+
+.job-result {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.job-result:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.job-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.job-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.job-title a:hover {
+  color: #3498db;
+  text-decoration: underline;
+}
+
+.job-location {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.job-description {
+  color: #5a6c7d;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-tag {
+  background: #ecf0f1;
+  color: #2c3e50;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+}
+
+.job-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.job-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 5px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .job-discovery-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .discovery-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .discovery-card {
+    padding: 1.5rem;
+  }
+  
+  .company-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .keywords-container {
+    justify-content: center;
+  }
+  
+  #start-discovery-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .discovery-steps {
+    padding-left: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .job-discovery-start {
+    padding: 1rem 0;
+  }
+  
+  .job-discovery-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+  }
+  
+  .job-discovery-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .discovery-card {
+    padding: 1rem;
+  }
+  
+  .sidebar-info {
+    padding: 1.5rem;
+  }
+}
+
+/* Company Selection Styles */
+.job-discovery-company-selection {
+  padding: 2rem 0;
+  background: #f8f9fa;
+  min-height: 80vh;
+}
+
+.profile-summary .keywords-preview {
+  margin-top: 1.5rem;
+}
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.keywords-note {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-bottom: 0;
+}
+
+.no-keywords {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.companies-section .section-description {
+  margin-bottom: 2rem;
+  color: #6c757d;
+}
+
+.companies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.company-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.company-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+}
+
+.company-header h3 {
+  color: #2c3e50;
+  margin-bottom: 0.8rem;
+  font-size: 1.4rem;
+}
+
+.company-description {
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.company-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.company-actions .btn {
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 0.6rem 1rem;
+}
+
+.company-discover-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border: none;
+}
+
+.company-discover-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #2471a3);
+}
+
+.company-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.company-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.help-section {
+  margin-top: 2rem;
+}
+
+.help-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.help-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.step-number {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.step-content p {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+/* Company-specific search page additions */
+.company-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+}
+
+.company-tag.company-link:hover {
+  background: #3498db;
+  color: white;
+  text-decoration: none;
+}
+
+.company-meta {
+  margin-top: 1rem;
+}
+
+/* Responsive adjustments for company selection */
+@media (max-width: 768px) {
+  .companies-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .help-steps {
+    grid-template-columns: 1fr;
+  }
+  
+  .company-actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,8 @@
+services:
+  forseti_safety_content.agent_power:
+    class: Drupal\forseti_safety_content\Service\AgentPowerService
+    arguments: ['@string_translation']
+    
+  forseti_safety_content.safety_dimensions:
+    class: Drupal\forseti_safety_content\Service\SafetyDimensionsService
+    arguments: ['@string_translation']

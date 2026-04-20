@@ -1,0 +1,106 @@
+/**
+ * NFR Navigation Menu Styles
+ * Uses Forseti theme + Bootstrap 5 classes with collapsible sections
+ */
+
+.nfr-navigation-menu {
+  /* Menu container styling handled by Forseti card-forseti class */
+}
+
+.nfr-navigation-menu .nav {
+  /* Bootstrap nav classes handle structure */
+}
+
+.nfr-navigation-menu .nav-link {
+  padding: 0.75rem 1rem;
+  color: white;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  display: block;
+  text-decoration: none;
+}
+
+.nfr-navigation-menu .nav-link:hover {
+  background-color: rgba(0, 212, 255, 0.1);
+  border-left-color: #00d4ff;
+  color: white;
+}
+
+.nfr-navigation-menu .nav-link:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-left-color: #00d4ff;
+  color: white;
+  outline: none;
+}
+
+.nfr-navigation-menu .nav-link.active {
+  background-color: rgba(0, 212, 255, 0.15);
+  border-left-color: #00d4ff;
+  font-weight: 600;
+  color: white;
+}
+
+/* Collapsible parent links */
+.nfr-navigation-menu .nav-link-parent {
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.nfr-navigation-menu .nav-link-parent:hover {
+  background-color: rgba(0, 212, 255, 0.1);
+  border-left-color: #00d4ff;
+}
+
+.nfr-navigation-menu .nav-link-parent:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-left-color: #00d4ff;
+  color: white;
+  outline: none;
+}
+
+.nfr-navigation-menu .nav-link-parent .parent-title {
+  flex: 1;
+}
+
+/* Collapse icon rotation */
+.nfr-navigation-menu .collapse-icon {
+  transition: transform 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.nfr-navigation-menu .nav-link-parent[aria-expanded="false"] .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.nfr-navigation-menu .nav-link-parent[aria-expanded="true"] .collapse-icon {
+  transform: rotate(0deg);
+}
+
+/* Children section */
+.nfr-navigation-menu .nav-children {
+  padding-left: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.nfr-navigation-menu .nav-children .nav-link {
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+}
+
+.nfr-navigation-menu .nav-divider {
+  margin: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth collapse animation */
+.nfr-navigation-menu .collapse {
+  transition: height 0.2s ease;
+}

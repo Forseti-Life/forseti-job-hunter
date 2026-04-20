@@ -1,0 +1,36 @@
+uuid: 100ef48c-0e0f-48ea-b34d-5909a0c4c95f
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: G-41QXRELBPB.69650668a77d32.48447702
+label: G-41QXRELBPB
+weight: 0
+tag_container_ids:
+  - G-41QXRELBPB
+advanced_settings:
+  consent_mode: false
+dimensions_metrics:
+  1:
+    type: metric
+    name: ''
+    value: ''
+conditions:
+  response_status:
+    id: response_status
+    negate: false
+    status_codes:
+      - 403
+      - 404
+events:
+  webform_purchase: {  }
+  login:
+    method: CMS
+  search: {  }
+  custom: {  }
+  generate_lead:
+    value: ''
+    currency: ''
+  sign_up:
+    method: CMS

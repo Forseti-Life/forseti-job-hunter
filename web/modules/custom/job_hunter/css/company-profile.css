@@ -1,0 +1,379 @@
+/**
+ * @file
+ * Company Profile Styles - Professional Theme Integration
+ */
+
+/* Target the existing company node structure */
+.node--type-company {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(100, 181, 246, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  margin: 2rem 0;
+  color: #e0e0e0;
+}
+
+/* Company node content wrapper */
+.node--type-company .node__content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* Company Header Section */
+.company-header-section {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(100, 181, 246, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.company-logo-wrapper img {
+  max-width: 80px;
+  max-height: 80px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.company-main-title {
+  color: #64b5f6;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.company-meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.company-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #b0bec5;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.company-meta-item i {
+  color: #64b5f6;
+  width: 1.2rem;
+  text-align: center;
+}
+
+/* Professional Section Styling */
+.professional-section {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(100, 181, 246, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.section-heading {
+  color: #64b5f6;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.section-heading i {
+  color: #81c784;
+}
+
+.section-content {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #e0e0e0;
+}
+
+.section-content p {
+  margin-bottom: 1rem;
+}
+
+/* Company Actions Section */
+.company-actions-section {
+  margin-top: 2rem;
+}
+
+.action-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(100, 181, 246, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: rgba(100, 181, 246, 0.4);
+}
+
+.action-icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #64b5f6, #42a5f5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-content {
+  flex: 1;
+}
+
+.action-content h4 {
+  color: #64b5f6;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-content .field__item {
+  color: #e0e0e0;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+/* Status Badge Styling */
+.status-card .action-icon {
+  background: linear-gradient(135deg, #81c784, #66bb6a);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  background: rgba(129, 199, 132, 0.2);
+  color: #81c784;
+  border: 1px solid rgba(129, 199, 132, 0.3);
+}
+
+.status-inactive {
+  background: rgba(229, 115, 115, 0.2);
+  color: #e57373;
+  border: 1px solid rgba(229, 115, 115, 0.3);
+}
+
+/* Link Styling for Company Fields */
+.node--type-company .field__item a {
+  color: #90caf9 !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.8rem 1.5rem !important;
+  background: rgba(100, 181, 246, 0.15) !important;
+  border: 1px solid rgba(100, 181, 246, 0.3) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  margin-top: 0.5rem !important;
+}
+
+.node--type-company .field__item a:hover {
+  color: #ffffff !important;
+  background: rgba(100, 181, 246, 0.3) !important;
+  border-color: rgba(100, 181, 246, 0.6) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(100, 181, 246, 0.3) !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+}
+
+.node--type-company .field__item a::before {
+  content: "🔗";
+  margin-right: 0.5rem;
+}
+
+.node--type-company .field--name-field-careers-url .field__item a::before {
+  content: "📋";
+}
+
+.node--type-company .field--name-field-website .field__item a::before {
+  content: "🌐";
+}
+
+/* Field Styling - Better Label/Value Differentiation */
+.node--type-company .field {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid rgba(100, 181, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.node--type-company .field:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(100, 181, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.node--type-company .field__label {
+  color: #64b5f6 !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  margin-bottom: 0.8rem !important;
+  display: block !important;
+  border-bottom: 1px solid rgba(100, 181, 246, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.node--type-company .field__item {
+  color: #e0e0e0 !important;
+  font-size: 1.2rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+/* Meta info field styling */
+.company-meta-item .field__label {
+  display: none;
+}
+
+.company-meta-item .field__item {
+  color: #b0bec5;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Section content field styling */
+.section-content .field__label {
+  color: #81c784;
+  font-size: 1rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+.section-content .field__item {
+  color: #e0e0e0;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .company-header-section {
+    padding: 1.5rem;
+  }
+  
+  .company-main-title {
+    font-size: 2rem;
+  }
+  
+  .company-meta-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .action-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+  
+  .action-icon {
+    margin-bottom: 1rem;
+  }
+  
+  .professional-section {
+    padding: 1.5rem;
+  }
+  
+  .section-heading {
+    font-size: 1.5rem;
+  }
+}
+
+/* Special styling for different field types */
+.node--type-company .field--name-field-active .field__item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 20px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-top: 0.5rem !important;
+}
+
+.node--type-company .field--name-field-active .field__item:contains("Off") {
+  background: rgba(229, 115, 115, 0.2) !important;
+  color: #e57373 !important;
+  border: 1px solid rgba(229, 115, 115, 0.3) !important;
+}
+
+.node--type-company .field--name-field-active .field__item:contains("On") {
+  background: rgba(129, 199, 132, 0.2) !important;
+  color: #81c784 !important;
+  border: 1px solid rgba(129, 199, 132, 0.3) !important;
+}
+
+.node--type-company .field--name-field-industry .field__item::before {
+  content: "🏭 ";
+  margin-right: 0.5rem;
+}
+
+.node--type-company .field--name-field-size .field__item::before {
+  content: "👥 ";
+  margin-right: 0.5rem;
+}
+
+/* Company title styling */
+.node--type-company h1.node__title,
+.node--type-company .node__title {
+  color: #64b5f6 !important;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  margin-bottom: 1.5rem !important;
+  text-align: center !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 2px solid rgba(100, 181, 246, 0.3) !important;
+}

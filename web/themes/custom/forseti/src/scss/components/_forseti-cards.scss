@@ -1,0 +1,238 @@
+// Forseti Card Component Styling
+// -----------------------------------------------------------------------------
+// Standardized card styling for forms, content blocks, and feature sections
+
+// Base Card Component
+.card-forseti {
+  background: #16213e !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  border-radius: 0.5rem;
+
+  // Heading styles
+  h4,
+  h5 {
+    color: #00d4ff !important;
+    font-weight: 600;
+  }
+
+  // Text content
+  p,
+  li {
+    color: #e8e8e8 !important;
+    line-height: 1.6;
+  }
+
+  // Form Elements
+  label {
+    color: #00d4ff;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    background-color: #1a1a2e;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #e8e8e8;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    width: 100%;
+    transition: all 0.3s ease;
+
+    &:focus {
+      background-color: #1a1a2e;
+      border-color: #00d4ff;
+      color: #e8e8e8;
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+    }
+
+    &::placeholder {
+      color: #666;
+    }
+  }
+
+  // Required field indicator
+  .form-required {
+    color: #f44336;
+  }
+
+  // Help text
+  .description {
+    color: #b8b8b8;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  // Submit buttons
+  button[type="submit"],
+  input[type="submit"],
+  .webform-button--submit {
+    background-color: #00d4ff;
+    border: none;
+    color: #1a1a2e;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #33dcff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+
+    &:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  .form-actions {
+    margin-top: 1.5rem;
+  }
+
+  // Social Auth Links
+  .social-auth-login a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 2rem;
+    background: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Accordion Forseti Theme
+.accordion-forseti {
+  .accordion-item {
+    background: #16213e;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    margin-bottom: 10px;
+    border-radius: 0.25rem;
+  }
+
+  .accordion-button {
+    background: #16213e;
+    color: #00d4ff;
+    border: none;
+    font-weight: 500;
+
+    &:not(.collapsed) {
+      background: #1a1a2e;
+      color: #00d4ff;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+    }
+
+    &::after {
+      filter: brightness(0) saturate(100%) invert(68%) sepia(82%) saturate(1974%) hue-rotate(156deg);
+    }
+  }
+
+  .accordion-body {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    border-top: 1px solid rgba(0, 212, 255, 0.2);
+  }
+}
+
+// Talk with Forseti Section
+.talk-with-forseti-section {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-top: 2px solid rgba(0, 212, 255, 0.3);
+  border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+  padding: 4rem 0;
+
+  h2 {
+    color: #00d4ff;
+    font-weight: 600;
+  }
+
+  .lead {
+    color: #e8e8e8;
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
+}
+
+.forseti-chat-preview {
+  text-align: center;
+  padding: 2rem;
+}
+
+.chat-icon-wrapper {
+  display: inline-block;
+  padding: 2rem;
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 50%;
+  border: 3px solid #00d4ff;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.forseti-chat-icon {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.6));
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+.forseti-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    padding: 0.5rem 0;
+    font-size: 1.1rem;
+    color: #e8e8e8;
+  }
+}
+
+// Hero CTA Buttons Enhancement
+.cta-buttons {
+  margin-top: 2rem;
+
+  .btn-primary {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    border: none;
+    color: #0f172a;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+      background: linear-gradient(135deg, #33dcff 0%, #00b8e6 100%);
+    }
+  }
+}

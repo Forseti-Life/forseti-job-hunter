@@ -1,0 +1,242 @@
+{#
+/**
+ * @file
+ * Template for Google Jobs job detail page.
+ *
+ * Available variables:
+ * - job: Job requirement object.
+ * - company: Company object.
+ * - sync: Google Jobs sync record.
+ * - validation_log: Array of validation log entries.
+ */
+#}
+
+<div class="google-jobs-job-detail">
+  
+  {# Header #}
+  <div class="job-header">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h1>{{ job.job_title }}</h1>
+        <p class="text-muted">
+          <i class="bi bi-building"></i> {{ company.company_name }}
+          <span class="mx-2">|</span>
+          <i class="bi bi-calendar"></i> Posted {{ job.created_at|date('M d, Y') }}
+        </p>
+      </div>
+      <div>
+        <a href="/jobhunter/googlejobsintegration" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to Integration
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# Sync Status Card #}
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3><i class="bi bi-google"></i> Google for Jobs Status</h3>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="status-item">
+            <label>Integration Status:</label>
+            {% if sync and sync.is_enabled %}
+              <span class="badge bg-success">Enabled</span>
+            {% else %}
+              <span class="badge bg-secondary">Disabled</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="status-item">
+            <label>Validation Status:</label>
+            {% if sync %}
+              <span class="badge badge-sync-{{ sync.validation_status }}">
+                {{ sync.validation_status|capitalize }}
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">Not Validated</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="status-item">
+            <label>Google Indexing:</label>
+            {% if sync and sync.google_indexing_status %}
+              <span class="badge badge-index-{{ sync.google_indexing_status }}">
+                {{ sync.google_indexing_status|replace({'_': ' '})|capitalize }}
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">Unknown</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="status-item">
+            <label>Last Validated:</label>
+            {% if sync and sync.last_validated %}
+              {{ sync.last_validated|date('M d, Y H:i') }}
+            {% else %}
+              Never
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      {% if sync and sync.is_enabled %}
+        <div class="mt-3">
+          <button class="btn btn-primary" id="validate-job" data-job-id="{{ job.id }}">
+            <i class="bi bi-check2-square"></i> Validate Now
+          </button>
+          <button class="btn btn-secondary" id="generate-structured-data" data-job-id="{{ job.id }}">
+            <i class="bi bi-code-square"></i> Regenerate Structured Data
+          </button>
+          <button class="btn btn-outline-danger" id="disable-integration" data-job-id="{{ job.id }}">
+            <i class="bi bi-toggle-off"></i> Disable Integration
+          </button>
+        </div>
+      {% else %}
+        <div class="mt-3">
+          <button class="btn btn-success" id="enable-integration" data-job-id="{{ job.id }}">
+            <i class="bi bi-toggle-on"></i> Enable Google Jobs Integration
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Performance Metrics #}
+  {% if sync and sync.is_enabled %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3><i class="bi bi-bar-chart"></i> Performance Metrics</h3>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-4">
+            <div class="metric">
+              <div class="metric-value">{{ sync.impressions_count|default(0)|number_format }}</div>
+              <div class="metric-label">Impressions</div>
+              <small class="text-muted">Views in Google Search</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="metric">
+              <div class="metric-value">{{ sync.clicks_count|default(0)|number_format }}</div>
+              <div class="metric-label">Clicks</div>
+              <small class="text-muted">Clicks to job posting</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="metric">
+              {% set ctr = sync.impressions_count > 0 ? ((sync.clicks_count / sync.impressions_count) * 100)|round(2) : 0 %}
+              <div class="metric-value">{{ ctr }}%</div>
+              <div class="metric-label">CTR</div>
+              <small class="text-muted">Click-through rate</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# Structured Data Preview #}
+  {% if sync and sync.structured_data_json %}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3><i class="bi bi-code-slash"></i> Schema.org Structured Data</h3>
+        <button class="btn btn-sm btn-outline-primary" id="copy-json">
+          <i class="bi bi-clipboard"></i> Copy JSON
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="structured-data-preview">
+          <pre id="json-ld-preview"><code>{{ sync.structured_data_json }}</code></pre>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# Validation History #}
+  {% if validation_log %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3><i class="bi bi-list-check"></i> Validation History</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in validation_log %}
+                <tr>
+                  <td>{{ log.created|date('M d, Y H:i') }}</td>
+                  <td>
+                    <span class="badge bg-info">{{ log.validation_type|replace({'_': ' '})|capitalize }}</span>
+                  </td>
+                  <td>
+                    <span class="badge badge-sync-{{ log.status }}">{{ log.status|capitalize }}</span>
+                  </td>
+                  <td>
+                    {% if log.errors_decoded is iterable and log.errors_decoded|length > 0 %}
+                      <button class="btn btn-sm btn-outline-warning" 
+                              onclick="alert('Errors:\n{{ log.errors_decoded|join('\n')|escape('js') }}')">
+                        {{ log.errors_decoded|length }} error(s)
+                      </button>
+                    {% endif %}
+                    {% if log.warnings_decoded is iterable and log.warnings_decoded|length > 0 %}
+                      <button class="btn btn-sm btn-outline-info"
+                              onclick="alert('Warnings:\n{{ log.warnings_decoded|join('\n')|escape('js') }}')">
+                        {{ log.warnings_decoded|length }} warning(s)
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# Validation Errors/Warnings #}
+  {% if sync_validation_errors|length > 0 %}
+    <div class="alert alert-warning">
+      <h4><i class="bi bi-exclamation-triangle"></i> Validation Issues</h4>
+      <ul>
+        {% for error in sync_validation_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {# Resources #}
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="bi bi-book"></i> Resources</h3>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li><a href="/jobhunter/documentation/google-jobs-integration" target="_blank">Google Jobs Integration Guide</a></li>
+        <li><a href="https://search.google.com/test/rich-results" target="_blank">Google Rich Results Test</a></li>
+        <li><a href="https://search.google.com/search-console" target="_blank">Google Search Console</a></li>
+        <li><a href="https://schema.org/JobPosting" target="_blank">Schema.org JobPosting Documentation</a></li>
+      </ul>
+    </div>
+  </div>
+
+  {# Status Messages #}
+  <div id="status-messages" class="mt-3"></div>
+
+</div>

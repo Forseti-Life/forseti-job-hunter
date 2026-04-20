@@ -1,0 +1,687 @@
+{#
+/**
+ * @file
+ * Step 5: Submit Application (combined Confirm Job / Locate Apply / Submit).
+ *
+ * Three sections rolled into one page:
+ *   A. Confirm the job still exists on the destination ATS.
+ *   B. Locate the apply control / entry point.
+ *   C. Submit the application (auto or manual).
+ *
+ * Variables:
+ *   job_id, job_title, company_name, company_id
+ *   apply_url, auth_url, auth_type, ats_platform
+ *   account_ready, browser_verified, has_stored_credential, prerequisites_met
+ *   job_confirmed_on_site, apply_control_located
+ *   submission_attempted, submission_started, submission_completed
+ *   submission_status, submission_result, confirmation
+ *   attempt_count, last_outcome, last_error, last_attempt_at
+ *   has_tailored_resume, resume_pdf_basename, resume_upload_result, resume_uploaded
+ *   section_a_status, section_b_status, section_c_status, all_pass
+ *   step5_cache_exists, step5_last_run_at, step5_ran_this_request
+ *   run_step5_csrf_token, return_url
+ */
+#}
+
+{% set section_color = {
+  'pass': '#28a745',
+  'in_progress': '#ffc107',
+  'incomplete': '#6c757d'
+} %}
+
+<div class="application-submission-page">
+  <h1>{{ 'Step 5: Submit Application'|t }}</h1>
+  <p>{{ 'Confirm the job exists, locate the apply control, and submit your application.'|t }}</p>
+
+  {# ── Requisition context ─────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Requisition Context'|t }}</h3>
+    <p><strong>{{ 'Job'|t }}:</strong> <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">{{ job_title }}</a></p>
+    <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}{% if company_id %} <small>(ID: {{ company_id }})</small>{% endif %}</p>
+    <p><strong>{{ 'ATS Platform'|t }}:</strong> {{ ats_platform|default('unknown') }}</p>
+    <p>
+      <strong>{{ 'Apply URL'|t }}:</strong>
+      {% if apply_url %}
+        <a href="{{ apply_url }}" target="_blank" rel="noopener">{{ apply_url }}</a>
+      {% else %}
+        <em>{{ 'Not available — complete Steps 2 & 3 first.'|t }}</em>
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Upstream prerequisites summary ──────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Upstream Prerequisites'|t }}</h3>
+    <table class="queue-status-table">
+      <tbody>
+        <tr>
+          <td>{{ 'Apply URL resolved (Step 2)'|t }}</td>
+          <td>
+            {% if apply_url %}
+              <span class="badge badge--success">{{ 'Yes'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'No'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'Auth path identified (Step 3)'|t }}</td>
+          <td>
+            {% if auth_type and auth_type != 'unknown' and auth_type != 'captcha_blocked' %}
+              <span class="badge badge--success">{{ auth_type }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'Not identified'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'Account ready (Step 4)'|t }}</td>
+          <td>
+            {% if account_ready %}
+              <span class="badge badge--success">{{ 'Ready'|t }}{% if browser_verified %} ({{ 'browser verified'|t }}){% endif %}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'Not confirmed'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'Credentials stored'|t }}</td>
+          <td>
+            {% if has_stored_credential %}
+              <span class="badge badge--success">{{ 'Yes'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'No'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if not prerequisites_met %}
+      <p style="margin-top: 8px; color: #dc3545;">
+        <strong>⚠️ {{ 'Prerequisites not fully met.'|t }}</strong>
+        {{ 'Complete Steps 2-4 before submitting.'|t }}
+      </p>
+    {% else %}
+      <p style="margin-top: 8px; color: #28a745;">
+        <strong>✅ {{ 'All upstream prerequisites met. Ready to submit.'|t }}</strong>
+      </p>
+    {% endif %}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {# SECTION A — Confirm Job Exists on Destination                             #}
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  <div class="job-info-box" style="border-left: 4px solid {{ section_color[section_a_status]|default('#6c757d') }};">
+    <h3>
+      {% if section_a_status == 'pass' %}✅{% else %}🔍{% endif %}
+      {{ 'A. Confirm Job Exists on Destination'|t }}
+    </h3>
+
+    {% if job_confirmed_on_site %}
+      <p>
+        <span class="badge badge--success">{{ 'Confirmed'|t }}</span>
+        {{ 'The job requisition is present on the destination ATS.'|t }}
+      </p>
+      <p><strong>{{ 'Job'|t }}:</strong> {{ job_title }}</p>
+      <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}</p>
+    {% else %}
+      <p>{{ 'Verify that the requisition still exists and is accepting applications on the destination site.'|t }}</p>
+      {% if apply_url %}
+        <p>
+          <a href="{{ apply_url }}" target="_blank" rel="noopener" class="button button--secondary" style="display: inline-block; margin-right: 8px;">
+            {{ 'Open Job on ATS →'|t }}
+          </a>
+          <form method="post" action="{{ path('job_hunter.application_submission_step5_post', {'job_id': job_id}) }}" style="display: inline-block;">
+            <input type="hidden" name="csrf_token" value="{{ run_step5_csrf_token }}" />
+            <input type="hidden" name="step5_action" value="confirm_job_exists" />
+            <button type="submit" class="button button--primary">
+              {{ 'Confirm Job Exists'|t }}
+            </button>
+          </form>
+        </p>
+      {% else %}
+        <p><em>{{ 'No apply URL available. Complete Step 2 first.'|t }}</em></p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {# SECTION B — Locate Apply Control                                          #}
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  <div class="job-info-box" style="border-left: 4px solid {{ section_color[section_b_status]|default('#6c757d') }};">
+    <h3>
+      {% if section_b_status == 'pass' %}✅{% else %}🎯{% endif %}
+      {{ 'B. Locate Apply Control'|t }}
+    </h3>
+
+    {% if apply_control_located %}
+      <p>
+        <span class="badge badge--success">{{ 'Located'|t }}</span>
+        {{ 'The apply entry point has been identified.'|t }}
+      </p>
+      {% if apply_url %}
+        <p><strong>{{ 'Apply Entry Point'|t }}:</strong> <a href="{{ apply_url }}" target="_blank" rel="noopener">{{ apply_url }}</a></p>
+      {% endif %}
+      {% if auth_url and auth_url != apply_url %}
+        <p><strong>{{ 'Auth Entry Point'|t }}:</strong> <a href="{{ auth_url }}" target="_blank" rel="noopener">{{ auth_url }}</a></p>
+      {% endif %}
+    {% else %}
+      <p>{{ 'The apply control entry point has not been confirmed yet.'|t }}</p>
+      {% if apply_url %}
+        <p>{{ 'The resolved URL from Step 2 is available. The apply control will be confirmed when submission begins.'|t }}</p>
+        <p><strong>{{ 'Candidate URL'|t }}:</strong> <a href="{{ apply_url }}" target="_blank" rel="noopener">{{ apply_url }}</a></p>
+      {% else %}
+        <p><em>{{ 'No apply URL resolved. The apply control cannot be located until Step 2 is complete.'|t }}</em></p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {# SECTION C — Workday Application Flow                                      #}
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  <div class="job-info-box" style="border-left: 4px solid {{ section_color[section_c_status]|default('#6c757d') }};">
+    <h3>
+      {% if section_c_status == 'pass' %}✅{% elseif section_c_status == 'in_progress' %}⏳{% else %}🚀{% endif %}
+      {{ 'C. Workday Application Flow'|t }}
+    </h3>
+
+    {% if submission_completed %}
+      <p>
+        <span class="badge badge--success">{{ 'Submitted'|t }}</span>
+        {{ 'The application has been submitted successfully through the Workday wizard.'|t }}
+      </p>
+      {% if confirmation %}
+        <p><strong>{{ 'Confirmation'|t }}:</strong> {{ confirmation }}</p>
+      {% endif %}
+    {% endif %}
+
+    {# ── Workday Wizard Progress Tracker ────────────────────────────────── #}
+    {% if prerequisites_met or submission_started %}
+      <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 16px; margin-top: 12px;">
+        <h4 style="margin-top: 0;">{{ 'Workday Wizard Steps'|t }}</h4>
+        <table class="queue-status-table" style="margin-bottom: 12px;">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>{{ 'Step'|t }}</th>
+              <th style="width: 140px;">{{ 'Status'|t }}</th>
+              <th style="width: 160px;">{{ 'Completed'|t }}</th>
+              <th style="width: 140px;">{{ 'Automation'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for wd_step in wd_flow_steps %}
+              {% set is_current = wd_step.number == wd_current_step %}
+              {% set row_bg = is_current ? '#fff3cd' : (wd_step.status == 'pass' ? '#d4edda' : 'transparent') %}
+              <tr style="background: {{ row_bg }};">
+                <td style="text-align: center; font-weight: bold;">{{ wd_step.number }}</td>
+                <td>
+                  {% if wd_step.status == 'pass' %}✅{% elseif is_current %}▶️{% else %}⬜{% endif %}
+                  {{ wd_step.label|t }}
+                </td>
+                <td>
+                  {% if wd_step.status == 'pass' %}
+                    <span class="badge badge--success">{{ 'COMPLETE'|t }}</span>
+                  {% elseif is_current %}
+                    <span class="badge badge--warning">{{ 'CURRENT'|t }}</span>
+                  {% else %}
+                    <span class="badge badge--info" style="background: #e2e3e5; color: #383d41;">{{ 'UPCOMING'|t }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if wd_step.completed_at %}
+                    <small>{{ wd_step.completed_at }}</small>
+                  {% else %}
+                    <small style="color: #999;">&mdash;</small>
+                  {% endif %}
+                </td>
+                <td>
+                  {# Step 1: Autofill with Resume — uses the browser automation #}
+                  {% if wd_step.key == 'autofill_resume' and wd_step.status != 'pass' and is_current %}
+                    {% if has_tailored_resume %}
+                      <form method="post" action="{{ path('job_hunter.application_submission_step5_post', {'job_id': job_id}) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ run_step5_csrf_token }}" />
+                        <input type="hidden" name="step5_action" value="upload_resume_continue" />
+                        <button type="submit" class="button button--primary button--small" style="font-size: 0.8em; padding: 2px 8px;">
+                          📄 {{ 'Run'|t }}
+                        </button>
+                      </form>
+                    {% else %}
+                      <small style="color: #dc3545;">{{ 'No PDF'|t }}</small>
+                    {% endif %}
+
+                  {# Steps 2-7: status only, auto-progress handled centrally #}
+                  {% elseif wd_step.key != 'autofill_resume' and wd_step.status != 'pass' and is_current %}
+                    <small style="color: #0c5460;">{{ 'Auto'|t }}</small>
+                  {% elseif wd_step.status == 'pass' %}
+                    <small style="color: #28a745;">✓</small>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {# ── Current step details ─────────────────────────────────────── #}
+        {% if wd_current_step == 1 and not resume_uploaded %}
+          <div style="border-top: 1px solid #dee2e6; padding-top: 12px; margin-top: 8px;">
+            <h5 style="margin-top: 0;">📄 {{ 'Step 1: Autofill with Resume'|t }}</h5>
+            {% if has_tailored_resume %}
+              <p>{{ 'Tailored resume ready:'|t }} <strong>{{ resume_pdf_basename }}</strong></p>
+              <p style="font-size: 0.9em; color: #6c757d;">
+                {{ 'The browser automation will: log in → navigate to apply page → click "Autofill with resume" → verify auth → upload PDF → confirm "Successfully Uploaded!" → click Continue.'|t }}
+              </p>
+            {% else %}
+              <p style="color: #dc3545;">
+                <strong>⚠️ {{ 'No tailored resume PDF available.'|t }}</strong>
+                {{ 'Generate a tailored resume for this job first.'|t }}
+              </p>
+            {% endif %}
+          </div>
+        {% elseif wd_current_step >= 2 and wd_current_step <= 6 %}
+          <div style="border-top: 1px solid #dee2e6; padding-top: 12px; margin-top: 8px;">
+            <p style="font-size: 0.9em; color: #6c757d;">
+              🤖 <strong>{{ 'Auto Progression'|t }}</strong> — {{ 'After Autofill completes, the system should continue through Workday steps automatically.'|t }}
+            </p>
+            <form method="post" action="{{ path('job_hunter.application_submission_step5_post', {'job_id': job_id}) }}" style="margin: 8px 0 12px 0;">
+              <input type="hidden" name="csrf_token" value="{{ run_step5_csrf_token }}" />
+              <input type="hidden" name="step5_action" value="run_wd_wizard_auto" />
+              <button type="submit" class="button button--primary">
+                ▶ {{ 'Continue Wizard (Auto)'|t }}
+              </button>
+            </form>
+            {% if wd_current_step == 4 %}
+              <p style="font-size: 0.85em; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 4px;">
+                ⚠️ {{ 'Application Questions vary per job. Automation will attempt common questions (work authorization, sponsorship, age) but may flag this step for manual review.'|t }}
+              </p>
+            {% endif %}
+            {% if resume_upload_result.post_continue_url is defined and resume_upload_result.post_continue_url %}
+              <p>
+                <a href="{{ resume_upload_result.post_continue_url }}" target="_blank" rel="noopener" class="button button--secondary" style="font-size: 0.9em;">
+                  {{ 'Open Workday Wizard →'|t }}
+                </a>
+              </p>
+            {% elseif apply_url %}
+              <p>
+                <a href="{{ apply_url }}" target="_blank" rel="noopener" class="button button--secondary" style="font-size: 0.9em;">
+                  {{ 'Open Application →'|t }}
+                </a>
+              </p>
+            {% endif %}
+          </div>
+        {% elseif wd_current_step == 7 %}
+          <div style="border-top: 1px solid #dee2e6; padding-top: 12px; margin-top: 8px;">
+            <p style="color: #28a745; font-weight: bold;">
+              🎯 {{ 'Final step! Click "Continue Wizard (Auto)" above to run Review & Submit.'|t }}
+            </p>
+          </div>
+        {% elseif wd_all_complete %}
+          <div style="border-top: 1px solid #dee2e6; padding-top: 12px; margin-top: 8px;">
+            <p style="color: #28a745; font-weight: bold;">
+              ✅ {{ 'All Workday wizard steps complete. Application submitted!'|t }}
+            </p>
+          </div>
+        {% endif %}
+
+        {# Progress bar #}
+        {% set completed_count = 0 %}
+        {% for wd_step in wd_flow_steps %}
+          {% if wd_step.status == 'pass' %}
+            {% set completed_count = completed_count + 1 %}
+          {% endif %}
+        {% endfor %}
+        {% set progress_pct = ((completed_count / 7) * 100)|round %}
+        <div style="margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
+            <span>{{ 'Progress'|t }}</span>
+            <span>{{ completed_count }}/7 ({{ progress_pct }}%)</span>
+          </div>
+          <div style="background: #e9ecef; border-radius: 4px; height: 8px; overflow: hidden;">
+            <div style="background: {{ progress_pct == 100 ? '#28a745' : '#007bff' }}; width: {{ progress_pct }}%; height: 100%; border-radius: 4px; transition: width 0.3s;"></div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {# ── Manual submission fallback ─────────────────────────────────────── #}
+    {% if not submission_completed %}
+      {% if prerequisites_met %}
+        <details style="margin-top: 16px;">
+          <summary>{{ 'Record Manual Submission Instead'|t }}</summary>
+          <p style="margin-top: 8px;">{{ 'If you completed the entire Workday wizard manually, record it here. This will mark all steps as complete.'|t }}</p>
+          <form method="post" action="{{ path('job_hunter.application_submission_step5_post', {'job_id': job_id}) }}">
+            <input type="hidden" name="csrf_token" value="{{ run_step5_csrf_token }}" />
+            <input type="hidden" name="step5_action" value="mark_manual_submission" />
+            <div style="margin-bottom: 8px;">
+              <label for="manual_confirmation"><strong>{{ 'Confirmation / Reference'|t }}:</strong></label><br />
+              <input type="text" id="manual_confirmation" name="manual_confirmation"
+                     placeholder="{{ 'e.g., confirmation email received, application ID'|t }}"
+                     style="width: 400px; padding: 4px 8px;" />
+            </div>
+            <button type="submit" class="button button--secondary">
+              {{ 'Mark as Manually Submitted'|t }}
+            </button>
+          </form>
+        </details>
+      {% else %}
+        <p style="color: #6c757d; margin-top: 8px;">{{ 'Complete Steps 2-4 to unlock the Workday application flow.'|t }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {# ── Submission Result Details (when just submitted) ─────────────────────── #}
+  {% if submission_result is not empty %}
+    <div class="job-info-box" style="border-left: 4px solid {{ submission_result.success ? '#28a745' : '#dc3545' }};">
+      <h3>
+        {% if submission_result.success %}✅{% else %}❌{% endif %}
+        {{ 'Submission Result'|t }}
+      </h3>
+      <table class="queue-status-table">
+        <tbody>
+          {% if submission_result.status is defined %}
+            <tr>
+              <td>{{ 'Status'|t }}</td>
+              <td><code>{{ submission_result.status }}</code></td>
+            </tr>
+          {% endif %}
+          {% if submission_result.message is defined %}
+            <tr>
+              <td>{{ 'Message'|t }}</td>
+              <td>{{ submission_result.message }}</td>
+            </tr>
+          {% endif %}
+          {% if submission_result.application_id is defined and submission_result.application_id %}
+            <tr>
+              <td>{{ 'Application ID'|t }}</td>
+              <td>{{ submission_result.application_id }}</td>
+            </tr>
+          {% endif %}
+          {% if submission_result.error is defined and submission_result.error %}
+            <tr>
+              <td>{{ 'Error'|t }}</td>
+              <td style="color: #dc3545;">{{ submission_result.error }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {# ── Resume Upload Result Details ────────────────────────────────────────── #}
+  {% if resume_upload_result is not empty and resume_upload_result.ok is defined %}
+    <div class="job-info-box" style="border-left: 4px solid {{ resume_upload_result.ok ? '#28a745' : '#dc3545' }};">
+      <h3>
+        {% if resume_upload_result.ok %}✅{% else %}❌{% endif %}
+        {{ 'Resume Upload Checkpoint'|t }}
+      </h3>
+      <table class="queue-status-table">
+        <tbody>
+          <tr>
+            <td>{{ 'Overall'|t }}</td>
+            <td>
+              {% if resume_upload_result.ok %}
+                <span class="badge badge--success">{{ 'PASS'|t }}</span>
+              {% else %}
+                <span class="badge badge--danger">{{ 'FAIL'|t }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'Auth Verified'|t }}</td>
+            <td>
+              {% if resume_upload_result.auth_verified %}
+                <span class="badge badge--success">{{ resume_upload_result.verified_email }}</span>
+              {% else %}
+                <span class="badge badge--warning">{{ 'Not verified'|t }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'Resume Uploaded'|t }}</td>
+            <td>
+              {% if resume_upload_result.resume_uploaded %}
+                <span class="badge badge--success">{{ resume_upload_result.upload_filename|default('Yes') }}</span>
+              {% else %}
+                <span class="badge badge--warning">{{ 'No'|t }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'Continue Clicked'|t }}</td>
+            <td>
+              {% if resume_upload_result.continue_clicked %}
+                <span class="badge badge--success">{{ 'Yes'|t }}</span>
+              {% else %}
+                <span class="badge badge--warning">{{ 'No'|t }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% if resume_upload_result.post_continue_url %}
+            <tr>
+              <td>{{ 'Post-Continue URL'|t }}</td>
+              <td><a href="{{ resume_upload_result.post_continue_url }}" target="_blank" rel="noopener">{{ resume_upload_result.post_continue_url }}</a></td>
+            </tr>
+          {% endif %}
+          {% if resume_upload_result.page_title %}
+            <tr>
+              <td>{{ 'Page Title'|t }}</td>
+              <td>{{ resume_upload_result.page_title }}</td>
+            </tr>
+          {% endif %}
+          {% if resume_upload_result.evidence %}
+            <tr>
+              <td>{{ 'Evidence'|t }}</td>
+              <td style="font-size: 0.85em;">{{ resume_upload_result.evidence }}</td>
+            </tr>
+          {% endif %}
+          {% if resume_upload_result.error %}
+            <tr>
+              <td>{{ 'Error'|t }}</td>
+              <td style="color: #dc3545;">{{ resume_upload_result.error }}</td>
+            </tr>
+          {% endif %}
+          {% if resume_upload_result.screenshots is not empty %}
+            <tr>
+              <td>{{ 'Screenshots'|t }}</td>
+              <td>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start;">
+                  {% for screenshot_path in resume_upload_result.screenshots %}
+                    {% set screenshot_name = screenshot_path|split('/')|last %}
+                    {% set screenshot_url = path('job_hunter.application_submission_step5_screenshot', {'job_id': job_id, 'filename': screenshot_name}) %}
+                    <a href="{{ screenshot_url }}"
+                       class="jh-screenshot-thumb"
+                       data-full-src="{{ screenshot_url }}"
+                       data-full-name="{{ screenshot_name }}"
+                       title="{{ 'Click to expand'|t }}"
+                       style="text-decoration: none; display: inline-block;">
+                      <img src="{{ screenshot_url }}"
+                           alt="{{ screenshot_name }}"
+                           loading="lazy"
+                           style="width: 180px; height: 110px; object-fit: cover; border: 1px solid #ced4da; border-radius: 4px; display: block;" />
+                      <small style="display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 4px; color: #6c757d;">{{ screenshot_name }}</small>
+                    </a>
+                  {% endfor %}
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if resume_upload_result is not empty and resume_upload_result.screenshots is not empty %}
+    <div id="jh-screenshot-modal"
+         style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.82); align-items:center; justify-content:center; padding:20px;"
+         role="dialog"
+         aria-modal="true"
+         aria-label="{{ 'Screenshot Preview'|t }}">
+      <div style="position:relative; max-width:95vw; max-height:95vh;">
+        <button type="button"
+                id="jh-screenshot-modal-close"
+                aria-label="{{ 'Close'|t }}"
+                style="position:absolute; right:0; top:-44px; border:0; background:#ffffff; color:#212529; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:16px; font-weight:600;">
+          × {{ 'Close'|t }}
+        </button>
+        <img id="jh-screenshot-modal-image"
+             src=""
+             alt=""
+             style="display:block; max-width:95vw; max-height:88vh; border-radius:6px; box-shadow:0 0 0 2px rgba(255,255,255,0.2); background:#111;" />
+        <div id="jh-screenshot-modal-caption" style="margin-top:8px; color:#f1f3f5; font-size:0.9em; text-align:center;"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var modal = document.getElementById('jh-screenshot-modal');
+        var modalImg = document.getElementById('jh-screenshot-modal-image');
+        var modalCaption = document.getElementById('jh-screenshot-modal-caption');
+        var closeBtn = document.getElementById('jh-screenshot-modal-close');
+        if (!modal || !modalImg || !closeBtn) {
+          return;
+        }
+
+        function closeModal() {
+          modal.style.display = 'none';
+          modalImg.setAttribute('src', '');
+          modalImg.setAttribute('alt', '');
+          if (modalCaption) {
+            modalCaption.textContent = '';
+          }
+        }
+
+        document.querySelectorAll('.jh-screenshot-thumb').forEach(function (link) {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            var src = link.getAttribute('data-full-src') || link.getAttribute('href') || '';
+            var name = link.getAttribute('data-full-name') || '';
+            modalImg.setAttribute('src', src);
+            modalImg.setAttribute('alt', name);
+            if (modalCaption) {
+              modalCaption.textContent = name;
+            }
+            modal.style.display = 'flex';
+          });
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) {
+            closeModal();
+          }
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && modal.style.display !== 'none') {
+            closeModal();
+          }
+        });
+      })();
+    </script>
+  {% endif %}
+
+  {# ── Attempt History ─────────────────────────────────────────────────────── #}
+  {% if attempt_count > 0 or last_outcome %}
+    <div class="job-info-box">
+      <h3>{{ 'Attempt History'|t }}</h3>
+      <table class="queue-status-table">
+        <tbody>
+          <tr>
+            <td>{{ 'Total Attempts'|t }}</td>
+            <td>{{ attempt_count }}</td>
+          </tr>
+          {% if last_outcome %}
+            <tr>
+              <td>{{ 'Last Outcome'|t }}</td>
+              <td>{{ last_outcome }}</td>
+            </tr>
+          {% endif %}
+          {% if last_error %}
+            <tr>
+              <td>{{ 'Last Error'|t }}</td>
+              <td style="color: #dc3545;">{{ last_error }}</td>
+            </tr>
+          {% endif %}
+          {% if last_attempt_at %}
+            <tr>
+              <td>{{ 'Last Attempt At'|t }}</td>
+              <td>{{ last_attempt_at }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {# ── Overall Status ──────────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Step 5 Summary'|t }}</h3>
+    <table class="queue-status-table">
+      <thead>
+        <tr>
+          <th>{{ 'Section'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ 'A. Job Confirmed on Destination'|t }}</td>
+          <td>
+            {% if section_a_status == 'pass' %}
+              <span class="badge badge--success">{{ 'PASS'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'INCOMPLETE'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'B. Apply Control Located'|t }}</td>
+          <td>
+            {% if section_b_status == 'pass' %}
+              <span class="badge badge--success">{{ 'PASS'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'INCOMPLETE'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'C. Workday Application Flow'|t }}</td>
+          <td>
+            {% if section_c_status == 'pass' %}
+              <span class="badge badge--success">{{ 'PASS'|t }}</span>
+            {% elseif section_c_status == 'in_progress' %}
+              {% set wd_done = 0 %}
+              {% for s in wd_flow_steps %}{% if s.status == 'pass' %}{% set wd_done = wd_done + 1 %}{% endif %}{% endfor %}
+              <span class="badge badge--warning">{{ 'IN PROGRESS'|t }} ({{ wd_done }}/7)</span>
+            {% else %}
+              <span class="badge badge--info">{{ 'NOT STARTED'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top: 8px;">
+      <strong>{{ 'Step 5 Outcome'|t }}:</strong>
+      {% if all_pass %}
+        <span class="badge badge--success">{{ 'PASS'|t }}</span>
+      {% else %}
+        <span class="badge badge--warning">{{ 'INCOMPLETE'|t }}</span>
+      {% endif %}
+    </p>
+
+    {% if step5_last_run_at %}
+      <p><strong>{{ 'Last Updated'|t }}:</strong> {{ step5_last_run_at }}</p>
+    {% endif %}
+  </div>
+
+  {# ── Back link ────────────────────────────────────────────────────────────── #}
+  <div class="page-actions">
+    <a href="{{ return_url }}" class="button button--secondary">{{ 'Back to Requisition Flow'|t }}</a>
+    {% if all_pass %}
+      <a href="{{ path('job_hunter.application_submission_step_stub', {'job_id': job_id, 'step': 6}) }}" class="button button--primary" style="margin-left: 8px;">
+        {{ 'Continue to Step 6 →'|t }}
+      </a>
+    {% endif %}
+  </div>
+</div>

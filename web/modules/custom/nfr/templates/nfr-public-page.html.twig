@@ -1,0 +1,13 @@
+<div class="container-fluid my-4">
+  <div class="row">
+    <aside class="col-lg-3 col-md-4 mb-4">
+      {{ drupal_block('nfr_navigation') }}
+    </aside>
+    
+    <main class="col-lg-9 col-md-8">
+      <div class="nfr-public-page nfr-page-{{ page_id }}">
+        {{ content }}
+      </div>
+    </main>
+  </div>
+</div>

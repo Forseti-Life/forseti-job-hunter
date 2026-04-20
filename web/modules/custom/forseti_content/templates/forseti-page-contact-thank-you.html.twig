@@ -1,0 +1,53 @@
+{#
+/**
+ * @file
+ * Template for Contact Thank You page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - message: Thank you message
+ * - what_next: What happens next section
+ * - quick_links: Quick links section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+      <h1 class="mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-success mb-4">
+        <h3 class="text-success mb-3">✅ {{ message.title }}</h3>
+        <p class="lead mb-0">{{ message.content }}</p>
+      </div>
+      
+      <div class="card card-forseti p-4 text-start mb-4">
+        <h3 class="text-cyan mb-3">{{ what_next.title }}</h3>
+        <ul class="mb-0">
+          {% for item in what_next.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <div class="card card-forseti p-4 text-start">
+        <h3 class="text-cyan mb-3">{{ quick_links.title }}</h3>
+        <div class="row">
+          <div class="col-md-6">
+            <ul>
+              {% for link in quick_links.column1 %}
+                <li>{{ link|raw }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <ul>
+              {% for link in quick_links.column2 %}
+                <li>{{ link|raw }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

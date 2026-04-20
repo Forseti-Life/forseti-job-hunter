@@ -1,0 +1,21 @@
+uuid: 570a5065-c2f2-42f6-8f18-3a307f777978
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_suggestion_category
+    - node.type.community_suggestion
+  module:
+    - options
+id: node.community_suggestion.field_suggestion_category
+field_name: field_suggestion_category
+entity_type: node
+bundle: community_suggestion
+label: Category
+description: 'Category of the suggestion'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

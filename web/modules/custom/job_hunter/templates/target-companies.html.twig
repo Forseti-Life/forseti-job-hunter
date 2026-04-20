@@ -1,0 +1,142 @@
+{#
+/**
+ * @file
+ * Template for Target Companies management page.
+ *
+ * Available variables:
+ * - total_companies: Total number of target companies
+ * - active_companies: Number of active companies
+ * - total_jobs: Total jobs found across all companies
+ * - target_companies: Array of target company data
+ * - job_companies: Array of companies from job postings with counts
+ */
+#}
+
+<div class="target-companies-page">
+  <div class="target-companies-header">
+    <h2>🎯 {{ 'Target Companies'|t }}</h2>
+    <p class="subtitle">{{ 'Your primary target companies that Job Hunter actively monitors for opportunities'|t }}</p>
+    <p class="description">{{ 'These are the organizations you want to work for. The Job Hunter AI will prioritize opportunities from these companies when discovering jobs, tracking applications, and tailoring resumes.'|t }}</p>
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-number">{{ total_companies }}</span>
+        <span class="stat-label">{{ 'Target Companies'|t }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">{{ active_companies }}</span>
+        <span class="stat-label">{{ 'Active'|t }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">{{ total_jobs }}</span>
+        <span class="stat-label">{{ 'Jobs Found'|t }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <a href="/jobhunter/bulk-import-companies" class="btn-add-company">{{ '+ Add Companies'|t }}</a>
+  </div>
+
+  {% if target_companies is empty %}
+    <div class="empty-state">
+      <div class="empty-icon">🏢</div>
+      <h3>{{ 'No Target Companies Yet'|t }}</h3>
+      <p>{{ 'Start by adding companies you\'re interested in working for.'|t }}</p>
+      <a href="/jobhunter/bulk-import-companies" class="btn-primary">{{ 'Add Your First Company'|t }}</a>
+    </div>
+  {% else %}
+    <table class="companies-table">
+      <thead>
+        <tr>
+          <th>{{ 'Company'|t }}</th>
+          <th>{{ 'Location'|t }}</th>
+          <th>{{ 'Links'|t }}</th>
+          <th>{{ 'Jobs'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for company in target_companies %}
+          <tr>
+            <td class="company-name">
+              <strong>{{ company.name }}</strong>
+              {% if company.industry %}
+                <div class="company-industry">{{ company.industry }}</div>
+              {% endif %}
+            </td>
+            <td class="company-location">{{ company.location ?: '-' }}</td>
+            <td class="company-links">
+              {% if company.website %}
+                <a href="{{ company.website }}" target="_blank">{{ '🔗 Website'|t }}</a>
+              {% else %}
+                <span class="text-muted">{{ 'No website'|t }}</span>
+              {% endif %}
+              {% if company.careers_page_url %}
+                <a href="{{ company.careers_page_url }}" target="_blank">{{ '💼 Careers'|t }}</a>
+              {% endif %}
+            </td>
+            <td class="company-jobs"><span class="badge">{{ company.job_count }}</span></td>
+            <td class="company-status">
+              <span class="{% if company.active %}status-active{% else %}status-inactive{% endif %}">
+                {{ company.active ? 'Active'|t : 'Inactive'|t }}
+              </span>
+            </td>
+            <td class="company-actions">
+              <a href="/jobhunter/companies/{{ company.id }}/edit" class="btn-edit">{{ 'Edit'|t }}</a>
+              <a href="/jobhunter/companies/{{ company.id }}/delete" 
+                 class="btn-delete" 
+                 onclick="return confirm('{{ 'Delete'|t }} {{ company.name }}?')">{{ 'Delete'|t }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if job_companies is not empty %}
+    <div class="section-header">
+      <h3>📋 {{ 'Companies from Job Postings'|t }}</h3>
+      <p class="section-description">{{ 'Companies extracted from job descriptions you\'ve added'|t }}</p>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" 
+             id="company-filter" 
+             placeholder="{{ 'Filter companies by name...'|t }}" 
+             class="company-filter-input"
+             aria-label="{{ 'Filter companies'|t }}">
+      <span class="filter-count">
+        {{ 'Showing'|t }} <span id="visible-count">{{ job_companies|length }}</span> {{ 'of'|t }} {{ job_companies|length }} {{ 'companies'|t }}
+      </span>
+    </div>
+
+    <table class="all-companies-table">
+      <thead>
+        <tr>
+          <th>{{ 'Company Name'|t }}</th>
+          <th>{{ 'Job Postings'|t }}</th>
+          <th>{{ 'Action'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="companies-table-body">
+        {% for company_name, job_count in job_companies %}
+          <tr class="company-row" data-company-name="{{ company_name|lower }}">
+            <td class="company-name-cell"><strong>{{ company_name }}</strong></td>
+            <td class="job-count-cell"><span class="badge">{{ job_count }}</span></td>
+            <td class="action-cell">
+              {% if company_name in existing_companies %}
+                <span class="already-added">{{ '✓ Already in targets'|t }}</span>
+              {% else %}
+                <a href="#" 
+                   class="btn-add-quick" 
+                   data-company="{{ company_name }}" 
+                   onclick="addCompanyQuick(this); return false;">{{ '+ Add to Targets'|t }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>

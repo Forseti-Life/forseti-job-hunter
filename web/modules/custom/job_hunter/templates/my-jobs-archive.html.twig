@@ -1,0 +1,77 @@
+{#
+/**
+ * @file
+ * Template for the Archived Jobs page.
+ *
+ * Available variables:
+ * - jobs: Array of archived job objects
+ * - current_page: Current page number (0-indexed)
+ * - total_pages: Total number of pages
+ * - total_jobs: Total archived job count
+ */
+#}
+
+<div class="my-jobs-page my-jobs-archive-page">
+  <h1>🗄 {{ 'Archived Jobs'|t }}</h1>
+  <p>
+    <a href="/jobhunter/my-jobs" class="button button--secondary">← {{ 'Back to My Jobs'|t }}</a>
+  </p>
+
+  {% if jobs %}
+    <p class="results-summary">{{ 'Showing %count archived job(s).'|t({'%count': jobs|length}) }}</p>
+    <table class="jobs-table">
+      <thead>
+        <tr>
+          <th>{{ 'Job Title'|t }}</th>
+          <th>{{ 'Company'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+          <tr>
+            <td>
+              {% if job.job_title %}
+                <strong>{{ job.job_title }}</strong>
+              {% else %}
+                <em>{{ '(untitled)'|t }}</em>
+              {% endif %}
+            </td>
+            <td>{{ job.company_name ?: '—' }}</td>
+            <td>
+              <a href="{{ path('job_hunter.job_unarchive', {'job_id': job.id}, {'query': {'return_to': '/jobhunter/my-jobs/archive'}}) }}"
+                 class="button button--small button--primary">
+                {{ 'Restore to My Jobs'|t }}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <p>{{ 'No archived jobs.'|t }}</p>
+    </div>
+  {% endif %}
+
+  {% if total_pages > 1 %}
+    <nav class="pager" aria-label="{{ 'Pagination'|t }}">
+      <ul class="pager__items">
+        {% if current_page > 0 %}
+          <li class="pager__item pager__item--previous">
+            <a href="?page={{ current_page - 1 }}" rel="prev">‹ {{ 'Previous'|t }}</a>
+          </li>
+        {% endif %}
+        <li class="pager__item pager__item--current">
+          {{ 'Page %current of %total'|t({'%current': current_page + 1, '%total': total_pages}) }}
+        </li>
+        {% if current_page < total_pages - 1 %}
+          <li class="pager__item pager__item--next">
+            <a href="?page={{ current_page + 1 }}" rel="next">{{ 'Next'|t }} ›</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+</div>

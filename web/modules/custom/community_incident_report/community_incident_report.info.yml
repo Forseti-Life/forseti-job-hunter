@@ -1,0 +1,15 @@
+name: Community Incident Report
+description: Community-managed safety observation form and listing for forseti.life.
+type: module
+package: Forseti
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:node
+  - drupal:field
+  - drupal:text
+  - drupal:datetime
+  - drupal:image
+  - drupal:taxonomy
+  - drupal:user
+  - drupal:system
+  - drupal:views

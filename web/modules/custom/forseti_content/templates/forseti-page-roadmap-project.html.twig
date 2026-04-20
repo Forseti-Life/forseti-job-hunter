@@ -1,0 +1,238 @@
+{#
+/**
+ * @file
+ * Template for individual Forseti project roadmap pages.
+ *
+ * Available variables:
+ * - title: Project title (may include "PROJ-XXX - " prefix, stripped below).
+ * - project_id: PROJ-XXX identifier.
+ * - summary: Short project description.
+ * - meta: {label: value} metadata pairs.
+ * - roadmap_reference: Source file reference.
+ * - current_state, next_step, queue_status: Status prose.
+ * - goals: List of goal strings.
+ * - back_url: URL for breadcrumb back link.
+ * - nav_links: [{url, text, style}] navigation buttons.
+ * - pipeline_counts: {implemented, in_progress, queued, pending, total, impl_pct, progress_pct}
+ * - feature_groups: ordered {group-key: {title, sort, counts, features: [...]}}
+ */
+#}
+{# Strip "PROJ-XXX - " prefix from title for clean display #}
+{% set display_title = title|replace({(project_id ~ ' - '): ''}) %}
+
+<div class="fr-page container-fluid px-3 px-md-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+
+      {# ── Breadcrumb ──────────────────────────────────────────────────── #}
+      <nav class="fr-breadcrumb mb-4" aria-label="breadcrumb">
+        {% for link in nav_links %}
+          <a href="{{ link.url }}" class="fr-breadcrumb__link">← {{ link.text }}</a>
+        {% endfor %}
+        <span class="fr-breadcrumb__id">{{ project_id }}</span>
+      </nav>
+
+      {# ── Page header ─────────────────────────────────────────────────── #}
+      <header class="fr-header mb-4">
+        <h1 class="fr-header__title text-cyan">{{ display_title }}</h1>
+        {% if summary %}
+          <p class="fr-header__summary">{{ summary }}</p>
+        {% endif %}
+      </header>
+
+      {% if pipeline_counts and pipeline_counts.total > 0 %}
+
+        {# ── Stats + progress card ──────────────────────────────────────── #}
+        <div class="card card-forseti fr-stats-card mb-4">
+
+          <div class="fr-stats-grid">
+            <div class="fr-stat">
+              <span class="fr-stat__value">{{ pipeline_counts.total }}</span>
+              <span class="fr-stat__label">Features</span>
+            </div>
+            <div class="fr-stat fr-stat--shipped">
+              <span class="fr-stat__value">{{ pipeline_counts.implemented }}</span>
+              <span class="fr-stat__label">Shipped</span>
+            </div>
+            <div class="fr-stat fr-stat--progress">
+              <span class="fr-stat__value">{{ pipeline_counts.in_progress + pipeline_counts.queued }}</span>
+              <span class="fr-stat__label">In Progress</span>
+            </div>
+            <div class="fr-stat fr-stat--backlog">
+              <span class="fr-stat__value">{{ pipeline_counts.pending }}</span>
+              <span class="fr-stat__label">Backlog</span>
+            </div>
+          </div>
+
+          <div class="fr-progress-wrap">
+            <div class="fr-progress-bar">
+              <div class="fr-progress-fill fr-progress-fill--shipped"
+                   style="width: {{ pipeline_counts.impl_pct }}%"
+                   title="{{ pipeline_counts.impl_pct }}% shipped"></div>
+              {% set prog_extra = pipeline_counts.progress_pct - pipeline_counts.impl_pct %}
+              {% if prog_extra > 0 %}
+                <div class="fr-progress-fill fr-progress-fill--progress"
+                     style="width: {{ prog_extra }}%"></div>
+              {% endif %}
+            </div>
+            <div class="fr-progress-legend">
+              <span class="fr-badge fr-badge--shipped">✅ {{ pipeline_counts.implemented }} Shipped ({{ pipeline_counts.impl_pct }}%)</span>
+              {% if pipeline_counts.in_progress + pipeline_counts.queued > 0 %}
+                <span class="fr-badge fr-badge--progress">🔄 {{ pipeline_counts.in_progress + pipeline_counts.queued }} In Progress</span>
+              {% endif %}
+              {% if pipeline_counts.pending > 0 %}
+                <span class="fr-badge fr-badge--backlog">⏳ {{ pipeline_counts.pending }} Backlog</span>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+
+      {% endif %}
+
+      {% if feature_groups %}
+
+        {# ── Feature groups card ─────────────────────────────────────────── #}
+        <div class="card card-forseti fr-groups-card mb-4">
+
+          {# Group summary strip #}
+          <div class="fr-group-strip">
+            <h2 class="fr-section-title">Feature Groups</h2>
+            <div class="fr-strip-list">
+              {% for group_key, group in feature_groups %}
+                {% set g_pct = group.counts.total > 0 ? ((group.counts.implemented / group.counts.total) * 100)|round : 0 %}
+                <a href="#group-{{ group_key }}" class="fr-strip-chip" onclick="document.getElementById('group-{{ group_key }}').open=true">
+                  <span class="fr-strip-chip__name">{{ group.title }}</span>
+                  <span class="fr-strip-chip__meta">
+                    <span class="fr-strip-chip__bar-wrap">
+                      <span class="fr-strip-chip__bar-fill" style="width: {{ g_pct }}%"></span>
+                    </span>
+                    <span class="fr-strip-chip__pct">{{ g_pct }}%</span>
+                  </span>
+                  <span class="fr-strip-chip__count">({{ group.counts.implemented }}/{{ group.counts.total }})</span>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="fr-divider"></div>
+
+          {# Feature drill-down #}
+          <div class="fr-drill-down">
+            <p class="fr-drill-hint">Expand a group to inspect feature status from the live pipeline.</p>
+
+            {% for group_key, group in feature_groups %}
+              {% set g_total = group.counts.total %}
+              {% set g_pct   = g_total > 0 ? ((group.counts.implemented / g_total) * 100)|round : 0 %}
+
+              <details class="fr-group" id="group-{{ group_key }}">
+                <summary class="fr-group__header">
+                  <span class="fr-group__chevron">▶</span>
+                  <span class="fr-group__title">{{ group.title }}</span>
+                  <span class="fr-group__badges">
+                    {% if group.counts.implemented %}
+                      <span class="fr-badge fr-badge--shipped">{{ group.counts.implemented }} ✅</span>
+                    {% endif %}
+                    {% if group.counts.in_progress %}
+                      <span class="fr-badge fr-badge--progress">{{ group.counts.in_progress }} ��</span>
+                    {% endif %}
+                    {% if group.counts.queued %}
+                      <span class="fr-badge fr-badge--queued">{{ group.counts.queued }} 🔁</span>
+                    {% endif %}
+                    {% if group.counts.pending %}
+                      <span class="fr-badge fr-badge--backlog">{{ group.counts.pending }} ⏳</span>
+                    {% endif %}
+                    <span class="fr-group__pct">{{ g_pct }}%</span>
+                  </span>
+                </summary>
+
+                <ul class="fr-feature-list">
+                  {% for feature in group.features %}
+                    <li class="fr-feature fr-feature--{{ feature.status }}">
+                      <div class="fr-feature__left">
+                        {% if feature.status == 'implemented' %}
+                          <span class="fr-badge fr-badge--shipped">✅ {{ feature.status_label }}</span>
+                        {% elseif feature.status == 'in_progress' %}
+                          <span class="fr-badge fr-badge--progress">🔄 {{ feature.status_label }}</span>
+                        {% elseif feature.status == 'queued' %}
+                          <span class="fr-badge fr-badge--queued">🔁 {{ feature.status_label }}</span>
+                        {% else %}
+                          <span class="fr-badge fr-badge--backlog">⏳ {{ feature.status_label }}</span>
+                        {% endif %}
+                      </div>
+                      <div class="fr-feature__body">
+                        <span class="fr-feature__title">{{ feature.title }}</span>
+                        <code class="fr-feature__id">{{ feature.feature_id }}</code>
+                        {% if feature.scope %}
+                          <p class="fr-feature__scope">{{ feature.scope }}</p>
+                        {% endif %}
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+
+              </details>
+            {% endfor %}
+
+          </div>
+        </div>
+
+      {% endif %}
+
+      {# ── Project context (collapsible) ───────────────────────────────── #}
+      {% if current_state or next_step or queue_status or goals or meta %}
+        <details class="fr-context-details mb-3">
+          <summary class="fr-context-summary">Project context & metadata</summary>
+          <div class="card card-forseti p-4 mt-2">
+
+            {% if current_state %}
+              <h3 class="fr-context__heading">Current state</h3>
+              <p class="fr-context__body">{{ current_state }}</p>
+            {% endif %}
+
+            {% if next_step %}
+              <h3 class="fr-context__heading">Next step</h3>
+              <p class="fr-context__body">{{ next_step }}</p>
+            {% endif %}
+
+            {% if queue_status %}
+              <h3 class="fr-context__heading">Queue status</h3>
+              <p class="fr-context__body">{{ queue_status }}</p>
+            {% endif %}
+
+            {% if goals %}
+              <h3 class="fr-context__heading">Goals</h3>
+              <ul class="fr-context__list">
+                {% for goal in goals %}
+                  <li>{{ goal }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            {% if meta or roadmap_reference %}
+              <h3 class="fr-context__heading">Metadata</h3>
+              <div class="row">
+                {% for label, value in meta %}
+                  {% if value %}
+                    <div class="col-md-6 mb-2">
+                      <span class="fr-meta__label">{{ label }}:</span>
+                      <span class="fr-meta__value">{{ value }}</span>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+                {% if roadmap_reference %}
+                  <div class="col-12 mb-2">
+                    <span class="fr-meta__label">Source:</span>
+                    <code class="fr-meta__code">{{ roadmap_reference }}</code>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+          </div>
+        </details>
+      {% endif %}
+
+    </div>
+  </div>
+</div>

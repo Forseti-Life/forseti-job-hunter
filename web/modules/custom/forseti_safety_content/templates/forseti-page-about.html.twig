@@ -1,0 +1,50 @@
+{#
+/**
+ * @file
+ * Template for About Forseti page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - lead: Lead paragraph text
+ * - mission: Mission section content
+ * - core_values: Array of core value items
+ * - membership: Membership information
+ * - cta: Call-to-action content
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="lead mb-4 text-muted-light">
+        {{ lead }}
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ mission.title }}</h2>
+      {% for paragraph in mission.paragraphs %}
+        <p>{{ paragraph|raw }}</p>
+      {% endfor %}
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ 'Core Values'|t }}</h2>
+      <div class="row mt-4">
+        {% for value in core_values %}
+          <div class="col-md-6 mb-4">
+            <div class="card card-forseti p-3 h-100">
+              <h4>{{ value.icon|raw }} {{ value.title }}</h4>
+              <p>{{ value.description }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ membership.title }}</h2>
+      <p>{{ membership.content }}</p>
+      
+      <div class="alert alert-info-cyan mt-4">
+        <h4 class="text-cyan">{{ cta.title }}</h4>
+        <p class="mb-0">{{ cta.content|raw }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,430 @@
+{#
+/**
+ * @file
+ * Template for US Government Power Analysis page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction content with lead and paragraphs
+ * - branches: Government branches with entities and power profiles
+ */
+#}
+
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-11 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="lead mb-4 text-muted-light text-center">
+        {{ intro.lead }}
+      </div>
+      
+      <div class="text-center mb-4">
+        <a href="/agent-power-framework" class="btn btn-outline-primary me-2">
+          <i class="fas fa-arrow-left"></i> Back to Framework
+        </a>
+        <a href="/agent-power-framework/evaluations" class="btn btn-outline-cyan me-2">
+          <i class="fas fa-list"></i> View All Evaluations
+        </a>
+        <a href="/agent-power-framework" class="btn btn-outline-success">
+          <i class="fas fa-chart-line"></i> Example Assessment
+        </a>
+      </div>
+      
+      <div class="alert alert-info-cyan mb-4">
+        {% for paragraph in intro.paragraphs %}
+          <p{% if loop.last %} class="mb-0"{% endif %}>{{ paragraph }}</p>
+        {% endfor %}
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">
+        <i class="fas fa-chart-bar me-2"></i>Military Ranks: Framework Evaluation Results
+      </h2>
+      
+      {# Umbrella Controls #}
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <button class="btn btn-sm btn-outline-cyan me-2" id="expandAllCards">
+            <i class="fas fa-expand-alt me-1"></i>Expand All Cards
+          </button>
+          <button class="btn btn-sm btn-outline-cyan" id="collapseAllCards">
+            <i class="fas fa-compress-alt me-1"></i>Collapse All Cards
+          </button>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-info me-2" id="expandAllSubDims">
+            <i class="fas fa-list-ul me-1"></i>Expand All Sub-Dimensions
+          </button>
+          <button class="btn btn-sm btn-outline-info" id="collapseAllSubDims">
+            <i class="fas fa-minus-square me-1"></i>Collapse All Sub-Dimensions
+          </button>
+        </div>
+      </div>
+      
+      <div class="alert alert-success mb-4">
+        <p class="mb-2">
+          <strong><i class="fas fa-check-circle me-2"></i>Evaluation Complete:</strong> All 29 military ranks have been assessed against the Agent Power Framework's 30 sub-dimensions (6 per core dimension).
+        </p>
+        <p class="mb-0">
+          <strong>Key Finding:</strong> Sub-dimension analysis reveals nuanced power profiles - warrant officers show asymmetric capabilities (high synthesis scores of 5-7, but authority scores of 2-4), while senior NCOs score exceptionally high on trust networks (6) despite moderate overall authority (4).
+        </p>
+      </div>
+      
+      {# Evaluated Ranks Display with Collapsible Cards and 30 Sub-Dimensions #}
+      <div class="accordion accordion-forseti" id="ranksAccordion">
+      {% for rank in branches %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-{{ loop.index }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-card-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-card-{{ loop.index }}" aria-labelledby="heading-{{ loop.index }}">
+              <div class="d-flex align-items-center w-100" style="pointer-events: none;">
+                <div class="badge bg-{% if rank.level_avg >= 8 %}success{% elseif rank.level_avg >= 6 %}info{% elseif rank.level_avg >= 4 %}warning{% else %}secondary{% endif %} fs-5 p-2 me-3" style="min-width: 60px;">
+                  {{ rank.level_avg }}
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="text-cyan mb-0">{{ rank.position }}</h5>
+                  <div class="text-info small">{{ rank.title }}</div>
+                </div>
+              </div>
+            </button>
+          </h2>
+          <div id="collapse-card-{{ loop.index }}" class="accordion-collapse collapse rank-collapse" aria-labelledby="heading-{{ loop.index }}">
+            <div class="accordion-body p-4">
+              
+              {# Rank Details #}
+              <div class="mb-3">
+                <div class="text-muted-light small">
+                  <span class="badge bg-dark me-2">{{ rank.rank_type }}</span>
+                  <i class="fas fa-users me-1"></i>{{ rank.scope }}
+                </div>
+              </div>
+            
+            {# Main 5 Dimensions Summary #}
+            <div class="row g-2 mb-3">
+              <div class="col-md-4">
+                <div class="p-2 rounded" style="background: rgba(0, 212, 255, 0.1);">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-cyan"><i class="fas fa-database me-1"></i>Info Access</span>
+                    <span class="badge bg-{% if rank.power_profile.info >= 8 %}success{% elseif rank.power_profile.info >= 6 %}info{% elseif rank.power_profile.info >= 4 %}warning{% else %}secondary{% endif %}">
+                      {{ rank.power_profile.info }}/9
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-2 rounded" style="background: rgba(76, 175, 80, 0.1);">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-success"><i class="fas fa-coins me-1"></i>Resources</span>
+                    <span class="badge bg-{% if rank.power_profile.resource >= 8 %}success{% elseif rank.power_profile.resource >= 6 %}info{% elseif rank.power_profile.resource >= 4 %}warning{% else %}secondary{% endif %}">
+                      {{ rank.power_profile.resource }}/9
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-2 rounded" style="background: rgba(233, 30, 99, 0.1);">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-danger"><i class="fas fa-gavel me-1"></i>Authority</span>
+                    <span class="badge bg-{% if rank.power_profile.authority >= 8 %}success{% elseif rank.power_profile.authority >= 6 %}info{% elseif rank.power_profile.authority >= 4 %}warning{% else %}secondary{% endif %}">
+                      {{ rank.power_profile.authority }}/9
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-2 rounded" style="background: rgba(156, 39, 176, 0.1);">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-purple"><i class="fas fa-project-diagram me-1"></i>Network</span>
+                    <span class="badge bg-{% if rank.power_profile.network >= 8 %}success{% elseif rank.power_profile.network >= 6 %}info{% elseif rank.power_profile.network >= 4 %}warning{% else %}secondary{% endif %}">
+                      {{ rank.power_profile.network }}/9
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-2 rounded" style="background: rgba(255, 235, 59, 0.1);">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-warning"><i class="fas fa-brain me-1"></i>Synthesis</span>
+                    <span class="badge bg-{% if rank.power_profile.synthesis >= 8 %}success{% elseif rank.power_profile.synthesis >= 6 %}info{% elseif rank.power_profile.synthesis >= 4 %}warning{% else %}secondary{% endif %}">
+                      {{ rank.power_profile.synthesis }}/9
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {# Expandable 30 Sub-Dimensions Detail #}
+            <div class="accordion accordion-forseti mt-3" id="subdim-{{ loop.index }}">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="subdim-heading-{{ loop.index }}">
+                  <button class="accordion-button collapsed subdim-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-subdim-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-subdim-{{ loop.index }}" aria-labelledby="subdim-heading-{{ loop.index }}">
+                    <i class="fas fa-list-ul me-2"></i>View 30 Sub-Dimensions Breakdown
+                  </button>
+                </h2>
+                <div id="collapse-subdim-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="subdim-heading-{{ loop.index }}">
+                  <div class="accordion-body">
+                    
+                    {# Information Access (6 sub-dimensions) #}
+                    <div class="mb-3">
+                      <h6 class="text-cyan mb-2"><i class="fas fa-database me-2"></i>Information Access</h6>
+                      <div class="row g-2 small">
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Scope & Scale</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_scope >= 8 %}success{% elseif rank.sub_dimensions.info_scope >= 6 %}info{% elseif rank.sub_dimensions.info_scope >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_scope }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Restrictions</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_restrictions >= 8 %}success{% elseif rank.sub_dimensions.info_restrictions >= 6 %}info{% elseif rank.sub_dimensions.info_restrictions >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_restrictions }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Classification</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_classification >= 8 %}success{% elseif rank.sub_dimensions.info_classification >= 6 %}info{% elseif rank.sub_dimensions.info_classification >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_classification }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Temporal Reach</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_temporal >= 8 %}success{% elseif rank.sub_dimensions.info_temporal >= 6 %}info{% elseif rank.sub_dimensions.info_temporal >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_temporal }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Source Diversity</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_source_diversity >= 8 %}success{% elseif rank.sub_dimensions.info_source_diversity >= 6 %}info{% elseif rank.sub_dimensions.info_source_diversity >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_source_diversity }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Detail & Verification</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.info_detail >= 8 %}success{% elseif rank.sub_dimensions.info_detail >= 6 %}info{% elseif rank.sub_dimensions.info_detail >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.info_detail }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {# Resource Control (6 sub-dimensions) #}
+                    <div class="mb-3">
+                      <h6 class="text-success mb-2"><i class="fas fa-coins me-2"></i>Resource Control</h6>
+                      <div class="row g-2 small">
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Computational</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_computational >= 8 %}success{% elseif rank.sub_dimensions.resource_computational >= 6 %}info{% elseif rank.sub_dimensions.resource_computational >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_computational }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Financial</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_financial >= 8 %}success{% elseif rank.sub_dimensions.resource_financial >= 6 %}info{% elseif rank.sub_dimensions.resource_financial >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_financial }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Infrastructure</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_infrastructure >= 8 %}success{% elseif rank.sub_dimensions.resource_infrastructure >= 6 %}info{% elseif rank.sub_dimensions.resource_infrastructure >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_infrastructure }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Human Capital</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_human >= 8 %}success{% elseif rank.sub_dimensions.resource_human >= 6 %}info{% elseif rank.sub_dimensions.resource_human >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_human }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Energy</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_energy >= 8 %}success{% elseif rank.sub_dimensions.resource_energy >= 6 %}info{% elseif rank.sub_dimensions.resource_energy >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_energy }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Time & Attention</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.resource_time >= 8 %}success{% elseif rank.sub_dimensions.resource_time >= 6 %}info{% elseif rank.sub_dimensions.resource_time >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.resource_time }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {# Authority & Permission (6 sub-dimensions) #}
+                    <div class="mb-3">
+                      <h6 class="text-danger mb-2"><i class="fas fa-gavel me-2"></i>Authority & Permission</h6>
+                      <div class="row g-2 small">
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Legal Authorization</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_legal >= 8 %}success{% elseif rank.sub_dimensions.authority_legal >= 6 %}info{% elseif rank.sub_dimensions.authority_legal >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_legal }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Jurisdictional Reach</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_jurisdiction >= 8 %}success{% elseif rank.sub_dimensions.authority_jurisdiction >= 6 %}info{% elseif rank.sub_dimensions.authority_jurisdiction >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_jurisdiction }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Hierarchical Position</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_hierarchy >= 8 %}success{% elseif rank.sub_dimensions.authority_hierarchy >= 6 %}info{% elseif rank.sub_dimensions.authority_hierarchy >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_hierarchy }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Financial Authority</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_financial >= 8 %}success{% elseif rank.sub_dimensions.authority_financial >= 6 %}info{% elseif rank.sub_dimensions.authority_financial >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_financial }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Territorial Control</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_territory >= 8 %}success{% elseif rank.sub_dimensions.authority_territory >= 6 %}info{% elseif rank.sub_dimensions.authority_territory >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_territory }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Legitimacy & Trust</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.authority_legitimacy >= 8 %}success{% elseif rank.sub_dimensions.authority_legitimacy >= 6 %}info{% elseif rank.sub_dimensions.authority_legitimacy >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.authority_legitimacy }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {# Network Position (6 sub-dimensions) #}
+                    <div class="mb-3">
+                      <h6 class="text-purple mb-2"><i class="fas fa-project-diagram me-2"></i>Network Position</h6>
+                      <div class="row g-2 small">
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Trust Networks</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_trust >= 8 %}success{% elseif rank.sub_dimensions.network_trust >= 6 %}info{% elseif rank.sub_dimensions.network_trust >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_trust }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Dependencies</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_dependencies >= 8 %}success{% elseif rank.sub_dimensions.network_dependencies >= 6 %}info{% elseif rank.sub_dimensions.network_dependencies >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_dependencies }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Gatekeeping</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_gatekeeping >= 8 %}success{% elseif rank.sub_dimensions.network_gatekeeping >= 6 %}info{% elseif rank.sub_dimensions.network_gatekeeping >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_gatekeeping }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Influence Reach</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_influence >= 8 %}success{% elseif rank.sub_dimensions.network_influence >= 6 %}info{% elseif rank.sub_dimensions.network_influence >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_influence }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Reputation Capital</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_reputation >= 8 %}success{% elseif rank.sub_dimensions.network_reputation >= 6 %}info{% elseif rank.sub_dimensions.network_reputation >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_reputation }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Mobilization</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.network_mobilization >= 8 %}success{% elseif rank.sub_dimensions.network_mobilization >= 6 %}info{% elseif rank.sub_dimensions.network_mobilization >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.network_mobilization }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {# Synthesis & Application (6 sub-dimensions) #}
+                    <div class="mb-0">
+                      <h6 class="text-warning mb-2"><i class="fas fa-brain me-2"></i>Synthesis & Application</h6>
+                      <div class="row g-2 small">
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Pattern Recognition</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_pattern >= 8 %}success{% elseif rank.sub_dimensions.synthesis_pattern >= 6 %}info{% elseif rank.sub_dimensions.synthesis_pattern >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_pattern }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Creative Ideation</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_creativity >= 8 %}success{% elseif rank.sub_dimensions.synthesis_creativity >= 6 %}info{% elseif rank.sub_dimensions.synthesis_creativity >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_creativity }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Strategic Planning</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_planning >= 8 %}success{% elseif rank.sub_dimensions.synthesis_planning >= 6 %}info{% elseif rank.sub_dimensions.synthesis_planning >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_planning }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Decision Quality</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_decision >= 8 %}success{% elseif rank.sub_dimensions.synthesis_decision >= 6 %}info{% elseif rank.sub_dimensions.synthesis_decision >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_decision }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Learning Capability</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_learning >= 8 %}success{% elseif rank.sub_dimensions.synthesis_learning >= 6 %}info{% elseif rank.sub_dimensions.synthesis_learning >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_learning }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="d-flex justify-content-between p-1">
+                            <span>Memory & Recall</span>
+                            <span class="badge bg-{% if rank.sub_dimensions.synthesis_memory >= 8 %}success{% elseif rank.sub_dimensions.synthesis_memory >= 6 %}info{% elseif rank.sub_dimensions.synthesis_memory >= 4 %}warning{% else %}secondary{% endif %} rounded-pill">{{ rank.sub_dimensions.synthesis_memory }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>{# End ranksAccordion #}
+      
+      <div class="alert alert-warning mt-5">
+        <h5 class="text-warning mb-3">
+          <i class="fas fa-chart-line me-2"></i>Framework Evaluation Insights
+        </h5>
+        <p class="mb-2">
+          <strong>Power Level Distribution:</strong>
+        </p>
+        <ul class="mb-2">
+          <li><strong>Level 8-9 (Cross-Institutional to Approaching Omniscient):</strong> President (8.8), Secretary of Defense (8.2)</li>
+          <li><strong>Level 7 (Multi-Domain Academic):</strong> Four-Star Generals (7.0-7.6), Three-Star Generals (7.0)</li>
+          <li><strong>Level 6 (Domain-Specific Professional):</strong> Two-Star and One-Star Generals (6.0)</li>
+          <li><strong>Level 5 (Specialized):</strong> Colonels and Lt Colonels (5.0)</li>
+          <li><strong>Level 4 (Tactical/Operational):</strong> Majors, Captains, Senior NCOs (4.0-4.8)</li>
+          <li><strong>Level 3 (Personal/Commercial):</strong> Lieutenants, Mid-level NCOs (3.0-3.4)</li>
+          <li><strong>Level 2 (Filtered/Brand-Safe):</strong> Junior NCOs, Junior Enlisted (1.8-2.8)</li>
+          <li><strong>Level 1 (Basic):</strong> Entry-level Enlisted (1.0)</li>
+        </ul>
+        <p class="mb-2">
+          <strong>Notable Observations:</strong>
+        </p>
+        <ul class="mb-0">
+          <li>Warrant Officers show <strong>asymmetric profiles</strong>: High synthesis (6) due to technical expertise, but lower authority (3-4) due to non-command roles</li>
+          <li>Senior NCOs (E-9/E-8) score higher on Network (5) than similar-ranked officers due to extensive enlisted networks</li>
+          <li>Multiple general officer ranks (O-7, O-8) share identical scores (6.0) because scope differs but dimensional capabilities are equivalent</li>
+          <li>The President's only non-9 score is Synthesis (8), reflecting human decision-making limits vs institutional knowledge</li>
+        </ul>
+      </div>
+      
+      <div class="text-center mt-4 mb-5">
+        <a href="/agent-power-framework" class="btn btn-primary btn-lg me-2">
+          <i class="fas fa-book"></i> Explore Full Framework
+        </a>
+        <a href="/talk-with-forseti" class="btn btn-outline-cyan btn-lg">
+          <i class="fas fa-comment-dots"></i> Evaluate an Entity
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

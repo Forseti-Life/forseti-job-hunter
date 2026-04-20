@@ -1,0 +1,19 @@
+uuid: f180fd95-0929-4ef3-b12f-d088038b9f48
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_summary_updated
+    - node.type.ai_conversation
+id: node.ai_conversation.field_summary_updated
+field_name: field_summary_updated
+entity_type: node
+bundle: ai_conversation
+label: 'Summary Updated'
+description: 'When the conversation summary was last updated'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

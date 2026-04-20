@@ -1,0 +1,110 @@
+{#
+/**
+ * @file
+ * NFR Documentation Index Template
+ *
+ * Available variables:
+ * - development_docs: Array of development documentation items
+ * - reporting_docs: Array of reporting documentation items
+ * - cdc_docs: Array of CDC official documents
+ */
+#}
+<div class="container-fluid my-4">
+  <div class="row">
+    <aside class="col-lg-3 col-md-4 mb-4">
+      {{ drupal_block('nfr_navigation') }}
+    </aside>
+    
+    <main class="col-lg-9 col-md-8">
+      <div class="nfr-documentation-index">
+  <div class="intro">
+    <h1>{{ 'National Firefighter Registry Documentation'|t }}</h1>
+    <p class="intro-text">
+      {{ 'This page provides access to all NFR project documentation, including business requirements, technical specifications, and official CDC documents.'|t }}
+    </p>
+  </div>
+
+  {# Reporting Documentation Section #}
+  <details class="doc-section" open>
+    <summary>{{ 'Reporting & Analytics'|t }}</summary>
+    <div class="section-content">
+      {% for doc in reporting_docs %}
+        <div class="doc-item">
+          <div class="doc-header">
+            <h3>{{ doc.link }}</h3>
+          </div>
+          <p class="description">{{ doc.description }}</p>
+          {% if doc.file %}
+            <div class="doc-meta">
+              <small>
+                {{ 'File:'|t }} <strong>{{ doc.file }}</strong>
+                {% if doc.file_size %}
+                  ({{ doc.file_size }})
+                {% endif %}
+              </small>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </details>
+
+  {# Development Documentation Section #}
+  <details class="doc-section" open>
+    <summary>{{ 'Development Documentation'|t }}</summary>
+    <div class="section-content">
+      {% for doc in development_docs %}
+        <div class="doc-item">
+          <div class="doc-header">
+            <h3>{{ doc.link }}</h3>
+          </div>
+          <p class="description">{{ doc.description }}</p>
+          <div class="doc-meta">
+            <small>
+              {{ 'File:'|t }} <strong>{{ doc.file }}</strong>
+              {% if doc.file_size %}
+                ({{ doc.file_size }})
+              {% endif %}
+            </small>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </details>
+
+  {# CDC Official Documents Section #}
+  <details class="doc-section" open>
+    <summary>{{ 'CDC Official Documents'|t }}</summary>
+    <div class="section-content">
+      {% for doc in cdc_docs %}
+        <div class="doc-item cdc-doc">
+          <h3>{{ doc.link }}</h3>
+          <p class="description">{{ doc.description }}</p>
+          <div class="doc-meta">
+            <small>
+              {{ 'File:'|t }} <strong>{{ doc.file }}</strong>
+              {% if doc.file_size %}
+                ({{ doc.file_size }})
+              {% endif %}
+            </small>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </details>
+
+  {# Additional Resources Section #}
+  <details class="doc-section" open>
+    <summary>{{ 'Additional Resources'|t }}</summary>
+    <div class="section-content">
+      <div class="doc-item">
+        <h3><a href="https://www.cdc.gov/niosh/firefighters/resources/index.html" target="_blank" rel="noopener noreferrer">{{ 'CDC NIOSH Firefighter Resources'|t }}</a></h3>
+        <p class="description">{{ 'Comprehensive collection of firefighter health and safety resources from the CDC National Institute for Occupational Safety and Health (NIOSH), including research publications, training materials, health guidelines, and cancer prevention information.'|t }}</p>
+      </div>
+    </div>
+  </details>
+
+      </div>
+    </main>
+  </div>
+</div>

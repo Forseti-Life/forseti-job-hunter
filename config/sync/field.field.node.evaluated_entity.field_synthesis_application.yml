@@ -1,0 +1,25 @@
+uuid: 00825ea8-e66e-4097-9221-3c7ada9774db
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_synthesis_application
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_synthesis_application
+field_name: field_synthesis_application
+entity_type: node
+bundle: evaluated_entity
+label: 'Synthesis & Application'
+description: 'Power level (0-9) for Synthesis & Application dimension'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

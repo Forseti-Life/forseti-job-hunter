@@ -1,0 +1,59 @@
+forseti_content.about:
+  title: 'About'
+  route_name: forseti_content.about
+  menu_name: main
+  weight: -40
+  expanded: true
+
+forseti_content.legal:
+  title: 'Legal'
+  route_name: forseti_content.legal
+  menu_name: main
+  parent: forseti_content.about
+  weight: -39
+
+forseti_content.how_it_works:
+  title: 'How It Works'
+  route_name: forseti_content.how_it_works
+  menu_name: main
+  weight: -30
+  expanded: true
+
+forseti_content.roadmap:
+  title: 'Roadmap'
+  route_name: forseti_content.roadmap
+  menu_name: main
+  parent: forseti_content.how_it_works
+  weight: -29
+
+forseti_content.talk_with_forseti:
+  title: 'Talk with Forseti'
+  route_name: forseti_content.talk_with_forseti
+  menu_name: main
+  weight: -25
+
+forseti_content.agent_hierarchy:
+  title: 'Agent Power Framework'
+  route_name: forseti_content.agent_hierarchy
+  menu_name: main
+  parent: forseti_content.how_it_works
+  weight: -24
+
+forseti_content.example_entities:
+  title: 'Example Entities (Admin)'
+  route_name: forseti_content.example_entities
+  menu_name: main
+  parent: forseti_content.how_it_works
+  weight: -22
+
+forseti_content.institutional:
+  title: 'Family & Institutions'
+  route_name: institutional_management.landing
+  menu_name: main
+  weight: 5
+
+job_hunter.main_menu:
+  title: 'Job Hunter'
+  route_name: job_hunter.dashboard
+  menu_name: main
+  weight: 10

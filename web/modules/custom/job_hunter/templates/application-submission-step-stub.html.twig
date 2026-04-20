@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * Generic stub page for application submission process steps.
+ */
+#}
+
+<div class="application-submission-page">
+  <h1>{{ step_title }}</h1>
+  <p>{{ step_description }}</p>
+
+  <div class="job-info-box">
+    <h3>{{ 'Requisition Context'|t }}</h3>
+    <p><strong>{{ 'Job'|t }}:</strong> <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">{{ job_title }}</a></p>
+    <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}</p>
+    <p><strong>{{ 'Step'|t }}:</strong> {{ step }}</p>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Stub Status'|t }}</h3>
+    <p>{{ 'This step page is scaffolded and ready for detailed implementation.'|t }}</p>
+  </div>
+
+  <div class="page-actions">
+    <a href="{{ return_url }}" class="button button--secondary">{{ 'Back to Requisition Flow'|t }}</a>
+  </div>
+</div>

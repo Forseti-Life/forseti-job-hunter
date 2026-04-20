@@ -1,0 +1,355 @@
+/**
+ * @file
+ * Styles for Target Companies management page.
+ */
+
+.target-companies-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header Styles */
+.target-companies-header {
+  margin-bottom: 30px;
+}
+
+.target-companies-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 2em;
+  color: #2d3748;
+}
+
+.target-companies-header .subtitle {
+  color: #666;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+
+.target-companies-header .description {
+  color: #718096;
+  font-size: 0.95em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Stats Bar */
+.stats-bar {
+  display: flex;
+  gap: 30px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 8px;
+  min-width: 150px;
+}
+
+.stat-number {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #2c5282;
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Action Bar */
+.action-bar {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-add-company {
+  padding: 12px 24px;
+  background: #48bb78;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-add-company:hover {
+  background: #38a169;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 30px 0;
+}
+
+.empty-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.5em;
+  color: #2d3748;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 12px 30px;
+  background: #48bb78;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #38a169;
+}
+
+/* Section Header */
+.section-header {
+  margin: 40px 0 20px 0;
+  padding-top: 30px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.section-header h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.5em;
+  color: #2d3748;
+}
+
+.section-description {
+  color: #666;
+  margin: 0;
+}
+
+/* Filter Bar */
+.filter-bar {
+  margin: 20px 0;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.company-filter-input {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1em;
+  transition: border-color 0.2s;
+}
+
+.company-filter-input:focus {
+  outline: none;
+  border-color: #4299e1;
+}
+
+.filter-count {
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Tables */
+.companies-table,
+.all-companies-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.companies-table th,
+.all-companies-table th {
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  color: #2d3748;
+}
+
+.companies-table td,
+.all-companies-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.companies-table tr:last-child td,
+.all-companies-table tr:last-child td {
+  border-bottom: none;
+}
+
+.all-companies-table .company-row.hidden {
+  display: none;
+}
+
+/* Company Details */
+.company-name strong {
+  font-size: 1.1em;
+  color: #2d3748;
+}
+
+.company-industry {
+  font-size: 0.9em;
+  color: #718096;
+  margin-top: 4px;
+}
+
+.company-links a {
+  margin-right: 10px;
+  color: #4299e1;
+  text-decoration: none;
+}
+
+.company-links a:hover {
+  text-decoration: underline;
+}
+
+.text-muted {
+  color: #a0aec0;
+}
+
+/* Badge */
+.badge {
+  background: #e6fffa;
+  color: #234e52;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+/* Status */
+.status-active {
+  color: #38a169;
+  font-weight: 600;
+}
+
+.status-inactive {
+  color: #a0aec0;
+}
+
+/* Action Buttons */
+.company-actions {
+  white-space: nowrap;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-add-quick {
+  padding: 6px 12px;
+  margin-right: 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9em;
+  display: inline-block;
+  transition: background 0.2s;
+}
+
+.btn-edit {
+  background: #4299e1;
+  color: white;
+}
+
+.btn-delete {
+  background: #f56565;
+  color: white;
+}
+
+.btn-add-quick {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #3182ce;
+}
+
+.btn-delete:hover {
+  background: #e53e3e;
+}
+
+.btn-add-quick:hover {
+  background: #38a169;
+}
+
+.already-added {
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-bar {
+    gap: 15px;
+  }
+  
+  .stat {
+    min-width: 120px;
+    padding: 12px 15px;
+  }
+  
+  .stat-number {
+    font-size: 1.5em;
+  }
+  
+  .companies-table,
+  .all-companies-table {
+    font-size: 0.9em;
+  }
+  
+  .companies-table th,
+  .all-companies-table th,
+  .companies-table td,
+  .all-companies-table td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .target-companies-page {
+    padding: 10px;
+  }
+  
+  .stats-bar {
+    flex-direction: column;
+  }
+  
+  .stat {
+    width: 100%;
+  }
+  
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .company-filter-input {
+    width: 100%;
+    max-width: none;
+  }
+}

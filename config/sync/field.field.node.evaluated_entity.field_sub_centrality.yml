@@ -1,0 +1,25 @@
+uuid: cfd6601d-14a7-4dd2-9a93-cedfe14007b7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_centrality
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_centrality
+field_name: field_sub_centrality
+entity_type: node
+bundle: evaluated_entity
+label: Centrality
+description: 'Sub-dimension power level (0-9) for Centrality'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

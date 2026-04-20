@@ -1,0 +1,60 @@
+{#
+/**
+ * @file
+ * Template for Google Jobs search job detail page (user-facing).
+ *
+ * Available variables:
+ * - job: Job requirement object from jobhunter_job_requirements.
+ * - company: Company object from jobhunter_companies, or null.
+ */
+#}
+
+<div class="google-jobs-search-detail">
+
+  <div class="mb-3">
+    <a href="/jobhunter/googlejobssearch" class="btn btn-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> {{ 'Back to Search'|t }}
+    </a>
+  </div>
+
+  {% if job %}
+    <div class="card">
+      <div class="card-header">
+        <h1 class="h4 mb-0">{{ job.job_title|default('Job Details')|e }}</h1>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-2">
+          {% if company %}
+            <i class="bi bi-building"></i> {{ company.company_name|e }}
+          {% endif %}
+          {% if job.created_at %}
+            <span class="ms-3">
+              <i class="bi bi-calendar"></i> {{ 'Posted'|t }} {{ job.created_at|date('M d, Y') }}
+            </span>
+          {% endif %}
+        </p>
+
+        {% if job.job_description %}
+          <div class="gjobs-detail-description mt-3">
+            <h5>{{ 'Description'|t }}</h5>
+            <div>{{ job.job_description|e|nl2br }}</div>
+          </div>
+        {% endif %}
+
+        {% if job.job_url %}
+          <div class="mt-4">
+            <a href="{{ job.job_url|e }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="btn btn-primary">
+              {{ 'Apply Now'|t }} <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning">{{ 'Job not found.'|t }}</div>
+  {% endif %}
+
+</div>

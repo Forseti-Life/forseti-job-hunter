@@ -1,0 +1,6 @@
+services:
+  jobhunter_tester.qa_user.commands:
+    class: Drupal\jobhunter_tester\Commands\QaUserCommands
+    arguments: ['@entity_type.manager', '@database', '@logger.factory']
+    tags:
+      - { name: drush.command }

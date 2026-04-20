@@ -1,0 +1,291 @@
+{#
+/**
+ * @file
+ * Forseti Community Home Page
+ * Theme override for the front page - Community-focused landing page
+ */
+#}
+
+{{ attach_library('forseti/animated-header') }}
+
+<div class="page-wrapper">
+  {# Animated Header Section - Full Height Home Header #}
+  <div id="large-header" class="large-header home-header">
+    <canvas id="demo-canvas"></canvas>
+    <h1 class="main-title">
+      <span class="highlight">Forseti</span> <span class="thin">Life</span>
+    </h1>
+    <p class="main-subtitle">
+      A Tolerant, Scientific, Technology-Embracing Community That Takes Care of Its Own
+    </p>
+    <div class="hero-cta">
+      <a href="#about-community" class="btn btn-primary">Learn About Our Community</a>
+      <a href="#services" class="btn btn-outline-light">Member Services</a>
+      <a href="#membership" class="btn btn-outline-light">Join Us</a>
+    </div>
+  </div>
+
+  {# Navigation - Using Radix Navbar Component #}
+  {% block page_navigation %}
+    {% embed 'radix:navbar' with {
+      navbar_container_type: null,
+      navbar_expand: 'lg',
+      navbar_theme: 'dark',
+      navbar_utility_classes: [
+        'forseti-navbar',
+        'forseti-navbar-front',
+      ],
+    } %}
+      {% block branding %}
+        {% if page.navbar_branding %}
+          {{ page.navbar_branding }}
+        {% endif %}
+      {% endblock %}
+
+      {% block left %}
+        {% if page.navbar_left %}
+          <div class="me-auto">
+            {{ page.navbar_left }}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      {% block right %}
+        {% if page.navbar_right %}
+          <div class="ms-auto">
+            {{ page.navbar_right }}
+          </div>
+        {% endif %}
+      {% endblock %}
+    {% endembed %}
+  {% endblock %}
+
+  {# Main Content #}
+  <main class="main-content">
+    {% if page.header %}
+      <div class="header-region">
+        <div class="container">
+          {{ page.header }}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="container py-5">
+      {# Community Philosophy Section #}
+      <section id="about-community" class="mb-5">
+        <div class="row">
+          <div class="col-lg-10 mx-auto">
+            <h2 class="text-center mb-4">Our Community Philosophy</h2>
+            <div class="lead text-center mb-4">
+              <p>We are a tolerant, scientific, technology-embracing community that takes care of its own.</p>
+            </div>
+            <div class="row mt-5">
+              <div class="col-md-4 text-center mb-4">
+                <div class="philosophy-icon mb-3">
+                  <i class="fas fa-brain fa-3x text-primary"></i>
+                </div>
+                <h4>Science & Technology</h4>
+                <p>We embrace scientific methodology and cutting-edge technology to improve our lives and advance our capabilities.</p>
+              </div>
+              <div class="col-md-4 text-center mb-4">
+                <div class="philosophy-icon mb-3">
+                  <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h4>Community Care</h4>
+                <p>We believe in taking care of our own, building services and infrastructure that adds value to every member.</p>
+              </div>
+              <div class="col-md-4 text-center mb-4">
+                <div class="philosophy-icon mb-3">
+                  <i class="fas fa-balance-scale fa-3x text-primary"></i>
+                </div>
+                <h4>Tolerance & Equity</h4>
+                <p>We maintain a tolerant environment focused on creating equity and value for all community members.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# Currently Implemented Services Section #}
+      <section id="services" class="mb-5 bg-light py-5">
+        <div class="row">
+          <div class="col-lg-10 mx-auto">
+            <h2 class="text-center mb-4">Currently Implemented Services</h2>
+            <div class="lead text-center mb-3">
+              <p class="mb-2"><strong>Free to All Members</strong></p>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-file-alt text-primary me-2"></i>
+                      Resume Review & Tailoring
+                    </h5>
+                    <p class="card-text">AI-powered resume review and tailoring to job descriptions. Get your resume optimized for any position in minutes.</p>
+                    <a href="/jobhunter" class="btn btn-sm btn-primary">Access Service</a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-sitemap text-primary me-2"></i>
+                      Agentic Management System
+                    </h5>
+                    <p class="card-text">Our intelligent agent coordination system that orchestrates AI services and automates complex workflows for members.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-graduation-cap text-primary me-2"></i>
+                      Free Training in Agentic Development
+                    </h5>
+                    <p class="card-text">Learn to build and deploy AI agents. Hands-on training in agentic systems, automation, and AI development for members.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-info mt-4 text-center">
+              <h5 class="mb-3">
+                <i class="fas fa-rocket me-2"></i>
+                Exponential Growth
+              </h5>
+              <p class="mb-2"><strong>Our growth is exponential and we are building more services every day...</strong></p>
+              <p class="mb-0"><em>It's not a good day to be a SaaS business.</em></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# What We Build Section #}
+      <section id="our-approach" class="mb-5">
+        <div class="row">
+          <div class="col-lg-10 mx-auto">
+            <h2 class="text-center mb-4">What We Build</h2>
+            <div class="lead text-center mb-4">
+              <p>We build services and expand artificial intelligence for our community members by automating anything that can add value and equity to the community as a whole.</p>
+            </div>
+            <div class="row mt-4">
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-robot text-primary me-2"></i>
+                      AI-Powered Automation
+                    </h5>
+                    <p class="card-text">Leveraging artificial intelligence to automate processes and create efficiencies that benefit all members.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-tools text-primary me-2"></i>
+                      Member Services
+                    </h5>
+                    <p class="card-text">Custom services designed by the community, for the community, addressing real needs and creating tangible value.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-chart-line text-primary me-2"></i>
+                      Community Growth
+                    </h5>
+                    <p class="card-text">Building infrastructure and systems that scale with our community's evolving needs.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fas fa-handshake text-primary me-2"></i>
+                      Collaborative Innovation
+                    </h5>
+                    <p class="card-text">Members contribute ideas, skills, and resources to collectively build solutions.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# Membership Section #}
+      <section id="membership" class="mb-5">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">Membership</h2>
+            
+            <div class="card mb-4">
+              <div class="card-body">
+                <h4 class="card-title">
+                  <i class="fas fa-lock text-primary me-2"></i>
+                  Privately Funded Community
+                </h4>
+                <p class="card-text">Forseti is a privately funded community, ensuring independence and focus on member value rather than external obligations.</p>
+              </div>
+            </div>
+
+            <div class="card mb-4">
+              <div class="card-body">
+                <h4 class="card-title">
+                  <i class="fas fa-user-check text-primary me-2"></i>
+                  Invitation or Application
+                </h4>
+                <p class="card-text">New members join through invitation or by application with administrative approval. We seek members who bring value to the community.</p>
+              </div>
+            </div>
+
+            <div class="card mb-4">
+              <div class="card-body">
+                <h4 class="card-title">
+                  <i class="fas fa-star text-primary me-2"></i>
+                  What We Value
+                </h4>
+                <p class="card-text mb-3">New members are welcome who bring something to the table from either:</p>
+                <ul>
+                  <li><strong>Skill Set Perspective</strong> - Technical abilities, professional expertise, creative talents, or specialized knowledge that can benefit the community</li>
+                  <li><strong>Asset Perspective</strong> - Resources, connections, infrastructure, or capabilities that enhance community capacity</li>
+                </ul>
+                <p class="card-text">We value diverse contributions and recognize that every member brings unique strengths to our community.</p>
+              </div>
+            </div>
+
+            <div class="text-center mt-5">
+              <a href="/contact" class="btn btn-primary btn-lg">
+                <i class="fas fa-envelope me-2"></i>
+                Express Interest in Membership
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# Drupal Content Region #}
+      <div class="row">
+        <div class="col">
+          {% if page.content %}
+            {{ page.content }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {# Footer #}
+  {% if page.footer %}
+    {{ page.footer }}
+  {% endif %}
+</div>

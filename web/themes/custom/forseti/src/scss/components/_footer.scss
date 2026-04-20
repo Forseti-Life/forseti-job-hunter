@@ -1,0 +1,386 @@
+// Footer Styles for St. Louis Integration
+// =============================================================================
+
+.footer {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: #ffffff;
+  margin-top: auto;
+  padding: 3rem 0 1rem;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00d4ff, #090979);
+  }
+
+  // Container with grid layout
+  .container {
+    > * {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  h3, h4, h5 {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    
+    &::after {
+      content: '';
+      display: block;
+      width: 30px;
+      height: 2px;
+      background: #00d4ff;
+      margin-top: 0.5rem;
+    }
+  }
+
+  p, li, address {
+    color: #e8f4fd;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  a {
+    color: #b3deff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    
+    &:hover,
+    &:focus {
+      color: #00d4ff;
+      text-decoration: underline;
+      text-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+    }
+  }
+
+  // Footer blocks area (for custom placed blocks)
+  .footer-blocks {
+    margin-bottom: 2rem;
+    
+    // Style blocks in footer region
+    .block {
+      margin-bottom: 2rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .block-title,
+      h2, h3, h4, h5 {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        
+        &::after {
+          content: '';
+          display: block;
+          width: 30px;
+          height: 2px;
+          background: #00d4ff;
+          margin-top: 0.5rem;
+        }
+      }
+      
+      .block-content {
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          
+          li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.2rem;
+            
+            &::before {
+              content: '▸';
+              position: absolute;
+              left: 0;
+              color: #00d4ff;
+              font-weight: bold;
+            }
+          }
+        }
+      }
+    }
+    
+    // Multi-column layout for footer blocks
+    .block-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      
+      .block {
+        flex: 1;
+        min-width: 250px;
+      }
+    }
+  }
+
+  // Footer sections (default layout)
+  .footer-section {
+    margin-bottom: 2rem;
+    
+    @media (min-width: 768px) {
+      margin-bottom: 0;
+    }
+  }
+
+  // Company info section
+  .footer-company {
+    .company-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .company-tagline {
+      font-size: 1rem;
+      color: #b3deff;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+  }
+
+  // Services list
+  .footer-services {
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    li {
+      margin-bottom: 0.5rem;
+      position: relative;
+      padding-left: 1.2rem;
+      
+      &::before {
+        content: '▸';
+        position: absolute;
+        left: 0;
+        color: #00d4ff;
+        font-weight: bold;
+      }
+    }
+  }
+
+  // Contact info
+  .footer-contact {
+    .contact-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      
+      .icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.75rem;
+        opacity: 0.8;
+        fill: #00d4ff;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  // Social links
+  .footer-social {
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: #00d4ff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+      }
+      
+      .icon {
+        width: 20px;
+        height: 20px;
+        fill: #ffffff;
+      }
+    }
+  }
+
+  // Bottom bar
+  .footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    text-align: center;
+    color: #b3deff;
+    
+    p {
+      margin-bottom: 0.5rem;
+    }
+    
+    .footer-links {
+      margin-top: 1rem;
+      
+      a {
+        margin: 0 1rem;
+        font-size: 0.9rem;
+        
+        @media (max-width: 768px) {
+          display: block;
+          margin: 0.25rem 0;
+        }
+      }
+    }
+  }
+}
+
+// Make sure page wrapper takes full height
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Push footer to bottom
+main.main-content {
+  flex: 1;
+}
+
+// Professional page enhancements
+.page-content {
+  padding: 2rem 0;
+  min-height: 400px;
+  
+  // Default page styling
+  &.default-page {
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e3c72;
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      
+      &::after {
+        content: '';
+        display: block;
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, #00d4ff, #090979);
+        margin: 1rem auto;
+        border-radius: 2px;
+      }
+    }
+    
+    .page-intro {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #666;
+      text-align: center;
+      margin-bottom: 3rem;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .content-cards {
+      .card {
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+        
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+          background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+          color: white;
+          font-weight: 600;
+          border-bottom: none;
+          
+          h3, h4, h5 {
+            color: white;
+            margin: 0;
+          }
+        }
+        
+        .card-body {
+          padding: 2rem;
+        }
+      }
+    }
+  }
+}
+
+// 404 and error page styling
+.page-404,
+.page-error {
+  text-align: center;
+  padding: 4rem 0;
+  
+  h1 {
+    font-size: 6rem;
+    font-weight: 900;
+    color: #1e3c72;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .error-message {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 2rem;
+  }
+  
+  .error-description {
+    font-size: 1.1rem;
+    color: #888;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .back-home-btn {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(30, 60, 114, 0.3);
+      color: white;
+      text-decoration: none;
+    }
+  }
+}

@@ -1,0 +1,125 @@
+{#
+/**
+ * @file
+ * AmISafe Crime Map template.
+ *
+ * Available variables:
+ * - map_config: Configuration for the map
+ * - crime_types: Available crime types for filtering
+ * - districts: Police districts
+ * - date_range: Available date range
+ */
+#}
+
+<div id="safety-map" class="container-fluid py-2 py-md-3">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 mb-md-4 gap-2">
+        <div class="text-center text-md-start">
+          <h1 class="text-cyan mb-1 mb-md-2">Philadelphia Safety Map</h1>
+          <p class="text-muted-light mb-0">Interactive safety data visualization</p>
+        </div>
+        <div class="text-center text-md-end">
+          <a href="/mobile-app" class="btn btn-primary btn-sm">
+            <img src="/themes/custom/forseti/images/logos/originals/forseti_safe.png" alt="" class="forseti-icon" style="height: 20px;">
+            Get App
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="crime-map-layout">
+  <div class="crime-map-container">
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" class="loading-overlay d-none">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading safety data...</div>
+          <div class="loading-status">Preparing map...</div>
+        </div>
+      </div>
+      
+      <!-- This is the main container the JavaScript expects -->
+      <div id="crime-map-container"></div>
+      
+      <!-- Floating Map Controls (will be created by JavaScript) -->
+      <div id="map-filter-controls" class="floating-controls top-left">
+        <!-- Date Range Presets -->
+        <div class="control-group">
+          <div class="btn-group btn-group-sm w-100" role="group">
+            <button type="button" class="btn btn-light preset-btn" id="preset-12-months" data-preset="12months" title="Last 12 Months">12M</button>
+            <button type="button" class="btn btn-light preset-btn" id="preset-6-months" data-preset="6months" title="Last 6 Months">6M</button>
+            <button type="button" class="btn btn-light preset-btn active" id="preset-all-time" data-preset="alltime" title="All Time Data">ALL</button>
+          </div>
+          <input type="hidden" id="date-range-filter" value="alltime">
+        </div>
+        
+        <!-- Incident Type Filter Toggle -->
+        <div class="control-group">
+          <button id="toggle-crime-filter" class="btn btn-light btn-sm w-100" title="Filter Incident Types">
+            <span class="filter-icon">🔍</span> Incident Filters
+          </button>
+        </div>
+        
+        <!-- Incident Type Dropdown (hidden by default) -->
+        <div id="crime-type-dropdown" class="filter-dropdown d-none">
+          <div class="dropdown-header">
+            <strong>Incident Types</strong>
+            <button id="close-crime-filter" class="btn-close-filter">&times;</button>
+          </div>
+          <div class="dropdown-body">
+            <select id="crime-type-selector" class="form-control form-select" multiple size="8">
+              <!-- Dynamically populated from API -->
+            </select>
+            <small class="text-muted d-none d-md-block">Hold Ctrl/Cmd for multiple</small>
+            <small class="text-muted d-md-none">Tap to select multiple</small>
+          </div>
+          <div class="dropdown-footer d-flex gap-2">
+            <button id="apply-crime-filter" class="btn btn-primary btn-sm flex-fill">Apply</button>
+            <button id="clear-crime-filter" class="btn btn-secondary btn-sm flex-fill">Clear</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resolution and Zoom Indicator -->
+      <div class="map-controls">
+        <div class="resolution-indicator">
+          <button id="zoom-out" class="btn btn-xs btn-outline-secondary" title="Zoom Out">−</button>
+          <span class="zoom-label">ZOOM:</span>
+          <span id="zoom-level">12</span>
+          <button id="zoom-in" class="btn btn-xs btn-outline-secondary" title="Zoom In">+</button>
+          <span class="separator">|</span>
+          <button id="h3-decrease" class="btn btn-xs btn-outline-secondary" title="Decrease H3 Resolution (Larger Hexagons)">−</button>
+          <span class="resolution-label">H3:</span>
+          <span id="h3-resolution" class="h3-resolution-value">7</span>
+          <button id="h3-increase" class="btn btn-xs btn-outline-secondary" title="Increase H3 Resolution (Smaller Hexagons)">+</button>
+          <span class="separator">|</span>
+          <span class="scale-label" id="h3-scale-label">~5.2km² neighborhoods</span>
+        </div>
+      </div>
+      
+      <!-- Hexagon Detail Panel (fixed at bottom) -->
+      <div id="hexagon-detail-panel" class="hexagon-detail-panel card-forseti" style="display: none;">
+        <button id="close-detail-panel" class="close-panel-btn" title="Close">&times;</button>
+        <div id="hexagon-detail-content" class="panel-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Details Modal -->
+<div id="incident-modal" class="modal fade">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark">
+      <div class="modal-header border-secondary">
+        <h3 class="modal-title text-cyan">Incident Analysis</h3>
+        <button class="btn-close btn-close-white modal-close" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="incident-details"></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+safety_calculator.my_profile:
+  title: 'My Profile'
+  route_name: entity.user.canonical
+  menu_name: account
+  weight: -10
+

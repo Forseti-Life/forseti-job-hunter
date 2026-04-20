@@ -1,0 +1,83 @@
+{#
+/**
+ * @file
+ * Template for company-specific job discovery search page.
+ *
+ * Available variables:
+ * - user: The user entity
+ * - company: The company entity
+ * - job_opportunities: Array of job posting entities
+ */
+#}
+
+<div class="job-discovery-company">
+  <div class="job-discovery-header">
+    <h1>{{ 'Job Opportunities at %company'|t({'%company': company.getTitle()}) }}</h1>
+    <a href="{{ path('job_hunter.job_discovery') }}" class="btn btn-secondary">
+      {{ 'Back to Job Discovery'|t }}
+    </a>
+  </div>
+
+  <div class="job-opportunities">
+    <h2>{{ 'Job Opportunities at %company'|t({'%company': company.getTitle()}) }}</h2>
+    
+    {% if job_opportunities %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ 'Job Title'|t }}</th>
+            <th>{{ 'Location'|t }}</th>
+            <th>{{ 'Employment Type'|t }}</th>
+            <th>{{ 'Posted Date'|t }}</th>
+            <th>{{ 'Actions'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in job_opportunities %}
+            <tr>
+              <td>
+                <strong>{{ job.getTitle() }}</strong>
+                {% if not job.get('field_job_description').isEmpty %}
+                  <br><small class="text-muted">{{ job.get('field_job_description').value|striptags|slice(0, 100) }}...</small>
+                {% endif %}
+              </td>
+              <td>
+                {% if not job.get('field_location').isEmpty %}
+                  {{ job.get('field_location').value }}
+                {% else %}
+                  {{ 'Not specified'|t }}
+                {% endif %}
+              </td>
+              <td>
+                {% if not job.get('field_employment_type').isEmpty %}
+                  {{ job.get('field_employment_type').value }}
+                {% else %}
+                  {{ 'Not specified'|t }}
+                {% endif %}
+              </td>
+              <td>
+                {% if not job.get('field_posting_date').isEmpty %}
+                  {{ job.get('field_posting_date').value|date('M j, Y') }}
+                {% else %}
+                  {{ 'Not specified'|t }}
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ path('entity.node.canonical', {'node': job.id()}) }}" class="btn btn-sm btn-primary">
+                  {{ 'View Details'|t }}
+                </a>
+                <a href="{{ path('job_hunter.tailor_resume', {'user': user.id(), 'job': job.id()}) }}" class="btn btn-sm btn-success ms-2">
+                  {{ 'Tailor Resume'|t }}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-info">
+        <p>{{ 'No job opportunities currently available at %company. Check back later for new postings.'|t({'%company': company.getTitle()}) }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>

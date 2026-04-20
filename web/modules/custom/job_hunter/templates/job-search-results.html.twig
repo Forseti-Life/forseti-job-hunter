@@ -1,0 +1,147 @@
+{#
+/**
+ * @file
+ * Template for Job Search Results page.
+ *
+ * Available variables:
+ * - results: Array of job results
+ * - search_params: Search parameters used 
+ * - total_results: Number of results found
+ * - sources_searched: Array of sources that were searched
+ * - diagnostics: Diagnostic information when no results found
+ * - save_job_csrf_token: CSRF token for AJAX save-job requests
+ */
+#}
+
+<div class="job-search-results-page">
+  <h1>🔍 {{ 'Job Search Results'|t }}</h1>
+  
+  <div class="back-link-container">
+    <a href="/jobhunter/job-discovery" class="back-link">← {{ 'Back to Search'|t }}</a>
+  </div>
+
+  {% if search_params is not empty %}
+    <div class="search-summary-container">
+      <div class="search-summary">
+        {% if search_params.query %}
+          <span class="search-param"><strong>{{ 'Keywords:'|t }}</strong> {{ search_params.query }}</span>
+        {% endif %}
+        {% if search_params.location %}
+          <span class="search-param"><strong>{{ 'Location:'|t }}</strong> {{ search_params.location }}</span>
+        {% endif %}
+        {% if search_params.employment_type %}
+          <span class="search-param"><strong>{{ 'Type:'|t }}</strong> {{ search_params.employment_type }}</span>
+        {% endif %}
+        {% if search_params.salary_min %}
+          <span class="search-param"><strong>{{ 'Min Salary:'|t }}</strong> ${{ search_params.salary_min|number_format }}</span>
+        {% endif %}
+        {% if search_params.salary_max %}
+          <span class="search-param"><strong>{{ 'Max Salary:'|t }}</strong> ${{ search_params.salary_max|number_format }}</span>
+        {% endif %}
+        {% if search_params.remote_preference %}
+          <span class="search-param"><strong>{{ 'Remote:'|t }}</strong> {{ search_params.remote_preference|capitalize }}</span>
+        {% endif %}
+        {% if search_params.relocation_willing %}
+          <span class="search-param"><strong>{{ 'Relocate:'|t }}</strong> {{ search_params.relocation_willing|capitalize }}</span>
+        {% endif %}
+        {% if sources_searched %}
+          <span class="search-param"><strong>{{ 'Sources:'|t }}</strong> {{ sources_searched|join(', ')|capitalize }}</span>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="results-container">
+    {% if results is empty %}
+      <div class="no-results">
+        <h3>{{ 'No jobs found matching your criteria'|t }}</h3>
+        <p>{{ 'Your search returned 0 results from @count source(s).'|t({'@count': sources_searched|length}) }}</p>
+        
+        {% if diagnostics %}
+          <div class="diagnostic-info">
+            <h4>🔍 {{ 'Diagnostic Information:'|t }}</h4>
+            <ul>
+              {% if diagnostics.forseti_total is defined %}
+                <li><strong>{{ 'Forseti Database:'|t }}</strong> {{ diagnostics.forseti_total }} {{ 'total jobs available'|t }}</li>
+              {% endif %}
+              {% if diagnostics.google_cloud_total is defined %}
+                <li><strong>{{ 'Google Cloud Tenant:'|t }}</strong> {{ diagnostics.google_cloud_total }} {{ 'total jobs available'|t }}</li>
+              {% elseif diagnostics.google_cloud_error %}
+                <li><strong>{{ 'Google Cloud:'|t }}</strong> ⚠️ {{ diagnostics.google_cloud_error }}</li>
+              {% endif %}
+            </ul>
+            <p><strong>{{ 'Suggestions:'|t }}</strong></p>
+            <ul>
+              <li>{{ 'Try removing location filters (search nationwide)'|t }}</li>
+              <li>{{ 'Try broader keywords'|t }}</li>
+              <li>{{ 'Remove date posted filters'|t }}</li>
+              <li>{{ 'If no jobs available in data sources, import jobs first'|t }}</li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="results-summary">
+        <h3>{{ 'Found @count job'|t({'@count': results|length}) }}{% if results|length != 1 %}s{% endif %}</h3>
+      </div>
+      
+      <div class="job-results-list">
+        {% for job in results %}
+          <div class="job-result-card">
+            <div class="job-result-header">
+              <div class="job-result-title-block">
+                <h4 class="job-result-title">{{ job.title }}</h4>
+                <div class="job-result-meta">
+                  <span class="job-company">🏢 {{ job.company }}</span>
+                  <span class="job-location">📍 {{ job.location }}</span>
+                  <span class="job-type">💼 {{ job.employment_type }}</span>
+                </div>
+              </div>
+              <div class="job-result-actions">
+                <span class="job-source-badge">{{ job.source }}</span>
+              </div>
+            </div>
+            <div class="job-result-body">
+              <div class="job-result-details">
+                <span class="job-salary">💰 {{ job.salary_range }}</span>
+                <span class="job-posted">📅 {{ job.posted_date }}</span>
+              </div>
+              {% set clean_description = (job.description|default('')|striptags|replace({'\r\n': ' ', '\n': ' ', '\r': ' '})|trim) %}
+              <p class="job-description">
+                {{ clean_description|length > 650 ? clean_description|slice(0, 650) ~ '…' : clean_description }}
+              </p>
+            </div>
+            <div class="job-result-footer">
+              <a href="{{ path('job_hunter.addposting', {}, {'query': {'job_id': job.id}}) }}" class="btn-save-job" data-csrf-token="{{ save_job_csrf_token }}">{{ '💾 Save Job'|t }}</a>
+              {% if job.url %}
+                <a href="{{ job.url }}" target="_blank" class="btn-view-job" rel="noopener">{{ '🔗 View Original'|t }}</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {# Pagination Controls for SerpAPI #}
+      {% if pagination.serpapi and pagination.serpapi.next_page_token %}
+        <div class="search-pagination">
+          <div class="pagination-info">
+            <p>{{ 'Showing page @page of results from Google Jobs (SerpAPI)'|t({'@page': current_page|default(1)}) }}</p>
+          </div>
+          <div class="pagination-controls">
+            {% if current_page > 1 %}
+              <a href="#" class="btn-pagination btn-prev" data-page="{{ current_page - 1 }}">
+                ← {{ 'Previous Page'|t }}
+              </a>
+            {% endif %}
+            
+            {% if pagination.serpapi.has_more %}
+              <a href="#" class="btn-pagination btn-next" data-page="{{ current_page + 1 }}" data-token="{{ pagination.serpapi.next_page_token }}">
+                {{ 'Next Page'|t }} →
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,22 @@
+uuid: ba098b5e-6b01-4e93-8907-741d22cadc12
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_classification_desc
+    - node.type.evaluated_entity
+  module:
+    - text
+id: node.evaluated_entity.field_sub_classification_desc
+field_name: field_sub_classification_desc
+entity_type: node
+bundle: evaluated_entity
+label: 'Classification Description'
+description: 'AI-provided description for Classification sub-dimension'
+required: false
+translatable: true
+default_value: null
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

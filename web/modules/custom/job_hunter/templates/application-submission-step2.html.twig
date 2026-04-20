@@ -1,0 +1,179 @@
+{#
+/**
+ * @file
+ * Dedicated Step 2 page: Resolve redirect chain.
+ */
+#}
+
+<div class="application-submission-page">
+  <h1>{{ 'Step 2: Resolve Redirect Chain'|t }}</h1>
+  <p>{{ 'Focused diagnostics for redirect/canonical destination resolution for this requisition.'|t }}</p>
+
+  <div class="job-info-box">
+    <h3>{{ 'Step 2 Execution'|t }}</h3>
+    {% if step2_cache_exists %}
+      <p><strong>{{ 'Cached Result'|t }}:</strong> {{ 'Available'|t }}</p>
+      <p><strong>{{ 'Last Run'|t }}:</strong> {{ step2_last_run_at ? step2_last_run_at : 'Unknown'|t }}</p>
+      <p>{{ 'This page is showing cached Step 2 results. Click Re-run to execute checks again and replace cached data.'|t }}</p>
+    {% else %}
+      <p><strong>{{ 'Cached Result'|t }}:</strong> {{ 'Not available yet'|t }}</p>
+      <p>{{ 'Step 2 checks do not run automatically on page load. Click the button below to run and cache results.'|t }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ path('job_hunter.application_submission_step2', {'job_id': job_id}) }}">
+      <input type="hidden" name="run_step2" value="1" />
+      <input type="hidden" name="csrf_token" value="{{ run_step2_csrf_token }}" />
+      <button type="submit" class="button button--primary">
+        {% if step2_cache_exists %}
+          {{ 'Re-run Step 2 Checks'|t }}
+        {% else %}
+          {{ 'Run Step 2 Checks'|t }}
+        {% endif %}
+      </button>
+    </form>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Requisition Context'|t }}</h3>
+    <p><strong>{{ 'Job'|t }}:</strong> <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">{{ job_title }}</a></p>
+    <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}</p>
+    <p>
+      <strong>{{ 'Original Job Requisition URL'|t }}:</strong>
+      {% if original_job_url %}
+        <a href="{{ original_job_url }}" target="_blank" rel="noopener">{{ original_job_url }}</a>
+      {% else %}
+        —
+      {% endif %}
+    </p>
+    <p>
+      <strong>{{ 'Resolved Destination URL'|t }}:</strong>
+      {% if resolved_url %}
+        <a href="{{ resolved_url }}" target="_blank" rel="noopener">{{ resolved_url }}</a>
+      {% else %}
+        —
+      {% endif %}
+    </p>
+    <p><strong>{{ 'ATS Platform'|t }}:</strong> {{ ats_platform|default('unknown') }}</p>
+    <p><strong>{{ 'Resolution Confidence'|t }}:</strong> {{ confidence|default('none') }}</p>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Step 2 Gate Checks'|t }}</h3>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if has_career_page %}checked{% endif %} />
+        {{ 'Company careers/apply page identified'|t }}
+      </label>
+    </p>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if is_direct_link %}checked{% endif %} />
+        {{ 'Direct link path (no redirect hops required)'|t }}
+      </label>
+    </p>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if is_resolved %}checked{% endif %} />
+        {{ 'Redirect chain fully resolved (confidence medium/high)'|t }}
+      </label>
+    </p>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Scripted Verification Results'|t }}</h3>
+    {% if verification.error %}
+      <p><strong>{{ 'Verification error'|t }}:</strong> {{ verification.error }}</p>
+    {% endif %}
+
+    {% if verification.checks is defined and verification.checks|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Check'|t }}</th>
+            <th>{{ 'Required'|t }}</th>
+            <th>{{ 'Met'|t }}</th>
+            <th>{{ 'Evidence'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for check in verification.checks %}
+            <tr>
+              <td>{{ check.label }}</td>
+              <td>{{ check.required ? 'Yes'|t : 'No'|t }}</td>
+              <td>
+                <label>
+                  <input type="checkbox" disabled {% if check.met %}checked{% endif %} />
+                  {% if check.met %}
+                    {{ 'Met'|t }}
+                  {% else %}
+                    {{ 'Not Met'|t }}
+                  {% endif %}
+                </label>
+              </td>
+              <td>{{ check.evidence }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No scripted verification checks available.'|t }}</p>
+    {% endif %}
+
+    <p><strong>{{ 'Heuristic Confidence'|t }}:</strong> {{ verification.heuristic_confidence|default('—') }}</p>
+    <p><strong>{{ 'Decision Mode'|t }}:</strong> {{ verification.decision_mode|default('—') }}</p>
+    <p>
+      <strong>{{ 'Final Decision'|t }}:</strong>
+      {% if verification.final_pass %}
+        <span class="badge badge--success">{{ 'PASS'|t }}</span>
+      {% else %}
+        <span class="badge badge--warning">{{ 'FAIL'|t }}</span>
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'GenAI Fallback Analysis'|t }}</h3>
+    {% set genai = verification.genai|default({}) %}
+    <p><strong>{{ 'Fallback Used'|t }}:</strong> {{ genai.used ? 'Yes'|t : 'No'|t }}</p>
+    <p><strong>{{ 'GenAI Available'|t }}:</strong> {{ genai.available ? 'Yes'|t : 'No'|t }}</p>
+    <p><strong>{{ 'GenAI Call Success'|t }}:</strong> {{ genai.success ? 'Yes'|t : 'No'|t }}</p>
+    <p><strong>{{ 'GenAI Confirmed True Location'|t }}:</strong> {{ genai.confirmed ? 'Yes'|t : 'No'|t }}</p>
+    <p><strong>{{ 'GenAI Confidence'|t }}:</strong> {{ genai.confidence|default('none') }}</p>
+    <p><strong>{{ 'GenAI Evidence'|t }}:</strong> {{ genai.evidence|default('—') }}</p>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Resolution Trace'|t }}</h3>
+    {% if resolution_steps|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Action'|t }}</th>
+            <th>{{ 'Details'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for step in resolution_steps %}
+            <tr>
+              <td>{{ step.action|default('—') }}</td>
+              <td>
+                {% if step.url %}<div class="operation-item"><strong>{{ 'URL'|t }}:</strong> {{ step.url }}</div>{% endif %}
+                {% if step.option %}<div class="operation-item"><strong>{{ 'Option'|t }}:</strong> {{ step.option }}</div>{% endif %}
+                {% if step.status is defined %}<div class="operation-item"><strong>{{ 'Status'|t }}:</strong> {{ step.status }}</div>{% endif %}
+                {% if step.from %}<div class="operation-item"><strong>{{ 'From'|t }}:</strong> {{ step.from }}</div>{% endif %}
+                {% if step.to %}<div class="operation-item"><strong>{{ 'To'|t }}:</strong> {{ step.to }}</div>{% endif %}
+                {% if step.error %}<div class="operation-item"><strong>{{ 'Error'|t }}:</strong> {{ step.error }}</div>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No resolution trace available.'|t }}</p>
+    {% endif %}
+  </div>
+
+  <div class="page-actions">
+    <a href="{{ return_url }}" class="button button--secondary">{{ 'Back to Requisition Flow'|t }}</a>
+  </div>
+</div>

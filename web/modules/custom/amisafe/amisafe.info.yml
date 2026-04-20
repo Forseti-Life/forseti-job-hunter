@@ -1,0 +1,7 @@
+name: Am I Safe
+type: module  
+description: Ultra-precision crime analytics dashboard with H3 Resolution 13 support (44m² hexagons) for real-time safety monitoring
+core_version_requirement: ^9 || ^10 || ^11
+package: AmISafe
+dependencies:
+  - drupal:system

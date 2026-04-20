@@ -1,0 +1,491 @@
+{#
+/**
+ * @file
+ * Template for the Application Submission workflow page.
+ *
+ * Available variables:
+ * - summary: Totals by submission state
+ * - ready_jobs: Jobs in application_pending (ready to submit)
+ * - approval_jobs: Jobs in approval_pending (need PDF generation)
+ * - recent_applications: Recent application records
+ * - return_url: Return path for post actions
+ */
+#}
+
+<div class="application-submission-page">
+  <h1>{{ 'Application Submission'|t }}</h1>
+  {% if is_job_specific %}
+    <p>{{ 'This page is scoped to this specific requisition, company, and careers site.'|t }}</p>
+  {% else %}
+    <p>{{ 'Run and monitor the application automation process flow.'|t }}</p>
+  {% endif %}
+
+  {% if is_job_specific and job_snapshot %}
+    <div class="job-info-box">
+      <h3>{{ 'Requisition Status Snapshot'|t }}</h3>
+      <p><strong>{{ 'Job'|t }}:</strong> {{ job_snapshot.job_title }}</p>
+      <p><strong>{{ 'Company'|t }}:</strong> {{ job_snapshot.company_name }}</p>
+      <p>
+        <strong>{{ 'Career Site'|t }}:</strong>
+        {% if job_snapshot.career_url %}
+          <a href="{{ job_snapshot.career_url }}" target="_blank" rel="noopener">{{ job_snapshot.career_host|default(job_snapshot.career_url) }}</a>
+        {% else %}
+          —
+        {% endif %}
+      </p>
+      <p>
+        <strong>{{ 'Original Job Requisition URL'|t }}:</strong>
+        {% if job_snapshot.original_job_url %}
+          <a href="{{ job_snapshot.original_job_url }}" target="_blank" rel="noopener">{{ job_snapshot.original_job_url }}</a>
+        {% else %}
+          —
+        {% endif %}
+      </p>
+      <p><strong>{{ 'Submission Status'|t }}:</strong> {{ job_snapshot.submission_status_label }}</p>
+      <p><strong>{{ 'ATS Platform'|t }}:</strong> {{ job_snapshot.ats_platform|default('—') }}</p>
+      <p>
+        <strong>{{ 'Resolved Destination URL'|t }}:</strong>
+        {% if job_snapshot.career_url %}
+          <a href="{{ job_snapshot.career_url }}" target="_blank" rel="noopener">{{ job_snapshot.career_url }}</a>
+        {% else %}
+          —
+        {% endif %}
+      </p>
+      <p><strong>{{ 'Redirect Resolution Confidence'|t }}:</strong> {{ job_snapshot.resolution_confidence|default('—') }}</p>
+      <p><strong>{{ 'Current Workflow Status'|t }}:</strong> {{ selected_workflow_status|replace({'_': ' '})|title }}</p>
+      <p>
+        <strong>{{ 'PDF Generated for this role'|t }}:</strong>
+        <label>
+          <input type="checkbox" disabled {% if job_snapshot.pdf_generated %}checked{% endif %} />
+          {% if job_snapshot.pdf_generated %}
+            {{ 'Requirement Met'|t }}
+          {% else %}
+            {{ 'Requirement Not Met'|t }}
+          {% endif %}
+        </label>
+      </p>
+      <p>
+        <a href="{{ path('job_hunter.application_submission_step2', {'job_id': job_snapshot.job_id}) }}" class="button button--small button--secondary">
+          {{ 'Open Step 2: Resolve Redirect Chain'|t }}
+        </a>
+      </p>
+    </div>
+
+    <div class="job-info-box">
+      <h3>{{ 'Step 2: Redirect Resolution Path'|t }}</h3>
+      <p>
+        <strong>{{ 'Redirect chain fully resolved'|t }}:</strong>
+        <label>
+          <input type="checkbox" disabled {% if job_snapshot.is_direct_company_link or job_snapshot.redirect_chain_resolved %}checked{% endif %} />
+          {% if job_snapshot.is_direct_company_link %}
+            {{ 'Requirement Met (direct company/career link)'|t }}
+          {% elseif job_snapshot.redirect_chain_resolved %}
+            {{ 'Requirement Met (redirect chain captured and resolved)'|t }}
+          {% else %}
+            {{ 'Requirement Not Met'|t }}
+          {% endif %}
+        </label>
+      </p>
+      <p><strong>{{ 'Resolution Steps Captured'|t }}:</strong> {{ job_snapshot.resolution_steps_count|default(0) }}</p>
+      <p><strong>{{ 'Resolution Confidence'|t }}:</strong> {{ job_snapshot.resolution_confidence|default('—') }}</p>
+
+      {% if job_snapshot.is_direct_company_link %}
+        <p>{{ 'For this requisition, the source link is already direct to the company/careers destination, so redirect traversal is minimal.'|t }}</p>
+      {% else %}
+        <p>{{ 'If the source link is not direct, the chain must be fully resolved before continuing.'|t }}</p>
+        <ol class="workflow-steps">
+          <li class="workflow-step">{{ 'Capture source URL and selected apply option.'|t }}</li>
+          <li class="workflow-step">{{ 'Follow each redirect hop to canonical destination URL.'|t }}</li>
+          <li class="workflow-step">{{ 'Store hop-by-hop evidence in resolution metadata.'|t }}</li>
+          <li class="workflow-step">{{ 'Classify ATS/destination and set confidence level.'|t }}</li>
+          <li class="workflow-step">{{ 'If unresolved or aggregator-only, gate as manual review path.'|t }}</li>
+        </ol>
+      {% endif %}
+    </div>
+
+  {% endif %}
+
+  <div class="job-info-box">
+    <h3>{{ 'Full Process Flow Status'|t }}</h3>
+    {% if journey_steps|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Step'|t }}</th>
+            <th>{{ 'Gate Met'|t }}</th>
+            <th>{{ 'Status'|t }}</th>
+            <th>{{ 'Detail'|t }}</th>
+            <th>{{ 'Requirements'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for step in journey_steps %}
+            {% set effective_gate_met = step.gate_met %}
+            {% set effective_status = step.status %}
+            {% if is_job_specific and job_snapshot and step.index == 2 and (job_snapshot.is_direct_company_link or job_snapshot.redirect_chain_resolved) %}
+              {% set effective_gate_met = true %}
+              {% set effective_status = 'completed' %}
+            {% endif %}
+            <tr>
+              <td>
+                {% if is_job_specific and job_snapshot and step.index is defined %}
+                  {% if step.index == 2 %}
+                    <a href="{{ path('job_hunter.application_submission_step2', {'job_id': job_snapshot.job_id}) }}">{{ step.index }}. {{ step.label }}</a>
+                  {% elseif step.index == 3 %}
+                    <a href="{{ path('job_hunter.application_submission_step3', {'job_id': job_snapshot.job_id}) }}">{{ step.index }}. {{ step.label }}</a>
+                  {% elseif step.index == 4 %}
+                    <a href="{{ path('job_hunter.application_submission_step4', {'job_id': job_snapshot.job_id}) }}">{{ step.index }}. {{ step.label }}</a>
+                  {% elseif step.index == 5 %}
+                    <a href="{{ path('job_hunter.application_submission_step5', {'job_id': job_snapshot.job_id}) }}">{{ step.index }}. {{ step.label }}</a>
+                  {% else %}
+                    <a href="{{ path('job_hunter.application_submission_step_stub', {'job_id': job_snapshot.job_id, 'step': step.index}) }}">{{ step.index }}. {{ step.label }}</a>
+                  {% endif %}
+                {% else %}
+                  {{ step.index }}. {{ step.label }}
+                {% endif %}
+              </td>
+              <td>
+                <label>
+                  <input type="checkbox" disabled {% if effective_gate_met %}checked{% endif %} />
+                  {% if effective_gate_met %}
+                    {{ 'Requirement Met'|t }}
+                  {% else %}
+                    {{ 'Requirement Not Met'|t }}
+                  {% endif %}
+                </label>
+              </td>
+              <td>
+                {% if effective_status == 'completed' %}
+                  <span class="badge badge--success">{{ 'Completed'|t }}</span>
+                {% elseif effective_status == 'current' %}
+                  <span class="badge badge--warning">{{ 'In Progress'|t }}</span>
+                {% elseif effective_status == 'blocked' %}
+                  <span class="badge badge--warning">{{ 'Blocked'|t }}</span>
+                {% else %}
+                  <span class="badge badge--info">{{ 'Pending'|t }}</span>
+                {% endif %}
+              </td>
+              <td>{{ step.detail }}</td>
+              <td>
+                {% if step.requirements is defined and step.requirements|length > 0 %}
+                  {% for requirement in step.requirements %}
+                    {% set is_step2_auth_vetting = step.index == 2 and (
+                      (requirement.label is defined and 'Authentication process path' in requirement.label) or
+                      (requirement.evidence is defined and 'No vetted auth path yet' in requirement.evidence)
+                    ) %}
+                    {% if not is_step2_auth_vetting %}
+                    <div class="operation-item">
+                      <label>
+                        <input type="checkbox" disabled {% if requirement.met %}checked{% endif %} />
+                        {% if requirement.met %}
+                          {{ 'Met'|t }}
+                        {% else %}
+                          {{ 'Not Met'|t }}
+                        {% endif %}
+                      </label>
+                      <strong>{{ requirement.label }}</strong>
+                    </div>
+                    <div class="operation-item">{{ requirement.evidence }}</div>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No flow data available for this job yet.'|t }}</p>
+    {% endif %}
+  </div>
+
+  {% if not is_job_specific %}
+  <div class="job-info-box">
+    <h3>{{ 'Application Analysis Playbook'|t }}</h3>
+    <ol class="workflow-steps">
+      <li class="workflow-step"><strong>{{ '1) Resolve redirect chain'|t }}</strong> — {{ 'Capture every hop from source URL to canonical destination site.'|t }}</li>
+      <li class="workflow-step"><strong>{{ '2) Identify authentication path'|t }}</strong> — {{ 'Determine local account vs SSO and required account fields.'|t }}</li>
+      <li class="workflow-step"><strong>{{ '3) Verify account readiness'|t }}</strong> — {{ 'Confirm email verification and usable credentials for the destination site.'|t }}</li>
+      <li class="workflow-step"><strong>{{ '4) Confirm job exists on final site'|t }}</strong> — {{ 'Validate title/requisition on the final employer portal before submitting.'|t }}</li>
+      <li class="workflow-step"><strong>{{ '5) Locate apply control'|t }}</strong> — {{ 'Find the real apply entry point and note fallback/manual path if blocked.'|t }}</li>
+      <li class="workflow-step"><strong>{{ '6) Submit and capture evidence'|t }}</strong> — {{ 'Store confirmation, ATS platform, and retry/manual requirements.'|t }}</li>
+    </ol>
+  </div>
+
+  <div class="workflow-legend">
+    <h3>{{ 'Submission Process Flow'|t }}</h3>
+    <ol class="workflow-steps">
+      <li class="workflow-step workflow-step--approval-pending">
+        <span class="workflow-step__badge badge badge--info">1</span>
+        <strong>{{ 'User Approval Pending'|t }}</strong> &mdash; {{ 'Generate the tailored PDF before applying'|t }}
+      </li>
+      <li class="workflow-step workflow-step--application-pending">
+        <span class="workflow-step__badge badge badge--warning">2</span>
+        <strong>{{ 'Application Pending'|t }}</strong> &mdash; {{ 'Ready to submit through automation'|t }}
+      </li>
+      <li class="workflow-step workflow-step--pending-response">
+        <span class="workflow-step__badge badge badge--success">3</span>
+        <strong>{{ 'Pending Response'|t }}</strong> &mdash; {{ 'Submission complete, awaiting employer response'|t }}
+      </li>
+    </ol>
+  </div>
+
+  <div class="job-info-box">
+    <strong>{{ 'Total'|t }}:</strong> {{ summary.total|default(0) }}
+    &nbsp;|&nbsp; <strong>{{ 'Submitted'|t }}:</strong> {{ summary.submitted|default(0) }}
+    &nbsp;|&nbsp; <strong>{{ 'Pending/Processing'|t }}:</strong> {{ summary.processing|default(0) }}
+    &nbsp;|&nbsp; <strong>{{ 'Manual Required'|t }}:</strong> {{ summary.manual_required|default(0) }}
+    &nbsp;|&nbsp; <strong>{{ 'Failed'|t }}:</strong> {{ summary.failed|default(0) }}
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Stage Queue'|t }}</h3>
+    <table class="queue-status-table">
+      <thead>
+        <tr>
+          <th>{{ 'Stage'|t }}</th>
+          <th>{{ 'Count'|t }}</th>
+          <th>{{ 'Meaning'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge--info">{{ 'User Approval Pending'|t }}</span></td><td>{{ stage_counts.approval_pending|default(0) }}</td><td>{{ 'PDF needs generation/approval before automation.'|t }}</td></tr>
+        <tr><td><span class="badge badge--warning">{{ 'Application Pending'|t }}</span></td><td>{{ stage_counts.application_pending|default(0) }}</td><td>{{ 'Ready to submit through automation endpoint.'|t }}</td></tr>
+        <tr><td><span class="badge badge--warning">{{ 'Queued/Processing'|t }}</span></td><td>{{ stage_counts.processing|default(0) }}</td><td>{{ 'Submission is in queue or actively running.'|t }}</td></tr>
+        <tr><td><span class="badge badge--success">{{ 'Submitted'|t }}</span></td><td>{{ stage_counts.submitted|default(0) }}</td><td>{{ 'Submission appears complete; monitor response.'|t }}</td></tr>
+        <tr><td><span class="badge badge--neutral">{{ 'Manual Required'|t }}</span></td><td>{{ stage_counts.manual_required|default(0) }}</td><td>{{ 'Automation blocked, continue on destination site.'|t }}</td></tr>
+        <tr><td><span class="badge badge--warning">{{ 'Failed'|t }}</span></td><td>{{ stage_counts.failed|default(0) }}</td><td>{{ 'Attempt failed; inspect context and retry.'|t }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Needs PDF Approval'|t }}</h3>
+    {% if approval_jobs|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Job'|t }}</th>
+            <th>{{ 'Company'|t }}</th>
+            <th>{{ 'Platform'|t }}</th>
+            <th>{{ 'Submission Website'|t }}</th>
+            <th>{{ 'Action'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in approval_jobs %}
+            {% set extracted = job.extracted_data %}
+            {% set job_title = extracted.position.title|default(job.job_title)|default('Job #' ~ job.id) %}
+            {% set company_name = extracted.company.name|default(job.company_name)|default('Unknown') %}
+            <tr>
+              <td><a href="{{ path('job_hunter.application_submission_job', {'job_id': job.id}) }}">{{ job_title }}</a></td>
+              <td>{{ company_name }}</td>
+              <td>{{ job.display_platform|default('—') }}</td>
+              <td>
+                <a href="{{ path('job_hunter.generate_tailored_resume_pdf_redirect', {'job_id': job.id}, {'query': {'return_to': return_url}}) }}"
+                   class="button button--small button--primary"
+                   onclick="return confirm('{{ 'Generate PDF now?'|t }}')">{{ 'Generate PDF'|t }}</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No jobs currently waiting on PDF approval.'|t }}</p>
+    {% endif %}
+  </div>
+
+  <div class="job-info-box">
+    <h3>{{ 'Ready to Submit'|t }}</h3>
+    {% if ready_jobs|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Job'|t }}</th>
+            <th>{{ 'Company'|t }}</th>
+            <th>{{ 'Platform'|t }}</th>
+            <th>{{ 'Action'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in ready_jobs %}
+            {% set extracted = job.extracted_data %}
+            {% set job_title = extracted.position.title|default(job.job_title)|default('Job #' ~ job.id) %}
+            {% set company_name = extracted.company.name|default(job.company_name)|default('Unknown') %}
+            <tr>
+              <td><a href="{{ path('job_hunter.application_submission_job', {'job_id': job.id}) }}">{{ job_title }}</a></td>
+              <td>{{ company_name }}</td>
+              <td>{{ job.display_platform|default('—') }}</td>
+              <td>
+                {% if job.submission_apply_url %}
+                  <div class="operation-item">
+                    <a href="{{ job.submission_apply_url }}" target="_blank" rel="noopener">
+                      {{ job.submission_apply_option|default(job.submission_ats_platform|default('Open submission site')) }}
+                    </a>
+                  </div>
+                  <div class="operation-item">{{ job.submission_apply_url }}</div>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                <form method="post"
+                      action="{{ path('job_hunter.job_apply', {'job_id': job.id}, {'query': {'return_to': return_url}}) }}"
+                      onsubmit="return confirm('{{ 'Submit this application now?'|t }}')">
+                  <input type="hidden" name="csrf_token" value="{{ job.submit_csrf_token }}" />
+                  <button type="submit" class="button button--small button--primary">{{ 'Submit Application'|t }}</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No jobs are currently ready for submission. Use My Jobs to progress tailoring and PDF generation.'|t }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="job-info-box">
+    <h3>{% if is_job_specific %}{{ 'This Requisition Submission Activity'|t }}{% else %}{{ 'Recent Application Submissions'|t }}{% endif %}</h3>
+    {% if recent_applications|length > 0 %}
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Job'|t }}</th>
+            <th>{{ 'Status'|t }}</th>
+            <th>{{ 'Attempts'|t }}</th>
+            <th>{{ 'ATS'|t }}</th>
+            <th>{{ 'Resolution'|t }}</th>
+            <th>{{ 'Latest Attempt'|t }}</th>
+            <th>{{ 'Confirmation'|t }}</th>
+            <th>{{ 'Next Step'|t }}</th>
+            <th>{{ 'Action'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for application in recent_applications %}
+            {% set st = application.submission_status|default('unknown') %}
+            <tr>
+              <td><a href="{{ path('job_hunter.application_submission_job', {'job_id': application.job_id}) }}">{{ application.job_title }}</a></td>
+              <td>
+                {% if st in ['submitted','confirmed'] %}
+                  <span class="badge badge--success">{{ application.status_label }}</span>
+                {% elseif st in ['queued','processing','pending'] %}
+                  <span class="badge badge--warning">{{ application.status_label }}</span>
+                {% elseif st == 'manual_required' %}
+                  <span class="badge badge--neutral">{{ application.status_label }}</span>
+                {% elseif st == 'failed' %}
+                  <span class="badge badge--warning">{{ application.status_label }}</span>
+                {% else %}
+                  <span class="badge badge--info">{{ application.status_label }}</span>
+                {% endif %}
+              </td>
+              <td>{{ application.attempt_count }}</td>
+              <td>
+                {{ application.ats_platform|default('—') }}
+                {% if application.selected_apply_option %}
+                  <div class="operation-item">{{ application.selected_apply_option }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if application.resolution_steps_count > 0 %}
+                  {{ application.resolution_steps_count }} {{ 'steps'|t }}
+                {% else %}
+                  —
+                {% endif %}
+                {% if application.resolution_confidence %}
+                  <div class="operation-item">{{ 'Confidence'|t }}: {{ application.resolution_confidence }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if application.last_attempt_outcome %}
+                  <div class="operation-item">{{ application.last_attempt_outcome|replace({'_': ' '})|title }}</div>
+                  {% if application.last_attempt_at %}
+                    <div class="operation-item">{{ application.last_attempt_at }}</div>
+                  {% endif %}
+                  {% if application.last_attempt_error %}
+                    <div class="operation-item">{{ application.last_attempt_error|slice(0, 120) }}</div>
+                  {% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>{{ application.confirmation|default('—') }}</td>
+              <td>
+                {% if st in ['submitted','confirmed'] %}
+                  {{ 'Await employer response / interview outreach.'|t }}
+                {% elseif st in ['queued','processing','pending'] %}
+                  {{ 'Wait for queue completion, then refresh status.'|t }}
+                {% elseif st == 'manual_required' %}
+                  {{ 'Open destination apply URL and complete manually.'|t }}
+                {% elseif st == 'failed' %}
+                  {{ 'Review context and retry submission.'|t }}
+                {% else %}
+                  {{ 'Review submission details.'|t }}
+                {% endif %}
+              </td>
+              <td>
+                <div class="operation-item">
+                  {% if application.apply_url %}
+                    <a href="{{ application.apply_url }}" target="_blank" rel="noopener">{{ 'Open Apply URL'|t }}</a>
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+                {% if st in ['failed','manual_required'] %}
+                  <div class="operation-item">
+                    <form method="post" action="{{ path('job_hunter.job_apply', {'job_id': application.job_id}, {'query': {'return_to': return_url}}) }}" onsubmit="return confirm('{{ 'Retry this application now?'|t }}')">
+                      <input type="hidden" name="csrf_token" value="{{ application.submit_csrf_token }}" />
+                      <button type="submit" class="button button--small button--secondary">{{ 'Retry Automation'|t }}</button>
+                    </form>
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No applications submitted yet.'|t }}</p>
+    {% endif %}
+  </div>
+
+  {% if is_job_specific and selected_job and job_snapshot %}
+    <div class="job-info-box">
+      <h3>{{ 'Final Submission Action'|t }}</h3>
+      {% if not job_snapshot.pdf_generated %}
+        <div class="operation-item">
+          <a href="{{ path('job_hunter.generate_tailored_resume_pdf_redirect', {'job_id': selected_job.id}, {'query': {'return_to': return_url}}) }}"
+             class="button button--small button--primary"
+             onclick="return confirm('{{ 'Generate PDF now?'|t }}')">{{ 'Generate PDF for this Role'|t }}</a>
+        </div>
+        <div class="operation-item">{{ 'PDF must be generated for this requisition before submission.'|t }}</div>
+      {% elseif selected_workflow_status == 'application_pending' %}
+        {% if selected_job.submission_apply_url %}
+          <div class="operation-item">
+            <strong>{{ 'Submission Website:'|t }}</strong>
+            <a href="{{ selected_job.submission_apply_url }}" target="_blank" rel="noopener">
+              {{ selected_job.submission_apply_option|default(selected_job.submission_ats_platform|default('Open submission site')) }}
+            </a>
+          </div>
+          <div class="operation-item">{{ selected_job.submission_apply_url }}</div>
+        {% endif %}
+        <form method="post"
+              action="{{ path('job_hunter.job_apply', {'job_id': selected_job.id}, {'query': {'return_to': return_url}}) }}"
+              onsubmit="return confirm('{{ 'Submit this application now?'|t }}')">
+          <input type="hidden" name="csrf_token" value="{{ selected_job.submit_csrf_token }}" />
+          <button type="submit" class="button button--small button--primary">{{ 'Submit this Application'|t }}</button>
+        </form>
+      {% else %}
+        <div class="operation-item">{{ 'This requisition is not currently in application_pending state.'|t }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="page-actions">
+    <a href="/jobhunter/my-jobs" class="button button--secondary">{{ 'Back to My Jobs'|t }}</a>
+  </div>
+</div>

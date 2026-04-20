@@ -1,0 +1,192 @@
+# Job Application Automation Permissions
+
+# Basic access permission
+access job hunter:
+  title: 'Access Job Hunter'
+  description: 'Access Job Hunter dashboard and features. Restricted to authenticated users.'
+  restrict access: true
+
+# Administrative permissions
+administer job application automation:
+  title: 'Administer Job Application Automation'
+  description: 'Full administrative access to job application automation settings and configuration.'
+
+# Company content type permissions
+create company content:
+  title: 'Create Company Content'
+  description: 'Create new company profiles for job scraping.'
+
+edit own company content:
+  title: 'Edit Own Company Content'
+  description: 'Edit own company content.'
+
+edit any company content:
+  title: 'Edit Any Company Content'
+  description: 'Edit any company content.'
+
+delete own company content:
+  title: 'Delete Own Company Content'
+  description: 'Delete own company content.'
+
+delete any company content:
+  title: 'Delete Any Company Content'
+  description: 'Delete any company content.'
+
+view company content:
+  title: 'View Company Content'
+  description: 'View published company content.'
+
+# Job posting content type permissions
+create job_posting content:
+  title: 'Create Job Posting Content'
+  description: 'Create new job posting entries.'
+
+edit own job_posting content:
+  title: 'Edit Own Job Posting Content'
+  description: 'Edit own job posting content.'
+
+edit any job_posting content:
+  title: 'Edit Any Job Posting Content'
+  description: 'Edit any job posting content.'
+
+delete own job_posting content:
+  title: 'Delete Own Job Posting Content'
+  description: 'Delete own job posting content.'
+
+delete any job_posting content:
+  title: 'Delete Any Job Posting Content'
+  description: 'Delete any job posting content.'
+
+view job_posting content:
+  title: 'View Job Posting Content'
+  description: 'View published job posting content.'
+
+# Application content type permissions
+create application content:
+  title: 'Create Application Content'
+  description: 'Create new job application entries.'
+
+edit own application content:
+  title: 'Edit Own Application Content'
+  description: 'Edit own application content.'
+
+edit any application content:
+  title: 'Edit Any Application Content'
+  description: 'Edit any application content.'
+
+delete own application content:
+  title: 'Delete Own Application Content'
+  description: 'Delete own application content.'
+
+delete any application content:
+  title: 'Delete Any Application Content'
+  description: 'Delete any application content.'
+
+view application content:
+  title: 'View Application Content'
+  description: 'View published application content.'
+
+# Error queue content type permissions
+create issue content:
+  title: 'Create issue content'
+  description: 'Create new issue content'
+  
+edit own issue content:
+  title: 'Edit own issue content'
+  description: 'Edit own issue content'
+  
+edit any issue content:
+  title: 'Edit any issue content'
+  description: 'Edit any issue content'
+  
+delete own issue content:
+  title: 'Delete own issue content'
+  description: 'Delete own issue content'
+  
+delete any issue content:
+  title: 'Delete any issue content'
+  description: 'Delete any issue content'
+  
+view issue content:
+  title: 'View issue content'
+  description: 'View published issue content'
+
+# Workflow and management permissions
+manage job application workflow:
+  title: 'Manage Job Application Workflow'
+  description: 'Manage workflow states and transitions for job applications.'
+
+manage error queue:
+  title: 'Manage Error Queue'
+  description: 'Manage and resolve error queue items.'
+
+view job application reports:
+  title: 'View Job Application Reports'
+  description: 'Access reports and analytics for job applications.'
+
+manage job scraping:
+  title: 'Manage Job Scraping'
+  description: 'Configure and manage automated job scraping processes.'
+
+access user job applications:
+  title: 'Access User Job Applications'
+  description: 'Access and manage own job applications and profile.'
+
+# User Profile Management Permissions
+edit own job application profile:
+  title: 'Edit Own Job Application Profile'
+  description: 'Edit and manage own extended job application profile.'
+  
+view own job application profile:
+  title: 'View Own Job Application Profile'
+  description: 'View own job application profile dashboard and information.'
+
+view any job application profile:
+  title: 'View Any Job Application Profile'
+  description: 'View any user job application profile (admin access).'
+  
+edit any job application profile:
+  title: 'Edit Any Job Application Profile'
+  description: 'Edit any user job application profile (admin access).'
+
+manage user profiles:
+  title: 'Manage User Profiles'
+  description: 'Administrative access to user profile management and completeness tracking.'
+
+# Tailored Resume content type permissions
+create tailored_resume content:
+  title: 'Create Tailored Resume Content'
+  description: 'Create new tailored resume entries.'
+
+edit own tailored_resume content:
+  title: 'Edit Own Tailored Resume Content'
+  description: 'Edit own tailored resume content.'
+
+edit any tailored_resume content:
+  title: 'Edit Any Tailored Resume Content'
+  description: 'Edit any tailored resume content.'
+
+delete own tailored_resume content:
+  title: 'Delete Own Tailored Resume Content'
+  description: 'Delete own tailored resume content.'
+
+delete any tailored_resume content:
+  title: 'Delete Any Tailored Resume Content'
+  description: 'Delete any tailored resume content.'
+
+view tailored_resume content:
+  title: 'View Tailored Resume Content'
+  description: 'View published tailored resume content.'
+
+# Job Discovery and Resume Tailoring permissions
+access job discovery:
+  title: 'Access Job Discovery'
+  description: 'Access the job discovery functionality to search for jobs.'
+
+tailor resume:
+  title: 'Tailor Resume'
+  description: 'Use AI to tailor resume for specific job opportunities.'
+
+access companies overview:
+  title: 'Access Companies Overview'
+  description: 'Access the companies overview page for job discovery.'

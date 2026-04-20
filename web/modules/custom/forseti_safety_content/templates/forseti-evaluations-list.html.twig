@@ -1,0 +1,706 @@
+{#
+/**
+ * @file
+ * Template for the evaluations list page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - categories: Array of categories with rows of entity data
+ * - category_counts: Count of entities per category
+ * - entities_data: Array for radar chart
+ * - sort_field: Current sort field
+ * - sort_direction: Current sort direction (ASC/DESC)
+ */
+#}
+{{ attach_library('agent_evaluation/evaluated-entity') }}
+
+<div class="container py-4">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-3 text-cyan">{{ title }}</h1>
+      <p class="lead mb-4">{{ intro }}</p>
+      
+      <div class="text-center mb-4">
+        <a href="/agent-power-framework" class="btn btn-outline-primary me-2">
+          <i class="fas fa-arrow-left"></i> Back to Framework
+        </a>
+        <a href="/agent-power-framework/us-government" class="btn btn-outline-success">
+          <i class="fas fa-flag-usa"></i> Example Assessment: US Military
+        </a>
+      </div>
+
+      {% if entities_data is not empty %}
+        {# Radar Chart Visualization #}
+        <div class="card card-forseti mb-4">
+          <div class="card-body">
+            <h3 class="text-cyan mb-3">
+              <i class="fas fa-chart-radar me-2"></i>Power Profile Visualization
+            </h3>
+            
+            <div class="mb-3">
+              <label for="entity-search" class="form-label text-cyan">Search and Select Entities (up to 5):</label>
+              <p class="text-muted-light small mb-2">Click on any dimension in the chart to expand and view sub-dimensions</p>
+              <input type="text" 
+                     id="entity-search" 
+                     class="form-control form-control-lg mb-2" 
+                     placeholder="Type to search entities...">
+              
+              <div id="selected-entities" class="mb-3" style="display: none;">
+                <div class="d-flex flex-wrap gap-2" id="selected-entities-list"></div>
+              </div>
+              
+              <div id="entity-list" class="border rounded p-2" style="max-height: 160px; overflow-y: auto;">
+                {% for entity in entities_data %}
+                  <div class="form-check entity-item py-1" data-entity-name="{{ entity.name|lower }}" data-entity-nid="{{ entity.nid }}">
+                    <input class="form-check-input entity-checkbox" 
+                           type="checkbox" 
+                           value="{{ entity.nid }}" 
+                           id="entity-{{ entity.nid }}">
+                    <label class="form-check-label" for="entity-{{ entity.nid }}">
+                      {{ entity.name }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            
+            <div id="chart-container" style="display: none;">
+              <div class="evaluations-comparison-chart mb-3" 
+                   id="evaluations-radar-chart">
+                <div class="chart-controls mb-3 text-end">
+                  <button class="btn btn-sm btn-cyan chart-reset-btn" style="display: none;">
+                    <i class="fas fa-compress"></i> Show Overview
+                  </button>
+                </div>
+                <canvas id="evaluationsRadarChart" style="max-height: 500px;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {# Category Sort Controls #}
+      {% if categories is not empty %}
+        <div class="card card-forseti mb-3" id="category-sort-controls">
+          <div class="card-body">
+            <h5 class="text-cyan mb-3">
+              <i class="fas fa-sort me-2"></i>Sort Categories By:
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="?category_sort=total_power&category_order={{ category_sort == 'total_power' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'total_power' ? 'btn-cyan' : 'btn-secondary' }}">
+                ⚡ Total Power
+                {% if category_sort == 'total_power' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=information_access&category_order={{ category_sort == 'information_access' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'information_access' ? 'btn-cyan' : 'btn-secondary' }}">
+                ℹ️ Information Access
+                {% if category_sort == 'information_access' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=resource_control&category_order={{ category_sort == 'resource_control' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'resource_control' ? 'btn-cyan' : 'btn-secondary' }}">
+                🔧 Resource Control
+                {% if category_sort == 'resource_control' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=authority_permission&category_order={{ category_sort == 'authority_permission' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'authority_permission' ? 'btn-cyan' : 'btn-secondary' }}">
+                ⚖️ Authority & Permission
+                {% if category_sort == 'authority_permission' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=network_position&category_order={{ category_sort == 'network_position' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'network_position' ? 'btn-cyan' : 'btn-secondary' }}">
+                🌐 Network Position
+                {% if category_sort == 'network_position' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=synthesis_application&category_order={{ category_sort == 'synthesis_application' and category_order == 'DESC' ? 'ASC' : 'DESC' }}" 
+                 class="btn btn-sm {{ category_sort == 'synthesis_application' ? 'btn-cyan' : 'btn-secondary' }}">
+                🧠 Synthesis & Application
+                {% if category_sort == 'synthesis_application' %}
+                  <i class="fas fa-sort-{{ category_order == 'DESC' ? 'down' : 'up' }}"></i>
+                {% endif %}
+              </a>
+              <a href="?category_sort=label" 
+                 class="btn btn-sm {{ category_sort == 'label' ? 'btn-cyan' : 'btn-secondary' }}">
+                <i class="fas fa-sort-alpha-down"></i> Alphabetical
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {# Accordion with categories #}
+      {% if categories is not empty %}
+        <div class="accordion" id="categoryAccordion">
+          {% for category_key, category in categories %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading-{{ category_key }}">
+                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ category_key }}" aria-expanded="{{ loop.first ? 'true' : 'false' }}" aria-controls="collapse-{{ category_key }}">
+                  <div class="w-100 d-flex justify-content-between align-items-center pe-none">
+                    <div>
+                      <strong>{{ category.label }}</strong>
+                      <span class="badge bg-cyan ms-2">{{ category_counts[category_key] }}</span>
+                    </div>
+                    {% if category.average %}
+                      <div class="d-flex gap-3 text-white small">
+                        <span title="Information Access">ℹ️ {{ category.average.information_access }}/9</span>
+                        <span title="Resource Control">🔧 {{ category.average.resource_control }}/9</span>
+                        <span title="Authority & Permission">⚖️ {{ category.average.authority_permission }}/9</span>
+                        <span title="Network Position">🌐 {{ category.average.network_position }}/9</span>
+                        <span title="Synthesis & Application">🧠 {{ category.average.synthesis_application }}/9</span>
+                        <span title="Total Power" class="fw-bold text-cyan">⚡ {{ category.average.total_power }}/9</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                </button>
+              </h2>
+              <div id="collapse-{{ category_key }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading-{{ category_key }}">
+                <div class="accordion-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                      <thead>
+                        <tr>
+                          <th>
+                            <a href="?sort=title&order={{ sort_field == 'title' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Entity Name
+                              {% if sort_field == 'title' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=information_access&order={{ sort_field == 'information_access' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Information Access
+                              {% if sort_field == 'information_access' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=resource_control&order={{ sort_field == 'resource_control' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Resource Control
+                              {% if sort_field == 'resource_control' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=authority_permission&order={{ sort_field == 'authority_permission' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Authority & Permission
+                              {% if sort_field == 'authority_permission' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=network_position&order={{ sort_field == 'network_position' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Network Position
+                              {% if sort_field == 'network_position' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=synthesis_application&order={{ sort_field == 'synthesis_application' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Synthesis & Application
+                              {% if sort_field == 'synthesis_application' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                          <th class="text-center">
+                            <a href="?sort=total_power&order={{ sort_field == 'total_power' and sort_direction == 'ASC' ? 'DESC' : 'ASC' }}">
+                              Total Power
+                              {% if sort_field == 'total_power' %}
+                                <i class="fas fa-sort-{{ sort_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                              {% else %}
+                                <i class="fas fa-sort text-muted"></i>
+                              {% endif %}
+                            </a>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for row in category.rows %}
+                          <tr>
+                            <td>{{ row.title }}</td>
+                            <td class="text-center">
+                              <span class="badge bg-{{ row.information_access <= 3 ? 'danger' : (row.information_access <= 6 ? 'warning' : 'success') }}">
+                                {{ row.information_access }}/9
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge bg-{{ row.resource_control <= 3 ? 'danger' : (row.resource_control <= 6 ? 'warning' : 'success') }}">
+                                {{ row.resource_control }}/9
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge bg-{{ row.authority_permission <= 3 ? 'danger' : (row.authority_permission <= 6 ? 'warning' : 'success') }}">
+                                {{ row.authority_permission }}/9
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge bg-{{ row.network_position <= 3 ? 'danger' : (row.network_position <= 6 ? 'warning' : 'success') }}">
+                                {{ row.network_position }}/9
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge bg-{{ row.synthesis_application <= 3 ? 'danger' : (row.synthesis_application <= 6 ? 'warning' : 'success') }}">
+                                {{ row.synthesis_application }}/9
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <strong class="text-{{ row.total_power <= 3 ? 'danger' : (row.total_power <= 6 ? 'warning' : 'success') }}">
+                                {{ row.total_power }}/9
+                              </strong>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card card-forseti mb-4">
+          <div class="card-body text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>No evaluated entities yet. <a href="/agent-power-framework">Start an evaluation</a> to see results here.</p>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="text-center mt-4">
+        <a href="/agent-power-framework" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Evaluate New Entity
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChart);
+  } else {
+    initChart();
+  }
+  
+  function initChart() {
+    console.log('Initializing evaluations chart...');
+    
+    // Store entities data for chart
+    const entitiesData = {{ entities_data|json_encode|raw }};
+    console.log('Entities data:', entitiesData);
+    
+    const searchInput = document.getElementById('entity-search');
+    const entityList = document.getElementById('entity-list');
+    const selectedEntitiesContainer = document.getElementById('selected-entities');
+    const selectedEntitiesList = document.getElementById('selected-entities-list');
+    const chartContainer = document.getElementById('chart-container');
+    const checkboxes = document.querySelectorAll('.entity-checkbox');
+    
+    if (!searchInput || !entityList || !chartContainer) {
+      console.error('Required elements not found');
+      return;
+    }
+    
+    let selectedEntities = [];
+    const maxSelections = 5;
+    let currentView = 'overview'; // 'overview' or dimension key like 'information_access'
+    let currentChart = null;
+    
+    // Define colors for each main dimension (matching individual node chart)
+    const dimensionColors = {
+      'information_access': {
+        primary: '#00d4ff',
+        light: 'rgba(0, 212, 255, 0.6)'
+      },
+      'resource_control': {
+        primary: '#4caf50',
+        light: 'rgba(76, 175, 80, 0.6)'
+      },
+      'authority_permission': {
+        primary: '#e91e63',
+        light: 'rgba(233, 30, 99, 0.6)'
+      },
+      'network_position': {
+        primary: '#9c27b0',
+        light: 'rgba(156, 39, 176, 0.6)'
+      },
+      'synthesis_application': {
+        primary: '#ffeb3b',
+        light: 'rgba(255, 235, 59, 0.6)'
+      }
+    };
+    
+    // Sub-dimension labels mapping
+    const subDimensionLabels = {
+      information_access: ['Scope', 'Restriction', 'Classification', 'Temporal', 'Sources', 'Granularity'],
+      resource_control: ['Computational', 'Financial', 'Data Storage', 'Network Bandwidth', 'API Access', 'Human'],
+      authority_permission: ['Legal', 'Institutional', 'Budget Auth', 'Policy', 'Override', 'Audit'],
+      network_position: ['Connectivity', 'Centrality', 'Trust/Reputation', 'Info Flow', 'Coalition', 'Network Effects'],
+      synthesis_application: ['Reasoning', 'Creativity', 'Planning', 'Learning', 'Memory', 'Execution']
+    };
+    
+    // Colors for different entities
+    const entityColors = [
+      { bg: 'rgba(0, 212, 255, 0.2)', border: '#00d4ff' },
+      { bg: 'rgba(76, 175, 80, 0.2)', border: '#4caf50' },
+      { bg: 'rgba(233, 30, 99, 0.2)', border: '#e91e63' },
+      { bg: 'rgba(156, 39, 176, 0.2)', border: '#9c27b0' },
+      { bg: 'rgba(255, 235, 59, 0.2)', border: '#ffeb3b' }
+    ];
+    
+    const textColor = '#00d4ff';
+    const backgroundColor = '#16213e';
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const entityItems = entityList.querySelectorAll('.entity-item');
+      
+      entityItems.forEach(item => {
+        const entityName = item.dataset.entityName;
+        if (entityName.includes(searchTerm)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+    
+    // Checkbox selection handler
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const nid = this.value;
+        const entityData = entitiesData.find(e => e.nid == nid);
+        
+        if (this.checked) {
+          if (selectedEntities.length >= maxSelections) {
+            this.checked = false;
+            alert(`Maximum ${maxSelections} entities can be selected`);
+            return;
+          }
+          selectedEntities.push(entityData);
+        } else {
+          selectedEntities = selectedEntities.filter(e => e.nid != nid);
+        }
+        
+        currentView = 'overview'; // Reset to overview when selection changes
+        updateSelectedEntities();
+        renderChart();
+      });
+    });
+    
+    // Reset button handler
+    const resetBtn = document.querySelector('.chart-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        currentView = 'overview';
+        renderChart();
+      });
+    }
+    
+    function updateSelectedEntities() {
+      if (selectedEntities.length === 0) {
+        selectedEntitiesContainer.style.display = 'none';
+        return;
+      }
+      
+      selectedEntitiesContainer.style.display = 'block';
+      selectedEntitiesList.innerHTML = '';
+      
+      selectedEntities.forEach((entity, index) => {
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-secondary d-flex align-items-center gap-2';
+        const color = entityColors[index];
+        badge.style.backgroundColor = color.bg;
+        badge.style.borderColor = color.border;
+        badge.style.border = `2px solid ${color.border}`;
+        badge.innerHTML = `
+          <span class="text-white">${entity.name}</span>
+          <a href="/node/${entity.nid}" class="text-decoration-none small fw-bold" style="color: #00d4ff !important;" title="View full profile">
+            <i class="fas fa-external-link-alt"></i> Explore Detail
+          </a>
+          <button type="button" class="btn-close btn-close-white btn-sm" 
+                  onclick="removeEntity('${entity.nid}')" 
+                  style="font-size: 0.7em; padding: 0;">
+          </button>
+        `;
+        selectedEntitiesList.appendChild(badge);
+      });
+    }
+    
+    // Make removeEntity available globally
+    window.removeEntity = function(nid) {
+      const checkbox = document.getElementById('entity-' + nid);
+      if (checkbox) {
+        checkbox.checked = false;
+        selectedEntities = selectedEntities.filter(e => e.nid != nid);
+        updateSelectedEntities();
+        renderChart();
+      }
+    };
+    
+    function renderChart() {
+      if (selectedEntities.length === 0) {
+        chartContainer.style.display = 'none';
+        return;
+      }
+      
+      chartContainer.style.display = 'block';
+      
+      const canvas = document.getElementById('evaluationsRadarChart');
+      const resetBtn = document.querySelector('.chart-reset-btn');
+      if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+      }
+      
+      // Check if Chart.js is loaded
+      if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        return;
+      }
+      
+      // Destroy existing chart if it exists
+      if (currentChart) {
+        currentChart.destroy();
+      }
+      
+      // Determine labels and datasets based on current view
+      let labels, datasets;
+      const dimensionKeys = ['information_access', 'resource_control', 'authority_permission', 'network_position', 'synthesis_application'];
+      
+      if (currentView === 'overview') {
+        // Show primary dimensions
+        resetBtn.style.display = 'none';
+        labels = [
+          'Information Access',
+          'Resource Control',
+          'Authority & Permission',
+          'Network Position',
+          'Synthesis & Application'
+        ];
+        
+        // Create datasets for each selected entity with dimension colors for points
+        datasets = selectedEntities.map((entity, index) => {
+          const color = entityColors[index];
+          
+          // Get dimension colors for point labels
+          const pointColors = dimensionKeys.map(key => dimensionColors[key].primary);
+          
+          return {
+            label: entity.name,
+            data: [
+              entity.scores.information_access,
+              entity.scores.resource_control,
+              entity.scores.authority_permission,
+              entity.scores.network_position,
+              entity.scores.synthesis_application
+            ],
+            backgroundColor: color.bg,
+            borderColor: color.border,
+            borderWidth: 3,
+            pointBackgroundColor: pointColors,
+            pointBorderColor: backgroundColor,
+            pointBorderWidth: 2,
+            pointHoverBackgroundColor: '#ffffff',
+            pointHoverBorderColor: pointColors,
+            pointRadius: 6,
+            pointHoverRadius: 10,
+            pointHitRadius: 15,
+            tension: 0.2
+          };
+        });
+      } else {
+        // Show sub-dimensions for selected dimension
+        resetBtn.style.display = 'inline-block';
+        labels = subDimensionLabels[currentView] || [];
+        
+        // Create datasets for each selected entity's sub-dimensions
+        datasets = selectedEntities.map((entity, index) => {
+          const color = entityColors[index];
+          const subDims = entity.sub_dimensions[currentView] || {};
+          const subKeys = Object.keys(subDims);
+          const data = subKeys.map(key => subDims[key] || 0);
+          
+          return {
+            label: entity.name,
+            data: data,
+            backgroundColor: color.bg,
+            borderColor: color.border,
+            borderWidth: 2,
+            pointBackgroundColor: color.border,
+            pointBorderColor: backgroundColor,
+            pointBorderWidth: 2,
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: color.border,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.2
+          };
+        });
+      }
+      
+      // Create new chart
+      const ctx = canvas.getContext('2d');
+      currentChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          onClick: function(event, elements) {
+            if (currentView === 'overview' && elements.length > 0) {
+              // Clicked on a primary dimension - drill down
+              const index = elements[0].index;
+              const dimensionKeys = ['information_access', 'resource_control', 'authority_permission', 'network_position', 'synthesis_application'];
+              currentView = dimensionKeys[index];
+              renderChart();
+            }
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 9,
+              ticks: {
+                stepSize: 1,
+                color: textColor,
+                backdropColor: 'transparent',
+                font: {
+                  size: 9
+                }
+              },
+              grid: {
+                color: 'rgba(0, 212, 255, 0.2)',
+                circular: true
+              },
+              pointLabels: {
+                color: function(context) {
+                  if (currentView === 'overview') {
+                    // Use dimension colors for primary dimensions
+                    return dimensionColors[dimensionKeys[context.index]].primary;
+                  }
+                  return textColor;
+                },
+                font: {
+                  size: 14,
+                  weight: 'bold'
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: textColor,
+                font: {
+                  size: 14
+                },
+                padding: 15,
+                usePointStyle: true,
+                generateLabels: function(chart) {
+                  const datasets = chart.data.datasets;
+                  return datasets.map((dataset, index) => {
+                    return {
+                      text: dataset.label,
+                      fillStyle: dataset.borderColor,
+                      strokeStyle: dataset.borderColor,
+                      lineWidth: 3,
+                      hidden: false,
+                      index: index
+                    };
+                  });
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(22, 33, 62, 0.95)',
+              titleColor: textColor,
+              bodyColor: '#fff',
+              borderColor: textColor,
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                title: function(context) {
+                  return context[0].label;
+                },
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.r + ' / 9';
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('Chart rendered with ' + selectedEntities.length + ' entities in view: ' + currentView);
+    }
+    
+    console.log('Chart initialization complete');
+  }
+})();
+
+// Save and restore scroll position on sort button clicks
+(function() {
+  // Restore scroll position immediately (before page renders)
+  const savedScrollPos = sessionStorage.getItem('evaluationsScrollPos');
+  if (savedScrollPos) {
+    // Disable automatic scroll restoration
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    
+    // Restore immediately
+    window.scrollTo(0, parseInt(savedScrollPos));
+    sessionStorage.removeItem('evaluationsScrollPos');
+  }
+  
+  // Save scroll position when sort buttons are clicked
+  document.addEventListener('DOMContentLoaded', function() {
+    const sortButtons = document.querySelectorAll('a[href*="category_sort"]');
+    sortButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        sessionStorage.setItem('evaluationsScrollPos', window.scrollY);
+      });
+    });
+  });
+})();
+</script>
+

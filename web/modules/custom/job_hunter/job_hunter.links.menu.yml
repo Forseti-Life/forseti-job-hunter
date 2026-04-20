@@ -1,0 +1,13 @@
+# Main site navigation link - visible to all users
+job_hunter.main_menu:
+  title: 'Job Hunter'
+  route_name: job_hunter.dashboard
+  menu_name: main
+  weight: 20
+
+# Error Queue - Admin menu
+job_hunter.error_queue_admin:
+  title: 'Error Queue'
+  parent: 'system.admin_config_system'
+  route_name: 'job_hunter.error_queue_list'
+  weight: 10

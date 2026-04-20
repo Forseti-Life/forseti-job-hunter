@@ -1,0 +1,23 @@
+DEPRECATED: This file has been replaced by ai_conversation module's AIApiService.
+
+The agent_evaluation module now uses '@ai_conversation.ai_api_service' for all
+AI API functionality instead of maintaining its own duplicate implementation.
+
+In agent_evaluation.services.yml, the service 'agent_evaluation.api_service' 
+is now an alias to 'ai_conversation.ai_api_service'.
+
+To migrate your code:
+- Replace: \Drupal::service('agent_evaluation.api_service')
+- With: \Drupal::service('ai_conversation.ai_api_service')
+
+- Replace: use Drupal\agent_evaluation\Service\AIApiService;
+- With: use Drupal\ai_conversation\Service\AIApiServiceInterface;
+
+Date deprecated: February 11, 2026
+To remove: After verifying all code uses ai_conversation service
+
+Related Changes:
+- Removed duplicate AIConversationSettingsForm - use ai_conversation form instead
+- Removed duplicate routing for /admin/config/ai-conversation/settings  
+- ChatController now injects ai_conversation.ai_api_service
+- SettingsForm now uses ai_conversation.ai_api_service

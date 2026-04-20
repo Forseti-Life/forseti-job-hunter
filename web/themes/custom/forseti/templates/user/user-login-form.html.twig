@@ -1,0 +1,41 @@
+{#
+/**
+ * @file
+ * Theme override for the user login form.
+ */
+#}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="text-center mb-5">
+        <img src="/themes/custom/forseti/images/logos/originals/forseti_safe.png" alt="Forseti" class="forseti-chat-icon mb-4">
+        <h1 class="mb-3">Welcome Back</h1>
+        <p class="lead">Sign in to access your Forseti account and safety insights.</p>
+      </div>
+      
+      <div class="card-forseti p-4">
+        {{ form }}
+        
+        <div class="text-center mt-4 pt-4" style="border-top: 1px solid rgba(0, 212, 255, 0.3);">
+          <p class="text-muted mb-3">Or sign in with:</p>
+          <div class="social-auth-container">
+            <a class="social-auth auth-link btn btn-light" href="/user/login/google">
+              <img class="social-auth auth-icon me-2" src="/modules/contrib/social_auth_google/img/google_logo.svg" alt="Google logo" style="width: 20px; height: 20px;">
+              Sign in with Google
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center mt-4">
+        <p class="text-muted">
+          Don't have an account? <a href="/user/register" class="link-cyan">Create one now</a>
+        </p>
+        <p class="text-muted">
+          <a href="/user/password" class="link-cyan">Forgot your password?</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

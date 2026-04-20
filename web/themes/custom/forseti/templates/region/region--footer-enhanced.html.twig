@@ -1,0 +1,11 @@
+{#
+/**
+ * Enhanced footer region template with professional layout.
+ * This template renders Drupal blocks placed in the footer region.
+ */
+#}
+{% if content %}
+  <footer{{ attributes.addClass('footer', 'site-footer') }} role="contentinfo">
+    {{ content }}
+  </footer>
+{% endif %}

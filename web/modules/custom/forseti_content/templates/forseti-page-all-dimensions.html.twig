@@ -1,0 +1,107 @@
+{#
+/**
+ * @file
+ * Template for the All Dimensions exploration page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - all_dimensions: Array of dimension categories
+ * - total_count: Total number of dimensions (74)
+ */
+#}
+
+<div class="forseti-all-dimensions-page">
+  <div class="container py-5">
+    <div class="row">
+      <div class="col-12">
+        
+        <div class="text-center mb-5">
+          <h1 class="display-4 mb-3">{{ title }}</h1>
+          <p class="lead text-muted">{{ intro }}</p>
+          <div class="badge bg-primary fs-5 mt-3">{{ total_count }} Total Dimensions</div>
+        </div>
+
+        <div class="alert alert-info mb-5">
+          <h5><i class="fas fa-info-circle me-2"></i>Multi-Perspective Evaluation Framework</h5>
+          <p class="mb-2">The current 9 implemented dimensions focus on <strong>information power</strong> - what systems can access and how they process information. This comprehensive framework extends evaluation across:</p>
+          <ul class="mb-0">
+            <li><strong>Power users:</strong> Focus on the 9 information power dimensions</li>
+            <li><strong>Enterprise buyers:</strong> Add performance, security, and integration dimensions</li>
+            <li><strong>Regulators:</strong> Emphasize governance, security, and ethics dimensions</li>
+            <li><strong>Researchers:</strong> Consider all 74 dimensions for comprehensive analysis</li>
+          </ul>
+        </div>
+
+        {% for category_key, category in all_dimensions %}
+          <div class="dimension-category mb-5">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header {% if category_key == 'implemented' %}bg-primary text-white{% else %}bg-light{% endif %} py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3 class="mb-0 h4">
+                    {% if category_key == 'implemented' %}
+                      <i class="fas fa-check-circle me-2"></i>
+                    {% endif %}
+                    {{ category.name }}
+                  </h3>
+                  <span class="badge {% if category_key == 'implemented' %}bg-white text-primary{% else %}bg-primary{% endif %}">
+                    {{ category.dimensions|length }} dimensions
+                  </span>
+                </div>
+                <p class="mb-0 mt-2 {% if category_key == 'implemented' %}text-white{% else %}text-muted{% endif %} small">
+                  {{ category.description }}
+                </p>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  {% for dimension in category.dimensions %}
+                    <div class="col-md-6">
+                      <div class="dimension-item p-3 border rounded h-100 {% if category_key == 'implemented' %}bg-light{% endif %}">
+                        <h5 class="h6 mb-2">
+                          {% if category_key == 'implemented' %}
+                            <i class="fas fa-star text-warning me-1"></i>
+                          {% endif %}
+                          {{ dimension.name }}
+                        </h5>
+                        <p class="mb-0 small text-muted">{{ dimension.description }}</p>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="alert alert-warning mt-5">
+          <h5><i class="fas fa-lightbulb me-2"></i>Framework Evolution</h5>
+          <p class="mb-0">The 9 currently implemented dimensions provide a foundation for understanding AI system power and capabilities. As the field evolves, additional dimensions from this comprehensive framework can be developed to address specific evaluation needs across different use cases and stakeholder perspectives.</p>
+        </div>
+
+        <div class="text-center mt-5">
+          <a href="/agent-power-framework" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Back to Hierarchy
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.dimension-item {
+  transition: all 0.2s ease;
+}
+.dimension-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.dimension-category .card {
+  transition: all 0.3s ease;
+}
+.dimension-category .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+}
+</style>

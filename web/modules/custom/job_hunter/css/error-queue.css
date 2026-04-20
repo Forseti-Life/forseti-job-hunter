@@ -1,0 +1,288 @@
+/**
+ * @file
+ * Styles for error queue admin interface.
+ */
+
+/* Error Queue Container */
+.error-queue-list {
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+/* Error Queue Statistics Bar */
+.error-queue-stats {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+}
+
+.error-queue-stats p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.error-queue-stats strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Error Queue Table */
+.error-queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.error-queue-table thead {
+  background-color: #f8f8f8;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.error-queue-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-queue-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.error-queue-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.error-queue-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* Priority Badge */
+.priority-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priority-low {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.priority-medium {
+  background-color: #ffe0b2;
+  color: #e65100;
+}
+
+.priority-high {
+  background-color: #ffccbc;
+  color: #bf360c;
+}
+
+.priority-critical {
+  background-color: #ef9a9a;
+  color: #c62828;
+}
+
+/* Error Type Badge */
+.error-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #f0f0f0;
+  color: #555;
+  border: 1px solid #e0e0e0;
+}
+
+/* Fix Status Indicator */
+.fix-status {
+  font-size: 16px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.fix-status.fixed {
+  color: #4CAF50;
+}
+
+.fix-status.unfixed {
+  color: #999;
+}
+
+/* Error Details Page */
+.error-details-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.error-header {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: #fafafa;
+}
+
+.error-header .fieldset-legend {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.error-header .form-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.error-header .form-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.error-header .form-item__label {
+  display: inline-block;
+  font-weight: 600;
+  color: #555;
+  min-width: 120px;
+  margin-right: 16px;
+}
+
+.error-header .form-item__label + div {
+  display: inline-block;
+  color: #333;
+}
+
+/* Technical Details Section */
+.error-technical {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  background: #f8f8f8;
+}
+
+.error-technical pre {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 400px;
+  color: #333;
+}
+
+/* Error Actions */
+.error-actions {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  background: #f8f8f8;
+}
+
+.error-actions .button {
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+
+.error-actions .button:last-child {
+  margin-right: 0;
+}
+
+/* Dropbutton (Actions menu) */
+.dropbutton {
+  display: inline-block;
+  position: relative;
+}
+
+.dropbutton a {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-right: 4px;
+}
+
+.dropbutton a:hover {
+  background: #e8e8e8;
+  border-color: #d0d0d0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .error-queue-table {
+    font-size: 12px;
+  }
+
+  .error-queue-table th,
+  .error-queue-table td {
+    padding: 8px 10px;
+  }
+
+  .error-queue-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .priority-badge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-details-container {
+    margin: 10px;
+    padding: 16px;
+  }
+
+  .error-header .form-item__label {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 4px;
+  }
+
+  .error-header .form-item__label + div {
+    display: block;
+  }
+
+  .error-actions .button {
+    display: block;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+}

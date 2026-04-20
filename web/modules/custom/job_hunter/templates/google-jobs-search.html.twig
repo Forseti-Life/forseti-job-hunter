@@ -1,0 +1,201 @@
+{#
+/**
+ * @file
+ * Template for the Google Jobs search page (server-side rendered).
+ *
+ * Available variables:
+ * - query: The current search query string (sanitized).
+ * - results: Array of matching job objects from Cloud Talent API.
+ * - total_results: Total matching result count from API.
+ * - current_page: Current page number (1-based).
+ * - total_pages: Total number of pages.
+ * - page_size: Results per page.
+ * - has_search: Boolean — true if a search was submitted.
+ * - error_message: Translated error string, or null if no error.
+ */
+#}
+
+<div class="google-jobs-search">
+
+  {# Search Form #}
+  <div class="gjobs-search-form mb-4">
+    <form method="get" action="/jobhunter/googlejobssearch">
+      <div class="input-group">
+        <input type="text"
+               name="q"
+               class="form-control"
+               placeholder="{{ 'Search jobs (e.g. Software Engineer, Product Manager)'|t }}"
+               value="{{ query|e }}"
+               maxlength="256"
+               aria-label="{{ 'Search query'|t }}">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search"></i> {{ 'Search'|t }}
+        </button>
+      </div>
+    </form>
+
+    {# AC-1: Save this search — shown when a query is active #}
+    {% if has_search and query %}
+      {% if saved_searches|length < max_saved_searches %}
+        <form method="post" action="{{ save_search_url }}" class="gjobs-save-search-form mt-2">
+          <input type="hidden" name="keywords" value="{{ query|e }}">
+          <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-bookmark"></i> {{ 'Save this search'|t }}
+          </button>
+        </form>
+      {% else %}
+        <p class="text-muted small mt-2">
+          {{ 'Maximum saved searches reached. Delete one to save a new search.'|t }}
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {# API Error State (AC-4) #}
+  {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-circle"></i> {{ error_message }}
+    </div>
+  {% endif %}
+
+  {% if has_search and not error_message %}
+
+    {# Result Count (AC-2) #}
+    <div class="gjobs-result-count mb-3">
+      {% if total_results > 0 %}
+        <span class="text-muted">
+          {{ total_results }} {{ 'jobs found'|t }}
+          {% if total_pages > 1 %}
+            — {{ 'Page'|t }} {{ current_page }} {{ 'of'|t }} {{ total_pages }}
+          {% endif %}
+        </span>
+      {% endif %}
+    </div>
+
+    {# Results List #}
+    {% if results is not empty %}
+      <div class="gjobs-results-list">
+        {% for match in results %}
+          {% set job = match.job %}
+          <div class="card gjobs-result-card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h5 class="card-title mb-1">{{ job.title|default('Untitled')|e }}</h5>
+                  <p class="text-muted mb-1">
+                    <i class="bi bi-building"></i>
+                    {{ job.company|default('')|e }}
+                    {% if job.addresses is not empty %}
+                      <span class="mx-1">·</span>
+                      <i class="bi bi-geo-alt"></i>
+                      {{ job.addresses[0]|default('')|e }}
+                    {% endif %}
+                  </p>
+                </div>
+                {% if match.is_imported %}
+                  <span class="badge bg-success ms-2">{{ 'Imported'|t }}</span>
+                {% endif %}
+              </div>
+              {% if job.description %}
+                <p class="card-text mt-2 gjobs-description">
+                  {{ job.description|striptags|slice(0, 300)|e }}{% if job.description|length > 300 %}…{% endif %}
+                </p>
+              {% endif %}
+              {% if job.applicationInfo and job.applicationInfo.uris is not empty %}
+                <a href="{{ job.applicationInfo.uris[0]|e }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-sm btn-outline-primary mt-2">
+                  {{ 'Apply'|t }} <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {# Pagination Controls (AC-1) #}
+      {% if total_pages > 1 %}
+        <nav aria-label="{{ 'Search results pagination'|t }}" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {# Previous #}
+            <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+              <a class="page-link"
+                 href="?q={{ query|url_encode }}&amp;page={{ current_page - 1 }}"
+                 {% if current_page <= 1 %}aria-disabled="true" tabindex="-1"{% endif %}>
+                <i class="bi bi-chevron-left"></i> {{ 'Previous'|t }}
+              </a>
+            </li>
+
+            {# Page indicator #}
+            <li class="page-item disabled" aria-current="page">
+              <span class="page-link">
+                {{ 'Page'|t }} {{ current_page }} {{ 'of'|t }} {{ total_pages }}
+              </span>
+            </li>
+
+            {# Next #}
+            <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+              <a class="page-link"
+                 href="?q={{ query|url_encode }}&amp;page={{ current_page + 1 }}"
+                 {% if current_page >= total_pages %}aria-disabled="true" tabindex="-1"{% endif %}>
+                {{ 'Next'|t }} <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      {% endif %}
+
+    {% else %}
+      {# Empty State (AC-3) #}
+      <div class="gjobs-empty-state text-center py-5">
+        <i class="bi bi-search display-4 text-muted"></i>
+        <h4 class="mt-3">{{ 'No jobs found'|t }}</h4>
+        <p class="text-muted">
+          {{ 'No results matched'|t }} "<strong>{{ query|e }}</strong>".
+          {{ 'Try different keywords, a broader location, or fewer filters.'|t }}
+        </p>
+      </div>
+    {% endif %}
+
+  {% elseif not has_search %}
+    {# Initial state — no search submitted yet #}
+    <div class="gjobs-initial-state text-center py-5 text-muted">
+      <i class="bi bi-briefcase display-4"></i>
+      <p class="mt-3">{{ 'Enter a search term above to find jobs.'|t }}</p>
+    </div>
+  {% endif %}
+
+  {# AC-2: Saved searches panel #}
+  {% if saved_searches is not empty %}
+    <div class="gjobs-saved-searches mt-4">
+      <h3 class="gjobs-saved-searches__title">{{ 'Saved Searches'|t }}</h3>
+      <ul class="list-group">
+        {% for saved in saved_searches %}
+          {% set rerun_url = '/jobhunter/googlejobssearch?q=' ~ saved.keywords|url_encode ~ (saved.location ? '&location=' ~ saved.location|url_encode : '') %}
+          {% set delete_url = path('job_hunter.saved_search_delete', {'saved_search_id': saved.id}) %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <strong>{{ saved.keywords|e }}</strong>
+              {% if saved.location %}
+                <span class="text-muted"> &mdash; {{ saved.location|e }}</span>
+              {% endif %}
+            </span>
+            <span class="gjobs-saved-search__actions">
+              <a href="{{ rerun_url }}" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-play"></i> {{ 'Re-run'|t }}
+              </a>
+              <form method="post" action="{{ delete_url }}" style="display:inline-block;">
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('{{ 'Delete this saved search?'|t }}')">
+                  <i class="bi bi-trash"></i> {{ 'Delete'|t }}
+                </button>
+              </form>
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+</div>

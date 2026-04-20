@@ -1,0 +1,42 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a 403 page.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the page element.
+ * - page: The render array for the page.
+ */
+#}
+<div class="community-features">
+  <div class="container py-5">
+    <div class="text-center">
+      
+      <div class="mb-4">
+        <img src="/themes/custom/forseti/images/logos/originals/forseti_safe.png" alt="Forseti" class="forseti-chat-icon">
+      </div>
+      
+      <h1 class="mb-3" style="font-size: 6rem; color: #00d4ff; font-weight: 700;">403</h1>
+      <h2 class="mb-4">Access Denied</h2>
+      
+      <div class="mb-5 mx-auto" style="max-width: 700px;">
+        <p class="lead">
+          You don't have permission to access this page or resource. 
+          Forseti protects community areas that require authentication or special privileges.
+        </p>
+      </div>
+      
+      <div class="d-flex justify-content-center gap-3 flex-wrap mt-5">
+        <a href="/user/register" class="btn btn-primary btn-lg">Create Account</a>
+        <a href="/user/login" class="btn btn-outline-primary btn-lg">Sign In</a>
+        <a href="{{ path('<front>') }}" class="btn btn-outline-primary btn-lg">Return Home</a>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+{# Footer #}
+{% if page.footer %}
+  {{ page.footer }}
+{% endif %}

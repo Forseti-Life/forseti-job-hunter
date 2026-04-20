@@ -1,0 +1,25 @@
+uuid: 23133076-b59b-43c9-9715-66d7c93dcaad
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_total_tokens
+    - node.type.ai_conversation
+id: node.ai_conversation.field_total_tokens
+field_name: field_total_tokens
+entity_type: node
+bundle: ai_conversation
+label: 'Total Tokens'
+description: 'Total tokens used in this conversation'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

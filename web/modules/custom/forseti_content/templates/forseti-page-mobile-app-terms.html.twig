@@ -1,0 +1,76 @@
+{#
+/**
+ * @file
+ * Template for Mobile App Terms page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - license: App license section
+ * - permissions: Array of permission items
+ * - platform_specific: Platform-specific terms
+ * - background_location: Background location section
+ * - updates: App updates section
+ * - termination: Termination section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead">{{ intro }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ license.title }}</h2>
+      <p>{{ license.content }}</p>
+      <ul>
+        {% for item in license.restrictions %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'App Permissions'|t }}</h2>
+      
+      {% for permission in permissions %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ permission.icon }} {{ permission.permission }}</h4>
+          <p><strong>{{ 'Why We Need It:'|t }}</strong> {{ permission.why_needed }}</p>
+          <p class="mb-0">
+            <strong>{{ 'Required:'|t }}</strong> 
+            {% if permission.required %}
+              <span class="text-danger">{{ 'Yes'|t }}</span>
+            {% else %}
+              <span class="text-success">{{ 'Optional'|t }}</span>
+            {% endif %}
+          </p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'Platform-Specific Terms'|t }}</h2>
+      
+      {% for platform in platform_specific %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ platform.platform }}</h4>
+          <p>{{ platform.terms|raw }}</p>
+          <p class="mb-0"><strong>{{ 'Requirements:'|t }}</strong> {{ platform.requirements }}</p>
+        </div>
+      {% endfor %}
+      
+      <div class="alert alert-info-cyan mt-4">
+        <h4>{{ background_location.title }}</h4>
+        <p>{{ background_location.content }}</p>
+        <ul class="mb-0">
+          {% for item in background_location.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ updates.title }}</h2>
+      <p>{{ updates.content }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ termination.title }}</h2>
+      <p>{{ termination.content }}</p>
+    </div>
+  </div>
+</div>

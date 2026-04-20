@@ -1,0 +1,1929 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the NFR module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function nfr_install() {
+  // Create all database tables (orphaned from Drupal schema system)
+  _nfr_create_tables();
+  
+  // Assign permissions to roles
+  _nfr_assign_role_permissions();
+  
+  // Create validation test users
+  _nfr_create_validation_users();
+  
+  \Drupal::messenger()->addStatus(t('NFR module installed successfully. All data tables created and will persist across uninstall/reinstall.'));
+}
+
+/**
+ * Create all NFR database tables.
+ * 
+ * Tables are created directly via schema API instead of hook_schema()
+ * so they are "orphaned" from Drupal's schema management system.
+ * This prevents automatic deletion during module uninstall.
+ * 
+ * Note: Tables are actually created by update hooks (9007, 9008, 9009, 9010, 9011, 9012, 9013).
+ * This function just verifies they exist and logs status.
+ */
+function _nfr_create_tables() {
+  $schema = \Drupal::database()->schema();
+  
+  $expected_tables = [
+    'nfr_user_profile',
+    'nfr_work_history',
+    'nfr_job_titles',
+    'nfr_incident_frequency',
+    'nfr_major_incidents',
+    'nfr_other_employment',
+    'nfr_cancer_diagnoses',
+    'nfr_consent',
+    'nfr_questionnaire',
+    'nfr_section_completion',
+    'nfr_follow_up_surveys',
+  ];
+  
+  $existing = 0;
+  $missing = [];
+  
+  foreach ($expected_tables as $table) {
+    if ($schema->tableExists($table)) {
+      $existing++;
+    } else {
+      $missing[] = $table;
+    }
+  }
+  
+  if (!empty($missing)) {
+    \Drupal::logger('nfr')->warning('Missing tables during install: @tables. Run drush updb to create them via update hooks.', [
+      '@tables' => implode(', ', $missing),
+    ]);
+  }
+  
+  \Drupal::logger('nfr')->info('NFR install: @existing of @total tables exist.', [
+    '@existing' => $existing,
+    '@total' => count($expected_tables),
+  ]);
+}
+
+/**
+ * Helper function to create remaining NFR tables.
+ * @deprecated - Tables are created by update hooks, not during install
+ */
+function _nfr_create_remaining_tables($schema) {
+  // Deprecated - tables created by update hooks
+}
+
+/**
+ * Assign permissions to NFR roles.
+ */
+function _nfr_assign_role_permissions() {
+  $role_permissions = [
+    'firefighter' => [
+      'access nfr dashboard',
+      'view firefighter records',
+      'view cancer data',
+    ],
+    'fire_dept_admin' => [
+      'access nfr dashboard',
+      'view firefighter records',
+      'view cancer data',
+    ],
+    'nfr_researcher' => [
+      'access nfr dashboard',
+      'view firefighter records',
+      'view cancer data',
+      'view nfr reports',
+      'export nfr data',
+    ],
+    'nfr_administrator' => [
+      'administer nfr',
+      'access nfr dashboard',
+      'manage firefighters',
+      'view firefighter records',
+      'view cancer data',
+      'manage cancer data',
+      'export nfr data',
+      'view nfr reports',
+      'manage state registry linkages',
+    ],
+  ];
+  
+  foreach ($role_permissions as $role_id => $permissions) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if ($role) {
+      foreach ($permissions as $permission) {
+        $role->grantPermission($permission);
+      }
+      $role->save();
+    }
+  }
+}
+
+/**
+ * Create validation test users with specific UIDs.
+ */
+/**
+ * Create or update validation test users.
+ * 
+ * Following Drupal best practices:
+ * - Checks for existing users by username
+ * - Let Drupal assign UIDs automatically
+ * - Updates existing users instead of overwriting
+ * - Uses proper entity API
+ */
+function _nfr_create_validation_users() {
+  $validation_users = [
+    ['username' => 'firefighter_test_active', 'role' => 'firefighter', 'first' => 'John', 'last' => 'Smith'],
+    ['username' => 'firefighter_test_retired', 'role' => 'firefighter', 'first' => 'Jane', 'last' => 'Doe'],
+    ['username' => 'nfr_administrator_test', 'role' => 'nfr_administrator', 'first' => 'Admin', 'last' => 'User'],
+    ['username' => 'nfr_researcher_test', 'role' => 'nfr_researcher', 'first' => 'Research', 'last' => 'Analyst'],
+    ['username' => 'fire_department_admin_test', 'role' => 'fire_dept_admin', 'first' => 'Fire', 'last' => 'Chief'],
+  ];
+  
+  foreach ($validation_users as $user_data) {
+    // Check if user already exists by username (proper Drupal practice)
+    $existing_by_name = \Drupal::entityTypeManager()
+      ->getStorage('user')
+      ->loadByProperties(['name' => $user_data['username']]);
+    
+    if (!empty($existing_by_name)) {
+      $user = reset($existing_by_name);
+      // Update role if needed
+      if (!$user->hasRole($user_data['role'])) {
+        $user->addRole($user_data['role']);
+        $user->save();
+        \Drupal::logger('nfr')->info('Updated user @username (UID: @uid) to add role: @role', [
+          '@username' => $user_data['username'],
+          '@uid' => $user->id(),
+          '@role' => $user_data['role'],
+        ]);
+      }
+      continue;
+    }
+    
+    try {
+      // Create user using Drupal entity system (let Drupal assign UID)
+      $user = \Drupal\user\Entity\User::create([
+        'name' => $user_data['username'],
+        'mail' => $user_data['username'] . '@stlouisintegration.com',
+        'pass' => 'TestPassword123!',
+        'status' => 1,
+        'field_first_name' => $user_data['first'],
+        'field_last_name' => $user_data['last'],
+        'roles' => [$user_data['role']], // Add role during creation
+      ]);
+      
+      $user->save();
+      
+      // Log the created user
+      \Drupal::logger('nfr')->info('Created validation user @username (UID: @uid) with role: @role', [
+        '@username' => $user_data['username'],
+        '@uid' => $user->id(),
+        '@role' => $user_data['role'],
+      ]);
+      
+    } catch (\Exception $e) {
+      \Drupal::logger('nfr')->error('Failed to create validation user @username: @message', [
+        '@username' => $user_data['username'],
+        '@message' => $e->getMessage(),
+      ]);
+    }
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+/**
+ * Implements hook_uninstall().
+ * 
+ * IMPORTANT: We explicitly preserve all data tables during uninstall.
+ * By default, Drupal drops all tables defined in hook_schema() when uninstalling.
+ * We prevent this by NOT calling dropTable() and by preserving table data.
+ * 
+ * This allows reinstalling the module without losing any collected data,
+ * consent records, or user information.
+ */
+function nfr_uninstall() {
+  // Get the schema
+  $schema = \Drupal::database()->schema();
+  
+  // List of tables to preserve (do NOT drop)
+  $preserve_tables = [
+    'nfr_user_profile',
+    'nfr_work_history',
+    'nfr_job_titles',
+    'nfr_incident_frequency',
+    'nfr_major_incidents',
+    'nfr_other_employment',
+    'nfr_cancer_diagnoses',
+    'nfr_consent',
+    'nfr_questionnaire',
+    'nfr_section_completion',
+    'nfr_follow_up_surveys',
+  ];
+  
+  // Verify tables exist and will be preserved
+  $preserved_count = 0;
+  foreach ($preserve_tables as $table) {
+    if ($schema->tableExists($table)) {
+      $preserved_count++;
+    }
+  }
+  
+  \Drupal::messenger()->addStatus(t('NFR module uninstalled. @count data tables have been preserved and will not be deleted.', ['@count' => $preserved_count]));
+  
+  // Note: We do NOT call $schema->dropTable() for any tables
+  // This prevents data loss during module reinstall/updates
+}
+
+/**
+ * Ensure baseline legacy tables exist for early update hooks.
+ */
+function _nfr_ensure_update_base_tables() {
+  $schema = \Drupal::database()->schema();
+
+  if (!$schema->tableExists('nfr_questionnaire')) {
+    $schema->createTable('nfr_questionnaire', [
+      'description' => 'Legacy questionnaire table used by incremental NFR update hooks.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Drupal user ID',
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'unique keys' => [
+        'uid' => ['uid'],
+      ],
+      'indexes' => [
+        'created' => ['created'],
+      ],
+    ]);
+  }
+
+  if (!$schema->tableExists('nfr_job_titles')) {
+    $schema->createTable('nfr_job_titles', [
+      'description' => 'Legacy normalized job titles table used by NFR update hooks.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Drupal user ID',
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+
+  if (!$schema->tableExists('nfr_incident_frequency')) {
+    $schema->createTable('nfr_incident_frequency', [
+      'description' => 'Legacy incident frequency table used by NFR update hooks.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Drupal user ID',
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+}
+
+/**
+ * Add missing timestamp columns to normalized work history tables.
+ */
+function nfr_update_9003() {
+  _nfr_ensure_update_base_tables();
+  $schema = \Drupal::database()->schema();
+  
+  // Add created and updated to nfr_incident_frequency
+  if (!$schema->fieldExists('nfr_incident_frequency', 'created')) {
+    $schema->addField('nfr_incident_frequency', 'created', [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Timestamp when record was created',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_incident_frequency', 'updated')) {
+    $schema->addField('nfr_incident_frequency', 'updated', [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Timestamp when record was last updated',
+    ]);
+  }
+  
+  // Add updated to nfr_job_titles (created already exists)
+  if (!$schema->fieldExists('nfr_job_titles', 'updated')) {
+    $schema->addField('nfr_job_titles', 'updated', [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Timestamp when record was last updated',
+    ]);
+  }
+  
+  return t('Added timestamp columns to work history tables.');
+}
+
+/**
+ * Remove generic data JSON column now that we use normalized tables and specific JSON columns.
+ */
+function nfr_update_9004() {
+  $schema = \Drupal::database()->schema();
+  
+  // Drop the generic 'data' column from nfr_questionnaire
+  if ($schema->fieldExists('nfr_questionnaire', 'data')) {
+    $schema->dropField('nfr_questionnaire', 'data');
+  }
+  
+  return t('Removed generic data JSON column from nfr_questionnaire table.');
+}
+
+/**
+ * Add exposure_data JSON column for Section 3 data.
+ */
+function nfr_update_9005() {
+  $schema = \Drupal::database()->schema();
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'exposure_data')) {
+    $schema->addField('nfr_questionnaire', 'exposure_data', [
+      'type' => 'text',
+      'size' => 'big',
+      'not null' => FALSE,
+      'description' => 'JSON data for exposure information (AFFF, diesel, etc)',
+    ]);
+  }
+  
+  return t('Added exposure_data JSON column to nfr_questionnaire table.');
+}
+
+/**
+ * Remove unused columns from nfr_job_titles table.
+ */
+function nfr_update_9006() {
+  $schema = \Drupal::database()->schema();
+  
+  // Drop start_date and end_date - job dates aren't tracked, only department dates
+  if ($schema->fieldExists('nfr_job_titles', 'start_date')) {
+    $schema->dropField('nfr_job_titles', 'start_date');
+  }
+  if ($schema->fieldExists('nfr_job_titles', 'end_date')) {
+    $schema->dropField('nfr_job_titles', 'end_date');
+  }
+  
+  // Drop incident_types JSON - data properly stored in nfr_incident_frequency table
+  if ($schema->fieldExists('nfr_job_titles', 'incident_types')) {
+    $schema->dropField('nfr_job_titles', 'incident_types');
+  }
+  
+  return t('Removed unused columns from nfr_job_titles table.');
+}
+
+/**
+ * Add Section 3 exposure columns and create nfr_major_incidents table.
+ */
+function nfr_update_9007() {
+  $schema = \Drupal::database()->schema();
+  
+  // Add exposure columns to nfr_questionnaire
+  if (!$schema->fieldExists('nfr_questionnaire', 'afff_used')) {
+    $schema->addField('nfr_questionnaire', 'afff_used', [
+      'type' => 'varchar',
+      'length' => 20,
+      'not null' => FALSE,
+      'description' => 'yes, no, unknown',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'afff_times')) {
+    $schema->addField('nfr_questionnaire', 'afff_times', [
+      'type' => 'int',
+      'not null' => FALSE,
+      'description' => 'Number of times AFFF was used',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'afff_first_year')) {
+    $schema->addField('nfr_questionnaire', 'afff_first_year', [
+      'type' => 'int',
+      'not null' => FALSE,
+      'description' => 'Year first used AFFF',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'diesel_exhaust')) {
+    $schema->addField('nfr_questionnaire', 'diesel_exhaust', [
+      'type' => 'varchar',
+      'length' => 20,
+      'not null' => FALSE,
+      'description' => 'regularly, sometimes, rarely, never',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'chemical_activities')) {
+    $schema->addField('nfr_questionnaire', 'chemical_activities', [
+      'type' => 'text',
+      'not null' => FALSE,
+      'description' => 'JSON array of chemical exposure activities',
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'major_incidents')) {
+    $schema->addField('nfr_questionnaire', 'major_incidents', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Whether involved in major incidents with prolonged exposure',
+    ]);
+  }
+  
+  // Create nfr_major_incidents table
+  if (!$schema->tableExists('nfr_major_incidents')) {
+    $schema->createTable('nfr_major_incidents', [
+      'description' => 'Stores major incidents with prolonged/intense exposure',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ],
+        'description' => [
+          'type' => 'text',
+          'not null' => FALSE,
+          'description' => 'Event description',
+        ],
+        'incident_date' => [
+          'type' => 'varchar',
+          'length' => 10,
+          'not null' => FALSE,
+          'description' => 'YYYY-MM-DD',
+        ],
+        'duration' => [
+          'type' => 'varchar',
+          'length' => 20,
+          'not null' => FALSE,
+          'description' => 'hours, days, weeks, months',
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+  
+  // Create nfr_other_employment table if it doesn't exist
+  if (!$schema->tableExists('nfr_other_employment')) {
+    $schema->createTable('nfr_other_employment', [
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'occupation' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'industry' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'start_year' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'end_year' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'exposures' => [
+          'type' => 'text',
+          'not null' => FALSE,
+          'description' => 'JSON array of exposure types',
+        ],
+        'exposures_other' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+  
+  // Create nfr_cancer_diagnoses table if it doesn't exist
+  if (!$schema->tableExists('nfr_cancer_diagnoses')) {
+    $schema->createTable('nfr_cancer_diagnoses', [
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'cancer_type' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'year_diagnosed' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+  
+  return t('Added Section 3 exposure columns and created nfr_major_incidents table.');
+}
+
+/**
+ * Create nfr_cancer_diagnoses table and add health condition columns.
+ */
+function nfr_update_9012() {
+  $schema = \Drupal::database()->schema();
+  $database = \Drupal::database();
+  
+  // Create nfr_cancer_diagnoses table
+  if (!$schema->tableExists('nfr_cancer_diagnoses')) {
+    $schema->createTable('nfr_cancer_diagnoses', [
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'cancer_type' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'year_diagnosed' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+  
+  // Add health condition columns
+  $conditions = ['heart_disease', 'copd', 'asthma', 'diabetes'];
+  foreach ($conditions as $condition) {
+    $col_name = 'health_' . $condition;
+    if (!$schema->fieldExists('nfr_questionnaire', $col_name)) {
+      $schema->addField('nfr_questionnaire', $col_name, [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ]);
+    }
+  }
+  
+  // Migrate data from cancer_details JSON to new structures
+  if ($schema->fieldExists('nfr_questionnaire', 'cancer_details')) {
+    $results = $database->select('nfr_questionnaire', 'q')
+      ->fields('q', ['uid', 'cancer_details'])
+      ->condition('cancer_details', '', '<>')
+      ->isNotNull('cancer_details')
+      ->execute();
+    
+    $time = \Drupal::time()->getRequestTime();
+    
+    foreach ($results as $row) {
+      $data = json_decode($row->cancer_details, TRUE);
+      if (!empty($data)) {
+        // Migrate cancer diagnoses to new table
+        if (!empty($data['cancers']) && is_array($data['cancers'])) {
+          foreach ($data['cancers'] as $cancer) {
+            if (!empty($cancer['type'])) {
+              $database->insert('nfr_cancer_diagnoses')
+                ->fields([
+                  'uid' => $row->uid,
+                  'cancer_type' => $cancer['type'],
+                  'year_diagnosed' => !empty($cancer['year_diagnosed']) ? (int) $cancer['year_diagnosed'] : NULL,
+                  'created' => $time,
+                  'updated' => $time,
+                ])
+                ->execute();
+            }
+          }
+        }
+        
+        // Migrate other conditions to boolean columns
+        if (!empty($data['other_conditions']) && is_array($data['other_conditions'])) {
+          $update_fields = [];
+          foreach ($conditions as $condition) {
+            if (in_array($condition, $data['other_conditions'])) {
+              $update_fields['health_' . $condition] = 1;
+            }
+          }
+          
+          if (!empty($update_fields)) {
+            $database->update('nfr_questionnaire')
+              ->fields($update_fields)
+              ->condition('uid', $row->uid)
+              ->execute();
+          }
+        }
+      }
+    }
+    
+    // Drop the old JSON column
+    $schema->dropField('nfr_questionnaire', 'cancer_details');
+  }
+  
+  return t('Created nfr_cancer_diagnoses table and added health condition columns.');
+}
+
+/**
+ * Create nfr_section_completion table for individual section tracking.
+ */
+function nfr_update_9013() {
+  $schema = \Drupal::database()->schema();
+  
+  // Create the section completion tracking table
+  if (!$schema->tableExists('nfr_section_completion')) {
+    $table = [
+      'description' => 'Tracks individual section completion status for questionnaire.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+          'description' => 'Primary key',
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'section_number' => [
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'description' => 'Section number (1-9)',
+        ],
+        'completed' => [
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Whether section is completed (0 or 1)',
+        ],
+        'completed_at' => [
+          'type' => 'int',
+          'not null' => FALSE,
+          'description' => 'Timestamp when section was completed',
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Timestamp when record was last updated',
+        ],
+      ],
+      'primary key' => ['id'],
+      'unique keys' => [
+        'uid_section' => ['uid', 'section_number'],
+      ],
+      'indexes' => [
+        'uid' => ['uid'],
+        'section_number' => ['section_number'],
+      ],
+    ];
+    
+    $schema->createTable('nfr_section_completion', $table);
+  }
+  
+  // Migrate existing progress from last_section_completed
+  $database = \Drupal::database();
+  $questionnaires = $database->select('nfr_questionnaire', 'q')
+    ->fields('q', ['uid', 'last_section_completed'])
+    ->execute();
+  
+  foreach ($questionnaires as $row) {
+    if ($row->last_section_completed > 0) {
+      // Mark all sections up to last_section_completed as complete
+      for ($section = 1; $section <= $row->last_section_completed; $section++) {
+        $database->merge('nfr_section_completion')
+          ->keys([
+            'uid' => $row->uid,
+            'section_number' => $section,
+          ])
+          ->fields([
+            'completed' => 1,
+            'completed_at' => time(),
+            'updated' => time(),
+          ])
+          ->execute();
+      }
+    }
+  }
+  
+  return t('Created nfr_section_completion table and migrated existing progress.');
+}
+
+/**
+ * Add physical_activity_days column to nfr_questionnaire table.
+ */
+function nfr_update_9014() {
+  $schema = \Drupal::database()->schema();
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'physical_activity_days')) {
+    $schema->addField('nfr_questionnaire', 'physical_activity_days', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'description' => 'Days per week of physical activity (0-7)',
+    ]);
+  }
+  
+  return t('Added physical_activity_days column to nfr_questionnaire table.');
+}
+
+/**
+ * Add direct decontamination columns and migrate from JSON.
+ */
+function nfr_update_9011() {
+  $schema = \Drupal::database()->schema();
+  $database = \Drupal::database();
+  
+  $decon_fields = [
+    'washed_hands_face' => 'varchar',
+    'changed_gear_at_scene' => 'varchar',
+    'showered_at_station' => 'varchar',
+    'laundered_gear' => 'varchar',
+    'used_wet_wipes' => 'varchar',
+    'department_had_sops' => 'varchar',
+  ];
+  
+  // Add decontamination practice columns
+  foreach ($decon_fields as $field => $type) {
+    $col_name = 'decon_' . $field;
+    if (!$schema->fieldExists('nfr_questionnaire', $col_name)) {
+      $spec = [
+        'type' => $type,
+        'not null' => FALSE,
+      ];
+      if ($type === 'varchar') {
+        $spec['length'] = ($field === 'department_had_sops') ? 10 : 20;
+      }
+      $schema->addField('nfr_questionnaire', $col_name, $spec);
+    }
+  }
+  
+  // Add sops_year_implemented column
+  if (!$schema->fieldExists('nfr_questionnaire', 'decon_sops_year_implemented')) {
+    $schema->addField('nfr_questionnaire', 'decon_sops_year_implemented', [
+      'type' => 'int',
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Migrate data from decon_practices JSON to new columns
+  if ($schema->fieldExists('nfr_questionnaire', 'decon_practices')) {
+    $results = $database->select('nfr_questionnaire', 'q')
+      ->fields('q', ['uid', 'decon_practices'])
+      ->condition('decon_practices', '', '<>')
+      ->isNotNull('decon_practices')
+      ->execute();
+    
+    foreach ($results as $row) {
+      $data = json_decode($row->decon_practices, TRUE);
+      if (!empty($data)) {
+        $update_fields = [];
+        
+        // Migrate practice frequencies
+        foreach ($decon_fields as $field => $type) {
+          if (!empty($data[$field])) {
+            $update_fields['decon_' . $field] = $data[$field];
+          }
+        }
+        
+        // Migrate sops year
+        if (!empty($data['sops_year_implemented'])) {
+          $update_fields['decon_sops_year_implemented'] = (int) $data['sops_year_implemented'];
+        }
+        
+        if (!empty($update_fields)) {
+          $database->update('nfr_questionnaire')
+            ->fields($update_fields)
+            ->condition('uid', $row->uid)
+            ->execute();
+        }
+      }
+    }
+    
+    // Drop the old JSON column
+    $schema->dropField('nfr_questionnaire', 'decon_practices');
+  }
+  
+  return t('Added direct decontamination columns and migrated data from JSON.');
+}
+
+/**
+ * Add direct PPE columns and migrate from JSON.
+ */
+function nfr_update_9010() {
+  $schema = \Drupal::database()->schema();
+  $database = \Drupal::database();
+  
+  $ppe_fields = [
+    'scba', 'turnout_coat', 'turnout_pants', 'gloves',
+    'helmet', 'boots', 'nomex_hood', 'wildland_clothing',
+  ];
+  
+  // Add ever_used and year_started columns for each equipment type
+  foreach ($ppe_fields as $field) {
+    $ever_used_col = 'ppe_' . $field . '_ever_used';
+    $year_started_col = 'ppe_' . $field . '_year_started';
+    
+    if (!$schema->fieldExists('nfr_questionnaire', $ever_used_col)) {
+      $schema->addField('nfr_questionnaire', $ever_used_col, [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+      ]);
+    }
+    
+    if (!$schema->fieldExists('nfr_questionnaire', $year_started_col)) {
+      $schema->addField('nfr_questionnaire', $year_started_col, [
+        'type' => 'int',
+        'not null' => FALSE,
+      ]);
+    }
+  }
+  
+  // Add SCBA frequency columns
+  if (!$schema->fieldExists('nfr_questionnaire', 'ppe_scba_during_suppression')) {
+    $schema->addField('nfr_questionnaire', 'ppe_scba_during_suppression', [
+      'type' => 'varchar',
+      'length' => 20,
+      'not null' => FALSE,
+    ]);
+  }
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'ppe_scba_during_overhaul')) {
+    $schema->addField('nfr_questionnaire', 'ppe_scba_during_overhaul', [
+      'type' => 'varchar',
+      'length' => 20,
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Migrate data from ppe_practices JSON to new columns
+  if ($schema->fieldExists('nfr_questionnaire', 'ppe_practices')) {
+    $results = $database->select('nfr_questionnaire', 'q')
+      ->fields('q', ['uid', 'ppe_practices'])
+      ->condition('ppe_practices', '', '<>')
+      ->isNotNull('ppe_practices')
+      ->execute();
+    
+    foreach ($results as $row) {
+      $data = json_decode($row->ppe_practices, TRUE);
+      if (!empty($data)) {
+        $update_fields = [];
+        
+        // Migrate equipment data
+        foreach ($ppe_fields as $field) {
+          if (isset($data[$field]['ever_used'])) {
+            $update_fields['ppe_' . $field . '_ever_used'] = $data[$field]['ever_used'];
+          }
+          if (!empty($data[$field]['year_started'])) {
+            $update_fields['ppe_' . $field . '_year_started'] = (int) $data[$field]['year_started'];
+          }
+        }
+        
+        // Migrate SCBA frequency data
+        if (!empty($data['scba_during_suppression'])) {
+          $update_fields['ppe_scba_during_suppression'] = $data['scba_during_suppression'];
+        }
+        if (!empty($data['scba_during_overhaul'])) {
+          $update_fields['ppe_scba_during_overhaul'] = $data['scba_during_overhaul'];
+        }
+        
+        if (!empty($update_fields)) {
+          $database->update('nfr_questionnaire')
+            ->fields($update_fields)
+            ->condition('uid', $row->uid)
+            ->execute();
+        }
+      }
+    }
+    
+    // Drop the old JSON column
+    $schema->dropField('nfr_questionnaire', 'ppe_practices');
+  }
+  
+  return t('Added direct PPE columns and migrated data from JSON.');
+}
+
+/**
+ * Create nfr_other_employment table and migrate from JSON.
+ */
+function nfr_update_9009() {
+  $schema = \Drupal::database()->schema();
+  $database = \Drupal::database();
+  
+  // Create nfr_other_employment table
+  if (!$schema->tableExists('nfr_other_employment')) {
+    $schema->createTable('nfr_other_employment', [
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'occupation' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'industry' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'start_year' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'end_year' => [
+          'type' => 'int',
+          'not null' => FALSE,
+        ],
+        'exposures' => [
+          'type' => 'text',
+          'not null' => FALSE,
+          'description' => 'JSON array of exposure types',
+        ],
+        'exposures_other' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ]);
+  }
+  
+  // Add had_other_jobs column
+  if (!$schema->fieldExists('nfr_questionnaire', 'had_other_jobs')) {
+    $schema->addField('nfr_questionnaire', 'had_other_jobs', [
+      'type' => 'varchar',
+      'length' => 10,
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Migrate data from other_employment_data JSON to new table
+  if ($schema->fieldExists('nfr_questionnaire', 'other_employment_data')) {
+    $results = $database->select('nfr_questionnaire', 'q')
+      ->fields('q', ['uid', 'other_employment_data'])
+      ->condition('other_employment_data', '', '<>')
+      ->isNotNull('other_employment_data')
+      ->execute();
+    
+    $time = \Drupal::time()->getRequestTime();
+    foreach ($results as $row) {
+      $data = json_decode($row->other_employment_data, TRUE);
+      if (!empty($data)) {
+        // Update had_other_jobs
+        if (isset($data['had_other_jobs'])) {
+          $database->update('nfr_questionnaire')
+            ->fields(['had_other_jobs' => $data['had_other_jobs']])
+            ->condition('uid', $row->uid)
+            ->execute();
+        }
+        
+        // Migrate jobs to new table
+        if (!empty($data['jobs']) && is_array($data['jobs'])) {
+          foreach ($data['jobs'] as $job) {
+            $database->insert('nfr_other_employment')
+              ->fields([
+                'uid' => $row->uid,
+                'occupation' => $job['occupation'] ?? '',
+                'industry' => $job['industry'] ?? '',
+                'start_year' => $job['start_year'] ?? NULL,
+                'end_year' => $job['end_year'] ?? NULL,
+                'exposures' => !empty($job['exposures']) ? json_encode(array_filter($job['exposures'])) : NULL,
+                'exposures_other' => $job['exposures_other'] ?? '',
+                'created' => $time,
+                'updated' => $time,
+              ])
+              ->execute();
+          }
+        }
+      }
+    }
+    
+    // Drop the old JSON column
+    $schema->dropField('nfr_questionnaire', 'other_employment_data');
+  }
+  
+  return t('Created nfr_other_employment table and migrated data from JSON.');
+}
+
+/**
+ * Add missing military service columns.
+ */
+function nfr_update_9008() {
+  $schema = \Drupal::database()->schema();
+  
+  // Add military_start_date
+  if (!$schema->fieldExists('nfr_questionnaire', 'military_start_date')) {
+    $schema->addField('nfr_questionnaire', 'military_start_date', [
+      'type' => 'varchar',
+      'mysql_type' => 'date',
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Add military_end_date
+  if (!$schema->fieldExists('nfr_questionnaire', 'military_end_date')) {
+    $schema->addField('nfr_questionnaire', 'military_end_date', [
+      'type' => 'varchar',
+      'mysql_type' => 'date',
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Add military_currently_serving
+  if (!$schema->fieldExists('nfr_questionnaire', 'military_currently_serving')) {
+    $schema->addField('nfr_questionnaire', 'military_currently_serving', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ]);
+  }
+  
+  // Add military_was_firefighter
+  if (!$schema->fieldExists('nfr_questionnaire', 'military_was_firefighter')) {
+    $schema->addField('nfr_questionnaire', 'military_was_firefighter', [
+      'type' => 'varchar',
+      'length' => 10,
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Add military_firefighting_duties
+  if (!$schema->fieldExists('nfr_questionnaire', 'military_firefighting_duties')) {
+    $schema->addField('nfr_questionnaire', 'military_firefighting_duties', [
+      'type' => 'text',
+      'not null' => FALSE,
+    ]);
+  }
+  
+  // Drop unused military_years column
+  if ($schema->fieldExists('nfr_questionnaire', 'military_years')) {
+    $schema->dropField('nfr_questionnaire', 'military_years');
+  }
+  
+  return t('Added missing military service columns and removed unused military_years column.');
+}
+
+/**
+ * Add last_section_completed column to track questionnaire progress.
+ */
+function nfr_update_9002() {
+  _nfr_ensure_update_base_tables();
+  $schema = \Drupal::database()->schema();
+  
+  if (!$schema->fieldExists('nfr_questionnaire', 'last_section_completed')) {
+    $schema->addField('nfr_questionnaire', 'last_section_completed', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Last section number completed (0-9)',
+    ]);
+  }
+  
+  return t('Added last_section_completed column to track questionnaire progress.');
+}
+
+/**
+ * Add missing demographics columns to nfr_questionnaire table.
+ */
+function nfr_update_9001() {
+  _nfr_ensure_update_base_tables();
+  $schema = \Drupal::database()->schema();
+  
+  // Add race_other column
+  if (!$schema->fieldExists('nfr_questionnaire', 'race_other')) {
+    $schema->addField('nfr_questionnaire', 'race_other', [
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => FALSE,
+      'description' => 'Other race/ethnicity specification',
+    ]);
+  }
+  
+  // Add education_level column
+  if (!$schema->fieldExists('nfr_questionnaire', 'education_level')) {
+    $schema->addField('nfr_questionnaire', 'education_level', [
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+      'description' => 'Highest education level completed',
+    ]);
+  }
+  
+  // Add marital_status column
+  if (!$schema->fieldExists('nfr_questionnaire', 'marital_status')) {
+    $schema->addField('nfr_questionnaire', 'marital_status', [
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+      'description' => 'Current marital status',
+    ]);
+  }
+  
+  return t('Added missing demographics columns to nfr_questionnaire table.');
+}
+
+/**
+ * Implements hook_schema().
+ */
+/**
+ * Implements hook_schema().
+ * 
+ * Returns empty array to orphan tables from Drupal's schema management.
+ * Tables are created in hook_install() and will persist across uninstall/reinstall.
+ * This prevents automatic table deletion during module uninstall.
+ */
+function nfr_schema() {
+  // Return empty schema - all tables are managed manually
+  // This prevents Drupal from dropping tables on module uninstall
+  return [];
+}
+
+/**
+ * Create validation test users and assign role permissions.
+ */
+function nfr_update_9015() {
+  // Assign permissions to roles
+  _nfr_assign_role_permissions();
+  
+  // Create validation test users
+  _nfr_create_validation_users();
+  
+  return t('Created validation test users and assigned role permissions.');
+}
+
+/**
+ * Fix validation user roles - ensure all validation users have correct roles assigned.
+ */
+function nfr_update_9016() {
+  $validation_users = [
+    2 => ['username' => 'firefighter_active', 'role' => 'firefighter'],
+    3 => ['username' => 'firefighter_retired', 'role' => 'firefighter'],
+    4 => ['username' => 'nfr_admin', 'role' => 'nfr_administrator'],
+    5 => ['username' => 'nfr_researcher', 'role' => 'nfr_researcher'],
+    6 => ['username' => 'dept_admin', 'role' => 'fire_dept_admin'],
+  ];
+  
+  $fixed = 0;
+  foreach ($validation_users as $uid => $user_data) {
+    $user = \Drupal\user\Entity\User::load($uid);
+    if ($user && !$user->hasRole($user_data['role'])) {
+      $user->addRole($user_data['role']);
+      $user->save();
+      $fixed++;
+      \Drupal::logger('nfr')->info('Fixed role for user @username (UID: @uid) - added @role', [
+        '@username' => $user->getAccountName(),
+        '@uid' => $uid,
+        '@role' => $user_data['role'],
+      ]);
+    }
+  }
+  
+  return t('Fixed roles for @count validation users.', ['@count' => $fixed]);
+}
+
+/**
+ * Recreate validation test users if they don't exist.
+ */
+function nfr_update_9017() {
+  _nfr_create_validation_users();
+  return t('Validation test users created/updated.');
+}
+
+/**
+ * Create NFR custom roles if they don't exist.
+ */
+function nfr_update_9018() {
+  $roles = [
+    'firefighter' => [
+      'label' => 'Firefighter',
+      'weight' => 3,
+    ],
+    'fire_dept_admin' => [
+      'label' => 'Fire Department Administrator',
+      'weight' => 4,
+    ],
+    'nfr_researcher' => [
+      'label' => 'NFR Researcher',
+      'weight' => 5,
+    ],
+    'nfr_administrator' => [
+      'label' => 'NFR Administrator',
+      'weight' => 6,
+    ],
+  ];
+  
+  $created = 0;
+  foreach ($roles as $role_id => $role_info) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      $role = \Drupal\user\Entity\Role::create([
+        'id' => $role_id,
+        'label' => $role_info['label'],
+        'weight' => $role_info['weight'],
+      ]);
+      $role->save();
+      $created++;
+      \Drupal::logger('nfr')->info('Created role: @label (@id)', [
+        '@label' => $role_info['label'],
+        '@id' => $role_id,
+      ]);
+    }
+  }
+  
+  // Assign permissions to roles
+  _nfr_assign_role_permissions();
+  
+  return t('Created @count NFR roles and assigned permissions.', ['@count' => $created]);
+}
+
+/**
+ * Recreate validation test users after roles are created.
+ */
+function nfr_update_9019() {
+  _nfr_create_validation_users();
+  return t('Validation test users created/updated.');
+}
+
+/**
+ * Update validation users to follow test naming patterns.
+ */
+function nfr_update_9020() {
+  $old_usernames = [
+    'firefighter_active',
+    'firefighter_retired', 
+    'nfr_admin',
+    'nfr_researcher',
+    'dept_admin',
+    'firefighter',
+    'fire_department_admin',
+  ];
+  
+  $deleted = 0;
+  
+  // Delete old validation users
+  foreach ($old_usernames as $username) {
+    $users = \Drupal::entityTypeManager()
+      ->getStorage('user')
+      ->loadByProperties(['name' => $username]);
+    
+    if (!empty($users)) {
+      foreach ($users as $user) {
+        if ($user->id() > 1) { // Never delete admin
+          $user->delete();
+          $deleted++;
+          \Drupal::logger('nfr')->info('Deleted old validation user: @username', ['@username' => $username]);
+        }
+      }
+    }
+  }
+  
+  // Create new validation users with test naming pattern
+  _nfr_create_validation_users();
+  
+  return t('Deleted @count old validation users and created new test-pattern users.', ['@count' => $deleted]);
+}
+
+/**
+ * Add missing PPE scenario fields for CDC compliance.
+ */
+function nfr_update_9021() {
+  $schema = \Drupal::database()->schema();
+  $table = 'nfr_questionnaire';
+  
+  $new_columns = [
+    'ppe_scba_interior_attack' => [
+      'description' => 'SCBA use during interior structural attack',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_scba_exterior_attack' => [
+      'description' => 'SCBA use during exterior structural attack',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_respirator_vehicle_fires' => [
+      'description' => 'SCBA/respirator use during vehicle fires',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_respirator_brush_fires' => [
+      'description' => 'Respirator use during brush/vegetation fires',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_respirator_wildland' => [
+      'description' => 'Respirator use during wildland suppression',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_respirator_investigations' => [
+      'description' => 'Respirator use during fire investigations',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'ppe_respirator_wui' => [
+      'description' => 'Respirator use during WUI fires',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+  ];
+  
+  $added = 0;
+  foreach ($new_columns as $column_name => $spec) {
+    if (!$schema->fieldExists($table, $column_name)) {
+      $schema->addField($table, $column_name, $spec);
+      $added++;
+    }
+  }
+  
+  return t('Added @count PPE scenario columns to nfr_questionnaire table.', ['@count' => $added]);
+}
+
+/**
+ * Add "always done this" checkboxes for PPE equipment.
+ */
+function nfr_update_9022() {
+  $schema = \Drupal::database()->schema();
+  $table = 'nfr_questionnaire';
+  
+  $ppe_types = ['scba', 'turnout_coat', 'turnout_pants', 'gloves', 'helmet', 'boots', 'nomex_hood', 'wildland_clothing'];
+  
+  $added = 0;
+  foreach ($ppe_types as $type) {
+    $column_name = 'ppe_' . $type . '_always_used';
+    if (!$schema->fieldExists($table, $column_name)) {
+      $schema->addField($table, $column_name, [
+        'description' => 'Always used ' . $type . ' (from start of career)',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => FALSE,
+      ]);
+      $added++;
+    }
+  }
+  
+  return t('Added @count "always done this" PPE columns to nfr_questionnaire table.', ['@count' => $added]);
+}
+
+/**
+ * Create family cancer history table for CDC compliance.
+ */
+function nfr_update_9023() {
+  $schema = \Drupal::database()->schema();
+  
+  if (!$schema->tableExists('nfr_family_cancer_history')) {
+    $table_schema = [
+      'description' => 'Stores family cancer history for NFR participants',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+          'description' => 'Primary Key',
+        ],
+        'uid' => [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'description' => 'User ID',
+        ],
+        'relationship' => [
+          'type' => 'varchar',
+          'length' => 50,
+          'not null' => TRUE,
+          'description' => 'Family relationship (mother, father, sibling, etc)',
+        ],
+        'cancer_type' => [
+          'type' => 'varchar',
+          'length' => 100,
+          'not null' => TRUE,
+          'description' => 'Type of cancer',
+        ],
+        'age_at_diagnosis' => [
+          'type' => 'int',
+          'not null' => FALSE,
+          'description' => 'Age when diagnosed (if known)',
+        ],
+        'created' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Unix timestamp when created',
+        ],
+        'updated' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Unix timestamp when updated',
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid' => ['uid'],
+      ],
+    ];
+    
+    $schema->createTable('nfr_family_cancer_history', $table_schema);
+    return t('Created nfr_family_cancer_history table.');
+  }
+  
+  return t('Table nfr_family_cancer_history already exists.');
+}
+
+/**
+ * Add sleep tracking fields for CDC compliance.
+ */
+function nfr_update_9024() {
+  $schema = \Drupal::database()->schema();
+  $table = 'nfr_questionnaire';
+  
+  $sleep_columns = [
+    'sleep_hours_per_night' => [
+      'description' => 'Average hours of sleep per night',
+      'type' => 'float',
+      'not null' => FALSE,
+    ],
+    'sleep_quality' => [
+      'description' => 'Sleep quality rating',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => FALSE,
+    ],
+    'sleep_disorders' => [
+      'description' => 'Sleep disorders (JSON array)',
+      'type' => 'text',
+      'size' => 'normal',
+      'not null' => FALSE,
+    ],
+  ];
+  
+  $added = 0;
+  foreach ($sleep_columns as $column_name => $spec) {
+    if (!$schema->fieldExists($table, $column_name)) {
+      $schema->addField($table, $column_name, $spec);
+      $added++;
+    }
+  }
+  
+  return t('Added @count sleep tracking columns to nfr_questionnaire table.', ['@count' => $added]);
+}
+/**
+ * Create nfr_correlation_analysis table for statistical analysis.
+ */
+function nfr_update_9025() {
+  $schema = \Drupal::database()->schema();
+  
+  if ($schema->tableExists('nfr_correlation_analysis')) {
+    return t('Table nfr_correlation_analysis already exists.');
+  }
+  
+  $table_schema = [
+    'description' => 'Denormalized correlation analysis table aggregating all NFR data for statistical analysis',
+    'fields' => [
+      // System fields
+      'id' => [
+        'description' => 'Primary Key',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'description' => 'User ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'participant_id' => [
+        'description' => 'NFR Participant ID',
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => FALSE,
+      ],
+      'data_snapshot_date' => [
+        'description' => 'When this data was last updated',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'questionnaire_complete' => [
+        'description' => 'Whether questionnaire is complete',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      
+      // Demographics
+      'age_at_enrollment' => [
+        'type' => 'int',
+        'not null' => FALSE,
+      ],
+      'sex' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+      ],
+      'date_of_birth' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+      ],
+      'country_of_birth' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'state_of_birth' => [
+        'type' => 'varchar',
+        'length' => 2,
+        'not null' => FALSE,
+      ],
+      
+      // Race/Ethnicity (expanded from JSON)
+      'race_american_indian' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_asian' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_black' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_hispanic' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_middle_eastern' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_pacific_islander' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_white' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'race_other' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      
+      // Socioeconomic
+      'education_level' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      'marital_status' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      
+      // Anthropometric & Health
+      'height_inches' => ['type' => 'int', 'not null' => FALSE],
+      'weight_pounds' => ['type' => 'int', 'not null' => FALSE],
+      'bmi' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      'bmi_category' => ['type' => 'varchar', 'length' => 20, 'not null' => FALSE],
+      'smoking_status' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      'smoking_years' => ['type' => 'int', 'not null' => FALSE],
+      'alcohol_frequency' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      'exercise_frequency' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      'diet_quality' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      'sleep_hours_avg' => ['type' => 'numeric', 'precision' => 3, 'scale' => 1, 'not null' => FALSE],
+      
+      // Work History Aggregates
+      'total_fire_departments' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_years_service' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      'currently_active' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'year_first_firefighter' => ['type' => 'int', 'not null' => FALSE],
+      'years_career' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'years_volunteer' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'years_paid_on_call' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'years_seasonal' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'years_wildland' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'years_military' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => 0],
+      'highest_rank' => ['type' => 'varchar', 'length' => 100, 'not null' => FALSE],
+      'held_leadership_role' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'responded_to_incidents' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'total_incident_years' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      'num_states_worked' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'primary_work_state' => ['type' => 'varchar', 'length' => 2, 'not null' => FALSE],
+      'years_since_retirement' => ['type' => 'int', 'not null' => FALSE],
+      
+      // Incident Exposure Metrics (40 fields - structure fires)
+      'total_structure_residential_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_structure_commercial_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_structure_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_structure_fires_per_year' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2, 'not null' => FALSE],
+      'years_high_structure_exposure' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      
+      // Vehicle fires
+      'total_vehicle_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_vehicle_fires_per_year' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2, 'not null' => FALSE],
+      
+      // Wildland fires
+      'total_wildland_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_wildland_fires_per_year' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2, 'not null' => FALSE],
+      'years_wildland_service' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      
+      // Hazmat
+      'total_hazmat_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_hazmat_per_year' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2, 'not null' => FALSE],
+      
+      // Training fires
+      'total_training_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_training_fires_per_year' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2, 'not null' => FALSE],
+      
+      // Other incident types
+      'total_rubbish_fires' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_medical_ems_calls' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_technical_rescue' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_arff_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_marine_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_prescribed_burns' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_other_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'total_all_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'avg_all_incidents_per_year' => ['type' => 'numeric', 'precision' => 7, 'scale' => 2, 'not null' => FALSE],
+      'incident_diversity_score' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'primary_incident_type' => ['type' => 'varchar', 'length' => 50, 'not null' => FALSE],
+      
+      // Major incidents
+      'num_major_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'num_traumatic_incidents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      
+      // Health Outcomes
+      'has_cancer_diagnosis' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'num_cancer_diagnoses' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'age_first_cancer_diagnosis' => ['type' => 'int', 'not null' => FALSE],
+      'years_service_before_first_cancer' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      'earliest_cancer_type' => ['type' => 'varchar', 'length' => 100, 'not null' => FALSE],
+      
+      // Specific cancer flags
+      'has_lung_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_colorectal_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_prostate_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_breast_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_bladder_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_kidney_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_skin_cancer' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_leukemia' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_lymphoma' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_mesothelioma' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      
+      // Family cancer history
+      'family_cancer_count' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'family_cancer_parents' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'family_cancer_siblings' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      
+      // Temporal tracking
+      'enrollment_date' => ['type' => 'varchar', 'length' => 10, 'not null' => FALSE],
+      'years_since_enrollment' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      'data_completeness_percentage' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => FALSE],
+      
+      // Data quality
+      'data_quality_score' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'has_complete_work_history' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_complete_incident_data' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'has_complete_health_data' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'exclude_from_analysis' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'uid' => ['uid'],
+    ],
+    'indexes' => [
+      'has_cancer_diagnosis' => ['has_cancer_diagnosis'],
+      'total_years_service' => ['total_years_service'],
+      'age_first_cancer_diagnosis' => ['age_first_cancer_diagnosis'],
+      'total_structure_fires' => ['total_structure_fires'],
+      'data_quality_score' => ['data_quality_score'],
+    ],
+  ];
+  
+  $schema->createTable('nfr_correlation_analysis', $table_schema);
+  return t('Created nfr_correlation_analysis table with 100+ fields for statistical analysis.');
+}
+
+/**
+ * Create missing nfr_user_profile table.
+ *
+ * The table was referenced throughout NFRAdminController but was never
+ * included in any create statement. This adds the missing schema.
+ */
+function nfr_update_9026() {
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('nfr_user_profile')) {
+    return t('Table nfr_user_profile already exists.');
+  }
+
+  $schema->createTable('nfr_user_profile', [
+    'description' => 'NFR participant profile data keyed to Drupal users.',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary key.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'description' => 'Drupal user ID (foreign key to users).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'participant_id' => [
+        'description' => 'NFR participant identifier.',
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => FALSE,
+      ],
+      'first_name' => [
+        'description' => 'Participant first name.',
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'last_name' => [
+        'description' => 'Participant last name.',
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'state' => [
+        'description' => 'US state abbreviation.',
+        'type' => 'varchar',
+        'length' => 2,
+        'not null' => FALSE,
+      ],
+      'profile_completed' => [
+        'description' => 'Whether the profile is marked complete (0/1).',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'description' => 'Unix timestamp when the profile was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'description' => 'Unix timestamp when the profile was last updated.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'uid' => ['uid'],
+      'participant_id' => ['participant_id'],
+    ],
+    'indexes' => [
+      'state' => ['state'],
+      'profile_completed' => ['profile_completed'],
+      'created' => ['created'],
+    ],
+  ]);
+
+  return t('Created missing nfr_user_profile table.');
+}

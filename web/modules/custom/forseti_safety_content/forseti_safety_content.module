@@ -1,0 +1,327 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Forseti Safety Content module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function forseti_safety_content_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.forseti_safety_content':
+      return '<p>' . t('Forseti Safety Content provides the main pages and content for the Forseti Life website.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function forseti_safety_content_theme($existing, $type, $theme, $path) {
+  return [
+    'forseti_footer_block' => [
+      'variables' => [
+        'menu_items' => [],
+        'current_year' => NULL,
+      ],
+    ],
+    'forseti_page_about' => [
+      'variables' => [
+        'title' => NULL,
+        'lead' => NULL,
+        'mission' => [],
+        'core_values' => [],
+        'philly_focus' => [],
+        'cta' => [],
+      ],
+      'template' => 'forseti-page-about',
+    ],
+    'forseti_page_how_it_works' => [
+      'variables' => [
+        'title' => NULL,
+        'simple_answer' => NULL,
+        'subtitle' => NULL,
+        'steps' => [],
+        'privacy_security' => [],
+        'cta_buttons' => [],
+      ],
+      'template' => 'forseti-page-how-it-works',
+    ],
+    'forseti_page_community' => [
+      'variables' => [
+        'title' => NULL,
+        'subtitle' => NULL,
+        'why_join_title' => NULL,
+        'benefits' => [],
+        'how_to_title' => NULL,
+        'steps' => [],
+      ],
+      'template' => 'forseti-page-community',
+    ],
+    'forseti_page_mobile_app' => [
+      'variables' => [
+        'title' => NULL,
+        'subtitle' => NULL,
+        'beta_alert' => [],
+        'intro' => [],
+        'app_display' => [],
+        'features_title' => NULL,
+        'features' => [],
+        'cta' => [],
+      ],
+      'template' => 'forseti-page-mobile-app',
+    ],
+    'forseti_page_mobile_app_beta' => [
+      'variables' => [
+        'title' => NULL,
+        'subtitle' => NULL,
+        'download_section' => [],
+      ],
+      'template' => 'forseti-page-mobile-app-beta',
+    ],
+    'forseti_page_privacy' => [
+      'variables' => [
+        'title' => NULL,
+        'commitment' => [],
+        'data_collection' => [],
+        'data_usage' => [],
+        'never_do' => [],
+        'security_measures' => [],
+        'rights' => [],
+        'anonymous_reporting' => [],
+        'contact_cta' => [],
+        'last_updated' => NULL,
+      ],
+      'template' => 'forseti-page-privacy',
+    ],
+    'forseti_page_legal' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'sections' => [],
+        'last_updated' => NULL,
+      ],
+      'template' => 'forseti-page-legal',
+    ],
+    'forseti_page_terms' => [
+      'variables' => [
+        'title' => NULL,
+        'effective_date' => NULL,
+        'acceptance' => [],
+        'sections' => [],
+        'contact' => NULL,
+      ],
+      'template' => 'forseti-page-terms',
+    ],
+    'forseti_page_disclaimer' => [
+      'variables' => [
+        'title' => NULL,
+        'warnings' => [],
+        'no_guarantees' => [],
+        'user_responsibility' => [],
+        'liability_limitation' => [],
+      ],
+      'template' => 'forseti-page-disclaimer',
+    ],
+    'forseti_page_cookie_policy' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'what_are_cookies' => [],
+        'cookies_we_use' => [],
+        'managing_cookies' => [],
+        'third_party' => [],
+      ],
+      'template' => 'forseti-page-cookie-policy',
+    ],
+    'forseti_page_accessibility' => [
+      'variables' => [
+        'title' => NULL,
+        'commitment' => [],
+        'standards' => [],
+        'features' => [],
+        'limitations' => [],
+        'feedback' => [],
+        'assistive_tech' => [],
+      ],
+      'template' => 'forseti-page-accessibility',
+    ],
+    'forseti_page_data_usage' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'data_sources' => [],
+        'how_we_use' => [],
+        'data_retention' => [],
+        'data_sharing' => [],
+        'your_control' => [],
+      ],
+      'template' => 'forseti-page-data-usage',
+    ],
+    'forseti_page_ai_terms' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'ai_capabilities' => [],
+        'limitations' => [],
+        'conversation_guidelines' => [],
+        'data_usage' => [],
+        'intellectual_property' => [],
+        'human_oversight' => [],
+      ],
+      'template' => 'forseti-page-ai-terms',
+    ],
+    'forseti_page_mobile_app_terms' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'license' => [],
+        'permissions' => [],
+        'platform_specific' => [],
+        'background_location' => [],
+        'updates' => [],
+        'termination' => [],
+      ],
+      'template' => 'forseti-page-mobile-app-terms',
+    ],
+    'forseti_page_api_terms' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'access' => [],
+        'acceptable_use' => [],
+        'rate_limits' => [],
+        'authentication' => [],
+        'data_attribution' => [],
+        'liability' => [],
+        'termination' => [],
+      ],
+      'template' => 'forseti-page-api-terms',
+    ],
+    'forseti_page_community_guidelines' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'core_values' => [],
+        'expected_behavior' => [],
+        'prohibited_behavior' => [],
+        'reporting_incidents' => [],
+        'consequences' => [],
+        'reporting_violations' => [],
+      ],
+      'template' => 'forseti-page-community-guidelines',
+    ],
+    'forseti_page_copyright' => [
+      'variables' => [
+        'title' => NULL,
+        'copyright_notice' => [],
+        'ownership' => [],
+        'fair_use' => [],
+        'dmca_policy' => [],
+        'dmca_contact' => [],
+        'counter_notice' => [],
+        'repeat_infringers' => [],
+        'trademark' => [],
+      ],
+      'template' => 'forseti-page-copyright',
+    ],
+    'forseti_page_contact_thank_you' => [
+      'variables' => [
+        'title' => NULL,
+        'message' => [],
+        'what_next' => [],
+        'quick_links' => [],
+      ],
+      'template' => 'forseti-page-contact-thank-you',
+    ],
+    'forseti_page_safety_factors' => [
+      'variables' => [
+        'title' => NULL,
+        'lead' => NULL,
+        'assessment_alert' => [],
+        'dimensions_title' => NULL,
+        'dimensions_intro' => NULL,
+        'dimensions' => [],
+        'how_forseti_uses' => [],
+        'cta_buttons' => [],
+      ],
+      'template' => 'forseti-page-safety-factors',
+    ],
+    'forseti_page_agent_hierarchy' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => [],
+        'power_categories' => [],
+        'power_levels' => [],
+        'dimension_info' => [],
+        'transparency_note' => NULL,
+      ],
+      'template' => 'forseti-page-agent-hierarchy',
+    ],
+    'forseti_us_government_power' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => [],
+        'branches' => [],
+      ],
+      'template' => 'forseti-us-government-power',
+    ],
+    'forseti_page_agent_evaluate' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => [],
+        'entity_name' => NULL,
+      ],
+      'template' => 'forseti-page-agent-evaluate',
+    ],
+    'forseti_page_dimension' => [
+      'variables' => [
+        'dimension_id' => NULL,
+        'dimension_name' => NULL,
+        'dimension_description' => NULL,
+        'levels' => [],
+        'back_link' => NULL,
+      ],
+      'template' => 'forseti-page-dimension',
+    ],
+    'forseti_evaluation_matrix' => [
+      'variables' => [
+        'dimensions' => [],
+        'entities' => [],
+      ],
+      'template' => 'forseti-evaluation-matrix',
+    ],
+    'forseti_page_all_dimensions' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'all_dimensions' => [],
+        'total_count' => NULL,
+      ],
+      'template' => 'forseti-page-all-dimensions',
+    ],
+    'forseti_evaluations_list' => [
+      'variables' => [
+        'title' => NULL,
+        'intro' => NULL,
+        'categories' => [],
+        'category_counts' => [],
+        'entities_data' => [],
+        'sort_field' => NULL,
+        'sort_direction' => NULL,
+        'category_sort' => NULL,
+        'category_order' => NULL,
+      ],
+      'template' => 'forseti-evaluations-list',
+    ],
+    'forseti_example_entities' => [
+      'variables' => [
+        'entities' => [],
+      ],
+      'template' => 'forseti-example-entities',
+    ],
+  ];
+}

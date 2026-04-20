@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Theme override for the footer region.
+ *
+ * Available variables:
+ * - content: The content for this region, typically blocks.
+ * - attributes: HTML attributes for the region <div>.
+ * - region: The name of the region variable as defined in the theme's
+ *   .info.yml file.
+ */
+#}
+{% if content %}
+  <footer{{ attributes.addClass('footer', 'site-footer') }} role="contentinfo">
+    <div class="container">
+      {{ content }}
+    </div>
+  </footer>
+{% endif %}

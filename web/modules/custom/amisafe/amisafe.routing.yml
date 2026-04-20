@@ -1,0 +1,235 @@
+amisafe.dashboard:
+  path: '/amisafe'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\CrimeMapController::map'
+    _title: ''
+  requirements:
+    _permission: 'access content'
+
+# Dashboard route removed - /amisafe now directly shows crime map
+
+# Crime map route (now also accessible at /amisafe/crime-map)
+amisafe.crime_map:
+  path: '/amisafe/crime-map'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\CrimeMapController::map'
+    _title: ''
+  requirements:
+    _permission: 'access content'
+
+# API routes for AJAX data access
+amisafe.api.incidents:
+  path: '/api/amisafe/incidents'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::incidents'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.aggregated:
+  path: '/api/amisafe/aggregated'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::aggregated'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.hotspots:
+  path: '/api/amisafe/hotspots'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::hotspots'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.ultra_precision:
+  path: '/api/amisafe/ultra-precision'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::ultraPrecision'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.system_stats:
+  path: '/api/amisafe/system-stats'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::systemStats'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET'
+
+amisafe.api.districts:
+  path: '/api/amisafe/districts'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::districts'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+# Configuration form for Resolution 13 ultra-precision settings
+amisafe.config:
+  path: '/admin/config/services/amisafe'
+  defaults:
+    _form: '\Drupal\amisafe\Form\AmISafeConfigForm'
+    _title: 'AmISafe Configuration'
+  requirements:
+    _permission: 'administer site configuration'
+
+amisafe.api.crime_types:
+  path: '/api/amisafe/crime-types'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::crimeTypes'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.date_range:
+  path: '/api/amisafe/date-range'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::dateRange'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+# User location tracking endpoints
+amisafe.api.location.update:
+  path: '/api/amisafe/location/update'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::locationUpdate'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _method: 'POST'
+
+amisafe.api.location.history:
+  path: '/api/amisafe/location/history'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::locationHistory'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _method: 'GET'
+
+amisafe.api.citywide_stats:
+  path: '/api/amisafe/citywide-stats'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::citywideStats'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET'
+
+amisafe.api.hexagon_details:
+  path: '/api/amisafe/hexagon/{h3_index}'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::hexagonDetails'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+amisafe.api.hexagon_incidents:
+  path: '/api/amisafe/hexagon/{h3_index}/incidents'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::hexagonIncidents'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET|POST'
+
+# Debug route for API testing
+amisafe.api.debug:
+  path: '/api/amisafe/debug'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::debugTest'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+    _method: 'GET'
+
+# Test route for debugging
+amisafe.test:
+  path: '/amisafe/test'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\TestController::test'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+
+# Mobile app authentication API routes
+amisafe.api.user_register:
+  path: '/api/amisafe/user/register'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::userRegister'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
+    _method: 'POST'
+  options:
+    no_cache: 'TRUE'
+
+amisafe.api.user_login:
+  path: '/api/amisafe/user/login'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\ApiController::userLogin'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
+    _method: 'POST'
+  options:
+    no_cache: 'TRUE'
+
+# Admin configuration route
+amisafe.admin_form:
+  path: '/admin/config/amisafe'
+  defaults:
+    _form: '\Drupal\amisafe\Form\AmISafeSettingsForm'
+    _title: 'AmISafe Configuration'
+  requirements:
+    _permission: 'administer site configuration'
+
+# Log Management Routes
+amisafe.log_management:
+  path: '/admin/amisafe/logs'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\LogManagementController::logManagementPage'
+    _title: 'User Console Logs'
+  requirements:
+    _permission: 'administer site configuration'
+
+amisafe.api.log_upload:
+  path: '/api/amisafe/log/upload'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\LogManagementController::uploadLog'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
+    _method: 'POST'
+  options:
+    no_cache: 'TRUE'
+
+amisafe.api.log_get:
+  path: '/api/amisafe/log/{log_id}'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\LogManagementController::getLog'
+    _format: 'json'
+  requirements:
+    _permission: 'administer site configuration'
+    _method: 'GET'
+
+amisafe.api.log_delete:
+  path: '/api/amisafe/log/{log_id}/delete'
+  defaults:
+    _controller: '\Drupal\amisafe\Controller\LogManagementController::deleteLog'
+    _format: 'json'
+  requirements:
+    _permission: 'administer site configuration'
+    _method: 'POST'

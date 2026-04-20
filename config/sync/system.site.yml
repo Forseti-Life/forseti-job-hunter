@@ -1,0 +1,13 @@
+_core:
+  default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
+langcode: en
+uuid: 3830d14d-3f49-456c-9afa-6b834d0ee076
+name: Forseti
+mail: admin@example.com
+slogan: ''
+page:
+  front: /home
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: null

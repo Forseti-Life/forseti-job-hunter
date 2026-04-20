@@ -1,0 +1,633 @@
+nfr.dashboard:
+  path: '/nfr/dashboard'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRController::dashboard'
+    _title: 'NFR Dashboard'
+  requirements:
+    _permission: 'access nfr dashboard'
+
+nfr.admin_config:
+  path: '/admin/config/nfr/settings'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRSettingsForm'
+    _title: 'NFR Settings'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.firefighter_list:
+  path: '/nfr/firefighters'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRController::firefighterList'
+    _title: 'Firefighter Registry'
+  requirements:
+    _permission: 'access nfr dashboard'
+
+nfr.registration_form:
+  path: '/nfr/register-old'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRRegistrationForm'
+    _title: 'NFR Registration (Old)'
+  requirements:
+    _permission: 'access content'
+
+nfr.data_dashboard:
+  path: '/nfr/data-dashboard'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRController::dataDashboard'
+    _title: 'NFR Data Dashboard'
+  requirements:
+    _permission: 'access nfr dashboard'
+
+nfr.cancer_data:
+  path: '/nfr/cancer-data'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRController::cancerData'
+    _title: 'Cancer Data'
+  requirements:
+    _permission: 'access nfr dashboard'
+
+nfr.documentation:
+  path: '/nfr/documentation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::index'
+    _title: 'NFR Documentation'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.business_requirements:
+  path: '/nfr/documentation/business-requirements'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::businessRequirements'
+    _title: 'Business Requirements'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.user_roles:
+  path: '/nfr/documentation/user-roles'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::userRoles'
+    _title: 'User Roles & Process Flows'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.page_specs:
+  path: '/nfr/documentation/page-specifications'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::pageSpecifications'
+    _title: 'Page Specifications'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.protocol:
+  path: '/nfr/documentation/protocol'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::protocol'
+    _title: 'NFR Protocol (CDC)'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.user_profile:
+  path: '/nfr/documentation/user-profile'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::userProfile'
+    _title: 'User Profile Form (CDC)'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.questionnaire:
+  path: '/nfr/documentation/questionnaire'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::questionnaire'
+    _title: 'Enrollment Questionnaire (CDC)'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.architecture:
+  path: '/nfr/documentation/architecture'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::architecture'
+    _title: 'System Architecture'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.installation:
+  path: '/nfr/documentation/installation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::installation'
+    _title: 'Installation Guide'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.compliance:
+  path: '/nfr/documentation/drupal11-compliance'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::compliance'
+    _title: 'Drupal 11 Compliance'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.module_completion:
+  path: '/nfr/documentation/module-completion'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::moduleCompletion'
+    _title: 'Module Completion Summary'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.questionnaire_implementation:
+  path: '/nfr/documentation/questionnaire-implementation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::questionnaireImplementation'
+    _title: 'Questionnaire Implementation'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.test_credentials:
+  path: '/nfr/documentation/test-credentials'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::testCredentials'
+    _title: 'Test User Credentials'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.process_flow_relationships:
+  path: '/nfr/documentation/process-flow-relationships'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::processFlowRelationships'
+    _title: 'Process Flow Relationships'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.reporting:
+  path: '/nfr/documentation/reporting'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::reporting'
+    _title: 'Reporting & Analytics'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.correlation_analysis:
+  path: '/nfr/documentation/reporting/correlation-analysis'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::correlationAnalysis'
+    _title: 'Correlation Analysis Table Design'
+  requirements:
+    _permission: 'access content'
+
+nfr.documentation.correlation_analysis_guide:
+  path: '/nfr/documentation/reporting/correlation-analysis-guide'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDocumentationController::correlationAnalysisGuide'
+    _title: 'Correlation Analysis User Guide'
+  requirements:
+    _permission: 'access content'
+
+# Public Pages
+# Note: Most public content pages should be created as Drupal Basic Page nodes
+# and accessed via their aliases (e.g., /nfr/about, /nfr/how-it-works, etc.)
+# Use Path module to set URL aliases like /nfr/about
+# Only custom functionality pages need custom routes below:
+
+nfr.faq:
+  path: '/nfr/faq'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRPublicController::faq'
+    _title: 'Frequently Asked Questions'
+  requirements:
+    _permission: 'access content'
+
+nfr.contact:
+  path: '/nfr/contact'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRPublicController::contact'
+    _title: 'Contact Us'
+  requirements:
+    _permission: 'access content'
+
+nfr.home:
+  path: '/nfr'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRPublicController::home'
+    _title: 'National Firefighter Registry'
+  requirements:
+    _permission: 'access content'
+
+nfr.welcome:
+  path: '/nfr/welcome'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFREnrollmentController::welcome'
+    _title: 'Welcome to NFR'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.validation:
+  path: '/admin/nfr/validation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::validationDashboard'
+    _title: 'NFR Validation Dashboard'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.validation.test_route:
+  path: '/admin/nfr/validation/test-route'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testRoute'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.test_questionnaire:
+  path: '/admin/nfr/validation/test-questionnaire'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testQuestionnaireFlow'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.verify_database:
+  path: '/admin/nfr/validation/verify-database'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::verifyQuestionnaireDatabase'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.clear_test_data:
+  path: '/admin/nfr/validation/clear-test-data'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::clearTestData'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.test_full_enrollment:
+  path: '/admin/nfr/validation/test-full-enrollment'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testFullEnrollmentFlow'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.test_max_values:
+  path: '/admin/nfr/validation/test-max-values'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testMaxValuesFlow'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.test_min_values:
+  path: '/admin/nfr/validation/test-min-values'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testMinValuesFlow'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.test_yes_minimal:
+  path: '/admin/nfr/validation/test-yes-minimal'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::testYesMinimalFlow'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.check_error_logs:
+  path: '/admin/nfr/validation/check-error-logs'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::checkErrorLogsEndpoint'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.create_test_users:
+  path: '/admin/nfr/validation/create-test-users'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::createTestUsers'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.get_user_counts:
+  path: '/admin/nfr/validation/get-user-counts'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::getUserCounts'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.delete_test_users:
+  path: '/admin/nfr/validation/delete-test-users'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::deleteTestUsers'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.submit_all_firefighters:
+  path: '/admin/nfr/validation/submit-all-firefighters'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::submitAllFirefighterQuestionnaires'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+nfr.validation.fill_rates:
+  path: '/admin/nfr/validation/fill-rates'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::getFillRates'
+    _title: 'NFR Questionnaire Fill Rates'
+  requirements:
+    _permission: 'administer nfr'
+  options:
+    no_cache: TRUE
+
+# Redirect old path to new admin location
+nfr.validation.fill_rates_redirect:
+  path: '/nfr/validation/fill-rates'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRValidationController::fillRatesRedirect'
+    _title: 'NFR Questionnaire Fill Rates'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.public_data:
+  path: '/nfr/data'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRPublicController::publicData'
+    _title: 'Public Statistics'
+  requirements:
+    _permission: 'access content'
+
+# Enrollment/Registration Pages
+# Registration uses standard Drupal user registration at /user/register
+# NFR-specific fields added via user profile fields
+# Email verification handled by Drupal core
+# Login at /user/login, Password reset at /user/password
+
+nfr.consent:
+  path: '/nfr/consent'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRConsentForm'
+    _title: 'Informed Consent'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.user_profile:
+  path: '/nfr/profile'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRUserProfileForm'
+    _title: 'User Profile'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.my_profile:
+  path: '/nfr/my-profile'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRUserProfileForm'
+    _title: 'My Profile'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.user_settings:
+  path: '/nfr/settings'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRUserSettingsForm'
+    _title: 'Account Settings'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.enrollment_questionnaire:
+  path: '/nfr/questionnaire'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFREnrollmentController::questionnaireRedirect'
+    _title: 'Enrollment Questionnaire'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section1:
+  path: '/nfr/questionnaire/section/1'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection1Form'
+    _title: 'Section 1: Demographics'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section2:
+  path: '/nfr/questionnaire/section/2'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection2Form'
+    _title: 'Section 2: Work History'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section3:
+  path: '/nfr/questionnaire/section/3'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection3Form'
+    _title: 'Section 3: Exposure Information'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section4:
+  path: '/nfr/questionnaire/section/4'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection4Form'
+    _title: 'Section 4: Military Service'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section5:
+  path: '/nfr/questionnaire/section/5'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection5Form'
+    _title: 'Section 5: Other Employment'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section6:
+  path: '/nfr/questionnaire/section/6'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection6Form'
+    _title: 'Section 6: PPE Practices'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section7:
+  path: '/nfr/questionnaire/section/7'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection7Form'
+    _title: 'Section 7: Decontamination'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section8:
+  path: '/nfr/questionnaire/section/8'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection8Form'
+    _title: 'Section 8: Health Information'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.questionnaire.section9:
+  path: '/nfr/questionnaire/section/9'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRQuestionnaireSection9Form'
+    _title: 'Section 9: Lifestyle Factors'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.review_submit:
+  path: '/nfr/review'
+  defaults:
+    _form: '\Drupal\nfr\Form\NFRReviewSubmitForm'
+    _title: 'Review & Submit'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.confirmation:
+  path: '/nfr/confirmation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFREnrollmentController::confirmation'
+    _title: 'Enrollment Confirmation'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+# Participant Dashboard Pages
+# Note: Standard Drupal user profile available at /user/{uid}
+# Standard account settings at /user/{uid}/edit
+# Below are NFR-specific dashboard pages:
+
+nfr.my_dashboard:
+  path: '/nfr/my-dashboard'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDashboardController::myDashboard'
+    _title: 'My Dashboard'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+nfr.follow_up:
+  path: '/nfr/follow-up'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRDashboardController::followUp'
+    _title: 'Follow-Up Survey'
+  requirements:
+    _permission: 'access content'
+    _user_is_logged_in: 'TRUE'
+
+# Administrative Pages
+# Note: Participant list (/admin/nfr/participants) should be created as a View
+# with filters, sorting, and bulk operations instead of custom controller
+# Report Builder (/admin/nfr/reports) can use Views + Views Data Export module
+# User Issues queue could use existing support/ticketing modules
+
+nfr.admin_dashboard:
+  path: '/admin/nfr'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::adminDashboard'
+    _title: 'NFR Administration'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.admin_participants:
+  path: '/admin/nfr/participants'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::participantList'
+    _title: 'Participant Management'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_participant_detail:
+  path: '/admin/nfr/participant/{id}'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::participantDetail'
+    _title: 'Participant Details'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.admin_linkage:
+  path: '/admin/nfr/linkage'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::linkageManagement'
+    _title: 'Cancer Registry Linkage'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_data_quality:
+  path: '/admin/nfr/data-quality'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::dataQualityRedirect'
+    _title: 'Data Quality Monitor'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_reports:
+  path: '/admin/nfr/reports'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::reportBuilder'
+    _title: 'Reports & Analysis'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_reports_correlation:
+  path: '/admin/nfr/reports/correlation'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::correlationAnalysis'
+    _title: 'Correlation Analysis'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_reports_cluster:
+  path: '/admin/nfr/reports/cluster'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::clusterAnalysis'
+    _title: 'Cluster Analysis'
+  requirements:
+    _permission: 'view nfr reports'
+
+nfr.admin_issues:
+  path: '/admin/nfr/issues'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::userIssues'
+    _title: 'User Support Issues'
+  requirements:
+    _permission: 'administer nfr'
+
+nfr.admin_settings:
+  path: '/admin/nfr/settings'
+  defaults:
+    _controller: '\Drupal\nfr\Controller\NFRAdminController::systemSettings'
+    _title: 'System Settings'
+  requirements:
+    _permission: 'administer nfr'

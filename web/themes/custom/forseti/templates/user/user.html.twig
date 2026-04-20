@@ -1,0 +1,316 @@
+{#
+/**
+ * @file
+ * Theme override for a user profile.
+ *
+ * Available variables:
+ * - content: A list of content items. Use {{ content }} to print them all,
+ *   or print a subset such as {{ content.field_example }}. Use
+ *   {{ content|without('field_example') }} to temporarily suppress the 
+ *   printing of a given child element.
+ * - user: The user entity with limited access to object properties and methods.
+ */
+#}
+{{ attach_library('forseti/user_profile') }}
+{%
+  include 'radix:user' with {
+    content,
+    user,
+    attributes: attributes.addClass('professional-user-profile'),
+  }
+%}
+
+<div class="professional-user-profile">
+  <div class="container">
+    {# User Header Section #}
+    <div class="user-header-section">
+      <div class="row align-items-center">
+        {% if content.user_picture %}
+          <div class="col-md-3">
+            <div class="user-picture-wrapper">
+              {{ content.user_picture }}
+            </div>
+          </div>
+        {% endif %}
+        <div class="{{ content.user_picture ? 'col-md-9' : 'col-md-12' }}">
+          <h1 class="user-main-title">{{ user.getDisplayName() }}</h1>
+          <div class="user-meta-info">
+            {% if content.field_professional_summary %}
+              <div class="user-meta-item professional-summary">
+                <i class="fas fa-user-tie"></i>
+                <strong>Professional Summary:</strong>
+                {{ content.field_professional_summary }}
+              </div>
+            {% endif %}
+            {% if content.field_experience_years %}
+              <span class="user-meta-item">
+                <i class="fas fa-calendar-alt"></i>
+                {{ content.field_experience_years }} years experience
+              </span>
+            {% endif %}
+            {% if content.field_education_level %}
+              <span class="user-meta-item">
+                <i class="fas fa-graduation-cap"></i>
+                {{ content.field_education_level }}
+              </span>
+            {% endif %}
+            {% if content.field_work_authorization %}
+              <span class="user-meta-item">
+                <i class="fas fa-id-card"></i>
+                {{ content.field_work_authorization }}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Main Content Grid #}
+    <div class="row">
+      {# Left Column - Contact & Links #}
+      <div class="col-lg-4">
+        {# Contact Information Card #}
+        {% if content.field_linkedin_url or content.field_github_url or content.field_portfolio_url %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-link"></i>
+              Professional Links
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_linkedin_url %}
+                <div class="info-item">
+                  <i class="fab fa-linkedin"></i>
+                  <strong>LinkedIn:</strong>
+                  {{ content.field_linkedin_url }}
+                </div>
+              {% endif %}
+              {% if content.field_github_url %}
+                <div class="info-item">
+                  <i class="fab fa-github"></i>
+                  <strong>GitHub:</strong>
+                  {{ content.field_github_url }}
+                </div>
+              {% endif %}
+              {% if content.field_portfolio_url %}
+                <div class="info-item">
+                  <i class="fas fa-globe"></i>
+                  <strong>Portfolio:</strong>
+                  {{ content.field_portfolio_url }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Skills & Certifications Card #}
+        {% if content.field_skills_summary or content.field_certifications %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-cogs"></i>
+              Skills & Certifications
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_skills_summary %}
+                <div class="info-item">
+                  <i class="fas fa-tools"></i>
+                  <strong>Skills:</strong>
+                  {{ content.field_skills_summary }}
+                </div>
+              {% endif %}
+              {% if content.field_certifications %}
+                <div class="info-item">
+                  <i class="fas fa-certificate"></i>
+                  <strong>Certifications:</strong>
+                  {{ content.field_certifications }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Job Preferences Card #}
+        {% if content.field_target_job_titles or content.field_target_companies or content.field_remote_preference %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-bullseye"></i>
+              Job Preferences
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_target_job_titles %}
+                <div class="info-item">
+                  <i class="fas fa-briefcase"></i>
+                  <strong>Target Roles:</strong>
+                  {{ content.field_target_job_titles }}
+                </div>
+              {% endif %}
+              {% if content.field_target_companies %}
+                <div class="info-item">
+                  <i class="fas fa-building"></i>
+                  <strong>Target Companies:</strong>
+                  {{ content.field_target_companies }}
+                </div>
+              {% endif %}
+              {% if content.field_remote_preference %}
+                <div class="info-item">
+                  <i class="fas fa-home"></i>
+                  <strong>Remote Preference:</strong>
+                  {{ content.field_remote_preference }}
+                </div>
+              {% endif %}
+              {% if content.field_relocation_willing %}
+                <div class="info-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <strong>Willing to Relocate:</strong>
+                  {{ content.field_relocation_willing }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Right Column - Professional Details #}
+      <div class="col-lg-8">
+        {# Resume & Documents Card #}
+        {% if content.field_resume_file or content.field_cover_letter_template %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-file-alt"></i>
+              Documents
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_resume_file %}
+                <div class="info-item">
+                  <i class="fas fa-file-pdf"></i>
+                  <strong>Resume:</strong>
+                  {{ content.field_resume_file }}
+                </div>
+              {% endif %}
+              {% if content.field_cover_letter_template %}
+                <div class="info-item">
+                  <i class="fas fa-file-contract"></i>
+                  <strong>Cover Letter Template:</strong>
+                  {{ content.field_cover_letter_template }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Employment Details Card #}
+        {% if content.field_salary_expectation_min or content.field_salary_expectation_max or content.field_available_start_date %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-dollar-sign"></i>
+              Employment Details
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_salary_expectation_min or content.field_salary_expectation_max %}
+                <div class="info-item">
+                  <i class="fas fa-money-bill-wave"></i>
+                  <strong>Salary Expectation:</strong>
+                  {% if content.field_salary_expectation_min and content.field_salary_expectation_max %}
+                    {{ content.field_salary_expectation_min }} - {{ content.field_salary_expectation_max }}
+                  {% elseif content.field_salary_expectation_min %}
+                    From {{ content.field_salary_expectation_min }}
+                  {% elseif content.field_salary_expectation_max %}
+                    Up to {{ content.field_salary_expectation_max }}
+                  {% endif %}
+                </div>
+              {% endif %}
+              {% if content.field_available_start_date %}
+                <div class="info-item">
+                  <i class="fas fa-calendar-check"></i>
+                  <strong>Available Start Date:</strong>
+                  {{ content.field_available_start_date }}
+                </div>
+              {% endif %}
+              {% if content.field_references_available %}
+                <div class="info-item">
+                  <i class="fas fa-users"></i>
+                  <strong>References:</strong>
+                  {{ content.field_references_available }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Profile Statistics Card #}
+        {% if content.field_profile_completeness or content.field_last_profile_update %}
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-chart-line"></i>
+              Profile Statistics
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_profile_completeness %}
+                <div class="info-item">
+                  <i class="fas fa-percentage"></i>
+                  <strong>Profile Completeness:</strong>
+                  {{ content.field_profile_completeness }}
+                </div>
+              {% endif %}
+              {% if content.field_last_profile_update %}
+                <div class="info-item">
+                  <i class="fas fa-clock"></i>
+                  <strong>Last Updated:</strong>
+                  {{ content.field_last_profile_update }}
+                </div>
+              {% endif %}
+              {% if content.member_for %}
+                <div class="info-item">
+                  <i class="fas fa-user-clock"></i>
+                  <strong>Member For:</strong>
+                  {{ content.member_for }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Additional Information Section #}
+    {% if content.field_keywords_interested or content.field_notification_preferences %}
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="user-info-card">
+            <h3 class="card-title">
+              <i class="fas fa-info-circle"></i>
+              Additional Information
+            </h3>
+            <div class="user-info-content">
+              {% if content.field_keywords_interested %}
+                <div class="info-item">
+                  <i class="fas fa-tags"></i>
+                  <strong>Keywords of Interest:</strong>
+                  {{ content.field_keywords_interested }}
+                </div>
+              {% endif %}
+              {% if content.field_notification_preferences %}
+                <div class="info-item">
+                  <i class="fas fa-bell"></i>
+                  <strong>Notification Preferences:</strong>
+                  {{ content.field_notification_preferences }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {# Action Buttons Section #}
+    <div class="user-actions-section">
+      <div class="row">
+        <div class="col-12 text-center">
+          <a href="/user/{{ user.id() }}/edit" class="btn btn-primary btn-lg">
+            <i class="fas fa-edit"></i>
+            Edit Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

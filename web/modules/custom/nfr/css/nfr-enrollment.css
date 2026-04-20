@@ -1,0 +1,1235 @@
+/* NFR Enrollment Pages Styles */
+
+.nfr-enrollment-page {
+  padding: 2rem 0;
+}
+
+.enrollment-progress {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.enrollment-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.enrollment-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+}
+
+.enrollment-actions .btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Consent Form Styles */
+.consent-intro {
+  background: #e3f2fd;
+  padding: 1.5rem;
+  border-left: 4px solid #2196f3;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+}
+
+.consent-document,
+.confidentiality-assurance {
+  margin-bottom: 2rem;
+}
+
+.consent-content,
+.confidentiality-content {
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.consent-content h3,
+.confidentiality-content h4 {
+  color: #2c3e50;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.consent-content ul,
+.confidentiality-content ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.consent-content blockquote {
+  background: #f8f9fa;
+  border-left: 4px solid #6c757d;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  font-style: italic;
+}
+
+.signature-section {
+  background: #fff9e6;
+  padding: 1.5rem;
+  border-radius: 4px;
+  margin-top: 2rem;
+}
+
+.signature-date,
+.signature-ip {
+  margin-top: 0.5rem;
+  color: #6c757d;
+}
+
+#edit-consent-participate,
+#edit-consent-linkage {
+  margin-right: 0.5rem;
+}
+
+.form-checkbox + label {
+  cursor: pointer;
+}
+
+/* Required field indicator */
+.form-required {
+  color: #dc3545;
+}
+
+/* Questionnaire Process Flow Stepper */
+.nfr-process-stepper {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border: 1px solid #dee2e6;
+}
+
+.stepper-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.stepper-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.stepper-progress {
+  font-size: 1rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stepper-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  z-index: 1;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e9ecef;
+  border: 3px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.step-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-align: center;
+  max-width: 100px;
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.step-connector {
+  position: absolute;
+  top: 24px;
+  left: calc(50% + 24px);
+  right: calc(-50% + 24px);
+  height: 3px;
+  background: #dee2e6;
+  z-index: 0;
+  transition: background 0.3s ease;
+}
+
+/* Completed step */
+.stepper-step.completed .step-number {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-color: #28a745;
+  color: white;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.stepper-step.completed .step-label {
+  color: #28a745;
+  font-weight: 700;
+}
+
+.stepper-step.completed .step-connector {
+  background: linear-gradient(90deg, #28a745, #20c997);
+}
+
+.step-check {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+/* Active step */
+.stepper-step.active .step-number {
+  background: linear-gradient(135deg, #007bff, #00b8ff);
+  border-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4);
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+.stepper-step.active .step-label {
+  color: #007bff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4), 0 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4), 0 0 0 10px rgba(0, 123, 255, 0);
+  }
+}
+
+/* Upcoming step */
+.stepper-step.upcoming .step-number {
+  background: white;
+  border-color: #dee2e6;
+  color: #adb5bd;
+}
+
+.stepper-step.upcoming .step-label {
+  color: #adb5bd;
+}
+
+/* Step link wrapper for clickable steps */
+.step-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Hover effects for clickable steps */
+.stepper-step.clickable {
+  cursor: pointer;
+}
+
+.stepper-step.clickable .step-link:hover .step-number {
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+}
+
+.stepper-step.completed.clickable .step-link:hover .step-number {
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+  transform: scale(1.15);
+}
+
+.stepper-step.clickable .step-link:hover .step-label {
+  color: #007bff;
+  font-weight: 700;
+}
+
+.stepper-step.completed.clickable .step-link:hover .step-label {
+  color: #28a745;
+}
+
+.stepper-step.active.clickable .step-link:hover .step-label {
+  color: #0056b3;
+}
+
+/* Remove old hover effects that are now redundant */
+.stepper-step.completed:hover .step-number,
+.stepper-step.active:hover .step-number {
+  cursor: pointer;
+  transform: scale(1.1);
+}
+
+.stepper-step.completed:hover .step-label,
+.stepper-step.active:hover .step-label {
+  cursor: pointer;
+}
+
+/* Hide navigation buttons (they're triggered via JavaScript) */
+.section-nav-buttons {
+  display: none;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .stepper-steps {
+    flex-wrap: wrap;
+  }
+  
+  .stepper-step {
+    min-width: 80px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .step-label {
+    font-size: 0.75rem;
+    max-width: 80px;
+  }
+  
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+  }
+  
+  .step-connector {
+    top: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nfr-process-stepper {
+    padding: 1.5rem 1rem;
+  }
+  
+  .stepper-title {
+    font-size: 1.25rem;
+  }
+  
+  .stepper-progress {
+    font-size: 0.875rem;
+  }
+  
+  .stepper-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem 1rem;
+  }
+  
+  .step-connector {
+    display: none;
+  }
+  
+  .step-label {
+    max-width: 100%;
+  }
+}
+
+/* Old progress bar styles - kept for backwards compatibility */
+.questionnaire-progress {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border: 2px solid #dee2e6;
+}
+
+.questionnaire-progress .progress-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.questionnaire-progress .progress-bar {
+  background: #e9ecef;
+  height: 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  border: 2px solid #dee2e6;
+}
+
+.questionnaire-progress .progress-fill {
+  background: linear-gradient(90deg, #0056b3, #007bff, #00b8ff);
+  background-size: 200% 100%;
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: shimmer 2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.questionnaire-progress .progress-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: slide 2s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+.questionnaire-progress .progress-label {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  letter-spacing: 0.5px;
+}
+
+.questionnaire-progress .progress-fill:hover {
+  animation: shimmer 1s ease-in-out infinite, pulse-grow 0.8s ease-in-out infinite;
+  box-shadow: 0 0 25px rgba(0, 123, 255, 0.8);
+}
+
+@keyframes pulse-grow {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.05);
+  }
+}
+
+#nfr-questionnaire-form .form-item {
+  margin-bottom: 1.5rem;
+}
+
+#nfr-questionnaire-form .fieldset-wrapper {
+  padding: 1rem 0;
+}
+
+#nfr-questionnaire-form details {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #ffffff;
+}
+
+#nfr-questionnaire-form details > summary {
+  font-weight: 600;
+  color: #0056b3;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: -1rem -1rem 1rem -1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+#nfr-questionnaire-form details[open] > summary {
+  margin-bottom: 1rem;
+}
+
+.ppe-intro {
+  background: #e3f2fd;
+  padding: 1rem;
+  border-left: 4px solid #2196f3;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+/* Form section titles */
+#nfr-questionnaire-form h2 {
+  color: #2c3e50;
+  border-bottom: 2px solid #0056b3;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Action buttons */
+#nfr-questionnaire-form .form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1.5rem 0;
+  border-top: 2px solid #dee2e6;
+  margin-top: 2rem;
+}
+
+#nfr-questionnaire-form .button--primary {
+  background: #0056b3;
+  color: white;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#nfr-questionnaire-form .button--primary:hover {
+  background: #004494;
+}
+
+#nfr-questionnaire-form .button--secondary {
+  background: #6c757d;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#nfr-questionnaire-form .button--secondary:hover {
+  background: #5a6268;
+}
+
+/* Multi-column layouts for checkboxes/radios */
+.form-checkboxes,
+.form-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Table-like layout for incident types */
+#nfr-questionnaire-form .form-type-select {
+  margin-bottom: 0.75rem;
+}
+
+#nfr-questionnaire-form .form-type-select label {
+  display: inline-block;
+  width: 60%;
+  margin-bottom: 0.25rem;
+}
+
+#nfr-questionnaire-form .form-type-select select {
+  display: inline-block;
+  width: 38%;
+  margin-left: 1%;
+  vertical-align: top;
+}
+
+/* Repeating field groups */
+.container > fieldset,
+.container > .fieldset {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border: 1px solid #dee2e6;
+}
+
+/* Add button styling */
+input[type="submit"][value*="Add"] {
+  background: #28a745;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+input[type="submit"][value*="Add"]:hover {
+  background: #218838;
+}
+
+/* Review & Submit Page Styles */
+.review-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.review-header h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.review-header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.review-warning {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+}
+
+.review-warning ul {
+  margin: 1rem 0 0 1.5rem;
+}
+
+#nfr-review-submit-form details {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #ffffff;
+}
+
+#nfr-review-submit-form details > summary {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #0056b3;
+  cursor: pointer;
+  padding: 0.75rem;
+  margin: -1rem -1rem 1rem -1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  list-style: none;
+}
+
+#nfr-review-submit-form details > summary::-webkit-details-marker {
+  display: none;
+}
+
+#nfr-review-submit-form details > summary::before {
+  content: '▶ ';
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.2s;
+}
+
+#nfr-review-submit-form details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+#nfr-review-submit-form details[open] > summary {
+  margin-bottom: 1rem;
+}
+
+.summary-content {
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.summary-content h4 {
+  color: #2c3e50;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.25rem;
+}
+
+.summary-content p {
+  margin-bottom: 0.75rem;
+}
+
+.summary-content p.incomplete {
+  color: #dc3545;
+  font-style: italic;
+}
+
+.summary-content strong {
+  color: #495057;
+  font-weight: 600;
+}
+
+#nfr-review-submit-form .button--secondary {
+  margin-left: 1rem;
+}
+
+#nfr-review-submit-form fieldset {
+  border: 2px solid #0056b3;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: #f0f8ff;
+}
+
+#nfr-review-submit-form fieldset legend {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #0056b3;
+  padding: 0 0.5rem;
+}
+
+/* Confirmation Page Styles */
+.confirmation-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: #28a745;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+}
+
+.confirmation-header h1 {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.participant-id-box {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.participant-id-box h2 {
+  color: #0056b3;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.participant-id {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: #2c3e50;
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.save-note {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.next-steps {
+  margin: 2rem 0;
+}
+
+.next-steps h2 {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #0056b3;
+  padding-bottom: 0.5rem;
+}
+
+.next-steps ul {
+  list-style: none;
+  padding: 0;
+}
+
+.next-steps ul li {
+  padding: 0.75rem 0;
+  padding-left: 2rem;
+  position: relative;
+  line-height: 1.6;
+}
+
+.next-steps ul li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.confirmation-actions {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.confirmation-actions .button {
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.additional-links {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.additional-links h3 {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.additional-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.additional-links ul li {
+  margin-bottom: 0.5rem;
+}
+
+.additional-links a {
+  color: #0056b3;
+  text-decoration: none;
+}
+
+.additional-links a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  #nfr-questionnaire-form .form-actions {
+    flex-direction: column;
+  }
+  
+  #nfr-questionnaire-form .button--primary,
+  #nfr-questionnaire-form .button--secondary {
+    width: 100%;
+  }
+  
+  #nfr-questionnaire-form .form-type-select label,
+  #nfr-questionnaire-form .form-type-select select {
+    display: block;
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .confirmation-page {
+    padding: 1rem;
+  }
+  
+  .confirmation-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .participant-id {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+}
+
+/* ======================================
+   WELCOME PAGE STYLES
+   ====================================== */
+
+.welcome-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.welcome-header h1 {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* Enrollment Complete Notice */
+.enrollment-complete-notice {
+  background: #c6f6d5;
+  border: 2px solid #38a169;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.enrollment-complete-notice .notice-icon {
+  width: 60px;
+  height: 60px;
+  background: #38a169;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.enrollment-complete-notice .notice-content h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #22543d;
+}
+
+.enrollment-complete-notice .notice-content p {
+  margin-bottom: 1rem;
+  color: #276749;
+}
+
+/* Enrollment Process */
+.enrollment-process {
+  margin-bottom: 3rem;
+}
+
+.before-proceeding {
+  background: #fff7ed;
+  border-left: 4px solid #ed8936;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.before-proceeding h2 {
+  color: #7c2d12;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.before-proceeding p {
+  color: #7c2d12;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Enrollment Steps */
+.enrollment-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.enrollment-step {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  transition: all 0.3s;
+}
+
+.enrollment-step:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.enrollment-step.step-complete {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.enrollment-step.step-locked {
+  opacity: 0.6;
+  background: #f9fafb;
+}
+
+.enrollment-step .step-number {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3182ce, #63b3ed);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.enrollment-step.step-complete .step-number {
+  background: linear-gradient(135deg, #38a169, #48bb78);
+}
+
+.enrollment-step.step-locked .step-number {
+  background: #cbd5e0;
+  color: #718096;
+}
+
+.enrollment-step .step-content {
+  flex: 1;
+}
+
+.enrollment-step .step-content h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #1a365d;
+  font-size: 1.5rem;
+}
+
+.enrollment-step .step-content p {
+  color: #4a5568;
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.enrollment-step .button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #3182ce;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.enrollment-step .button:hover {
+  background: #2c5282;
+}
+
+.step-complete-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #38a169;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.step-locked {
+  color: #718096;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* Progress Summary */
+.progress-summary {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.progress-bar-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.progress-bar-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.progress-bar {
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3182ce, #63b3ed);
+  border-radius: 12px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  text-align: center;
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+/* Welcome Info Boxes */
+.welcome-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.info-box {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.info-box h3 {
+  color: #1a365d;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-box li {
+  margin-bottom: 0.75rem;
+}
+
+.info-box a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.info-box a:hover {
+  text-decoration: underline;
+}
+
+.info-box p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive Design for Welcome Page */
+@media (max-width: 768px) {
+  .welcome-page {
+    padding: 1rem;
+  }
+
+  .welcome-header {
+    padding: 1.5rem;
+  }
+
+  .welcome-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 1rem;
+  }
+
+  .enrollment-step {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .enrollment-step .step-number {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .enrollment-step .step-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .before-proceeding h2 {
+    font-size: 1.25rem;
+  }
+
+  .before-proceeding p {
+    font-size: 1rem;
+  }
+
+  .welcome-info {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .enrollment-complete-notice {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+}

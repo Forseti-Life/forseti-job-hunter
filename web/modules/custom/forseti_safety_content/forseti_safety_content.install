@@ -1,0 +1,389 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Forseti Safety Content module.
+ */
+
+use Drupal\block\Entity\Block;
+
+/**
+ * Implements hook_install().
+ */
+function forseti_safety_content_install() {
+  // NOTE: The contact_forseti webform config is in config/optional to prevent
+  // conflicts when reinstalling the module. Optional configs are only installed
+  // if they don't already exist, preserving webform submissions.
+  
+  $messenger = \Drupal::messenger();
+  $logger = \Drupal::logger('forseti_safety_content');
+  
+  // Create main menu block in header region.
+  $block_storage = \Drupal::entityTypeManager()->getStorage('block');
+  $existing_block = $block_storage->load('forseti_main_menu');
+  
+  if (!$existing_block) {
+    $block = $block_storage->create([
+      'id' => 'forseti_main_menu',
+      'theme' => 'forseti',
+      'region' => 'header',
+      'weight' => -10,
+      'plugin' => 'system_menu_block:main',
+      'settings' => [
+        'label' => 'Main navigation',
+        'label_display' => '0',
+        'level' => 1,
+        'depth' => 0,
+      ],
+    ]);
+    $block->save();
+    $messenger->addStatus(t('Main navigation menu has been placed in the header region.'));
+    $logger->info('Created main navigation menu block in header region.');
+    
+    // Rebuild menu links only if we created the block.
+    \Drupal::service('plugin.manager.menu.link')->rebuild();
+    $logger->info('Rebuilt menu links.');
+  }
+  else {
+    $messenger->addWarning(t('Main navigation menu block already exists. Skipping creation.'));
+    $logger->info('Main navigation menu block already exists, skipped creation.');
+  }
+  
+  // Create footer menu block in footer region.
+  $existing_footer_block = $block_storage->load('forseti_forsetifootermenu');
+  
+  if (!$existing_footer_block) {
+    // Get the default theme to ensure block is placed in active theme.
+    $default_theme = \Drupal::config('system.theme')->get('default');
+    
+    $footer_block = $block_storage->create([
+      'id' => 'forseti_forsetifootermenu',
+      'theme' => $default_theme,
+      'region' => 'footer',
+      'weight' => 0,
+      'plugin' => 'forseti_footer_menu',
+      'settings' => [
+        'label' => 'Forseti Footer Menu',
+        'label_display' => '0',
+      ],
+    ]);
+    $footer_block->save();
+    $messenger->addStatus(t('Forseti Footer Menu has been placed in the footer region.'));
+    $logger->info('Created Forseti Footer Menu block in footer region.');
+  }
+  else {
+    $messenger->addWarning(t('Forseti Footer Menu block already exists. Skipping creation.'));
+    $logger->info('Forseti Footer Menu block already exists, skipped creation.');
+  }
+  
+  // Configure custom error pages to use theme templates.
+  // Leave page.403 and page.404 empty so Drupal uses default error handling
+  // which will render page--403.html.twig and page--404.html.twig theme templates.
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  
+  // Get current page config to check for invalid 503 setting or old /error/* routes
+  $page_config = $config->get('page');
+  if (is_array($page_config)) {
+    // Remove invalid 503 setting if present
+    if (isset($page_config['503'])) {
+      unset($page_config['503']);
+      $logger->info('Removed invalid page.503 setting during installation.');
+    }
+    $config->set('page', $page_config);
+  }
+  
+  // Clear any old /error/* routes - theme templates handle error pages now
+  $config->clear('page.403');
+  $config->clear('page.404');
+  
+  // Set front page to homepage if not already set
+  $current_front = $config->get('page.front');
+  if (empty($current_front) || $current_front === '/node') {
+    $config->set('page.front', '/home');
+    $logger->info('Set front page to /home');
+  }
+  
+  $config->save();
+  
+  $messenger->addStatus(t('Error pages configured to use theme templates (page--403.html.twig, page--404.html.twig).'));
+  $logger->info('Configured error pages to use theme templates.');
+  
+  $messenger->addStatus(t('Forseti Safety Content module installed successfully. Visit /home to see the homepage.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function forseti_safety_content_uninstall() {
+  $logger = \Drupal::logger('forseti_safety_content');
+  
+  // Remove the main menu block.
+  $block = Block::load('forseti_main_menu');
+  if ($block) {
+    $block->delete();
+    $logger->info('Removed main navigation menu block.');
+  }
+  
+  // Remove the footer menu block.
+  $footer_block = Block::load('forseti_forsetifootermenu');
+  if ($footer_block) {
+    $footer_block->delete();
+    $logger->info('Removed footer menu block.');
+  }
+  
+  // Reset custom error pages to defaults (empty = use Drupal defaults).
+  // Note: Only 403 and 404 are supported in system.site config.
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  $config->clear('page.403');
+  $config->clear('page.404');
+  $config->save();
+  $logger->info('Reset custom error pages to defaults.');
+  
+  // NOTE: The contact_forseti webform and its submissions are NOT deleted.
+  // If you need to remove the webform, do it manually via the Webform UI
+  // or with: drush entity:delete webform contact_forseti
+  $logger->info('Webform contact_forseti and submissions preserved (not deleted).');
+}
+
+/**
+ * Remove invalid 503 error page setting from system.site config.
+ */
+function forseti_safety_content_update_9001() {
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  
+  // Get all page settings
+  $page_config = $config->get('page');
+  
+  // Remove 503 if it exists (not a valid Drupal setting)
+  if (is_array($page_config) && isset($page_config['503'])) {
+    unset($page_config['503']);
+    $config->set('page', $page_config);
+    $config->save();
+    
+    \Drupal::logger('forseti_safety_content')->info('Removed invalid page.503 setting from system.site config.');
+    return t('Removed invalid 503 error page setting from system configuration.');
+  }
+  
+  return t('No 503 error page setting found to remove.');
+}
+
+/**
+ * Remove /error/403 and /error/404 routes - theme templates now handle error pages.
+ */
+function forseti_safety_content_update_9002() {
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  
+  // Clear old /error/* route references
+  $config->clear('page.403');
+  $config->clear('page.404');
+  $config->save();
+  
+  \Drupal::logger('forseti_safety_content')->info('Cleared page.403 and page.404 settings - theme templates now handle error pages.');
+  return t('Cleared error page routes. Theme templates (page--403.html.twig, page--404.html.twig) now handle error pages.');
+}
+
+/**
+ * Update user registration settings and email templates with Forseti branding.
+ */
+function forseti_safety_content_update_9003() {
+  $config_factory = \Drupal::configFactory();
+  $logger = \Drupal::logger('forseti_safety_content');
+  $messages = [];
+  
+  // Update user.settings to enable visitor registration
+  $user_settings = $config_factory->getEditable('user.settings');
+  $current_register = $user_settings->get('register');
+  
+  if ($current_register !== 'visitors') {
+    $user_settings->set('register', 'visitors');
+    $user_settings->save();
+    $messages[] = t('Enabled visitor registration (was: @old)', ['@old' => $current_register]);
+    $logger->info('Updated user.settings: register changed from @old to visitors', ['@old' => $current_register]);
+  }
+  
+  // Update user.mail with Forseti branded email templates
+  $user_mail = $config_factory->getEditable('user.mail');
+  $module_path = \Drupal::service('extension.list.module')->getPath('forseti_safety_content');
+  $config_path = $module_path . '/config/install/user.mail.yml';
+  
+  if (file_exists($config_path)) {
+    $yaml = \Drupal::service('serialization.yaml');
+    $new_config = $yaml->decode(file_get_contents($config_path));
+    
+    // Update each email template
+    $templates = [
+      'cancel_confirm',
+      'password_reset',
+      'register_admin_created',
+      'register_no_approval_required',
+      'register_pending_approval',
+      'register_pending_approval_admin',
+      'status_activated',
+      'status_blocked',
+      'status_canceled'
+    ];
+    
+    foreach ($templates as $template) {
+      if (isset($new_config[$template])) {
+        $user_mail->set($template, $new_config[$template]);
+      }
+    }
+    
+    $user_mail->save();
+    $messages[] = t('Updated all user email templates with Forseti branding');
+    $logger->info('Updated user.mail with Forseti branded templates');
+  }
+  else {
+    $messages[] = t('Warning: Could not find user.mail.yml config file');
+    $logger->warning('Could not find user.mail.yml at @path', ['@path' => $config_path]);
+  }
+  
+  // Clear cache to ensure new configs are loaded
+  drupal_flush_all_caches();
+  $messages[] = t('Cleared all caches');
+  
+  return implode(' | ', $messages);
+}
+
+/**
+ * Add entity category field to evaluated_entity content type.
+ */
+function forseti_safety_content_update_9004() {
+  $config_factory = \Drupal::configFactory();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $logger = \Drupal::logger('forseti_safety_content');
+  $messages = [];
+  
+  // Check if field storage already exists
+  $field_storage = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'field_entity_category');
+  
+  if (!$field_storage) {
+    // Create field storage from config
+    $field_storage_config = [
+      'field_name' => 'field_entity_category',
+      'entity_type' => 'node',
+      'type' => 'list_string',
+      'cardinality' => 1,
+      'settings' => [
+        'allowed_values' => [
+          'us_government_executive' => 'US Government Executive Branch',
+          'us_military_general' => 'US Military - General/Flag Officers',
+          'us_military_field' => 'US Military - Field Grade Officers',
+          'us_military_company' => 'US Military - Company Grade Officers',
+          'us_military_warrant' => 'US Military - Warrant Officers',
+          'us_military_senior_enlisted' => 'US Military - Senior Enlisted',
+          'us_military_junior_enlisted' => 'US Military - Junior Enlisted',
+          'government_agencies' => 'Government Agencies',
+          'intelligence_alliances' => 'Intelligence Alliances',
+          'state_local_government' => 'State & Local Government',
+          'tech_companies' => 'Tech Companies',
+          'cybersecurity' => 'Cybersecurity',
+          'education_learning' => 'Education & Learning',
+          'legal_services' => 'Legal Services',
+          'professional_services' => 'Professional Services',
+          'financial_institutions' => 'Financial Institutions',
+          'healthcare_organizations' => 'Healthcare Organizations',
+          'universities' => 'Universities',
+          'research_institutions' => 'Research Institutions',
+          'law_enforcement' => 'Law Enforcement',
+          'transportation' => 'Transportation',
+          'retail_consumer' => 'Retail & Consumer',
+          'food_hospitality' => 'Food & Hospitality',
+          'manufacturing_industry' => 'Manufacturing & Industry',
+          'defense_aerospace' => 'Defense & Aerospace',
+          'energy_resources' => 'Energy & Resources',
+          'pharmaceutical' => 'Pharmaceutical',
+          'international_organizations' => 'International Organizations',
+          'nonprofits_research' => 'Non-Profits & Research',
+          'media_publishing' => 'Media & Publishing',
+          'social_platforms' => 'Social Platforms',
+          'entertainment_sports' => 'Entertainment & Sports',
+          'real_estate_construction' => 'Real Estate & Construction',
+          'agriculture_food' => 'Agriculture & Food Production',
+          'telecommunications' => 'Telecommunications',
+          'logistics_supply_chain' => 'Logistics & Supply Chain',
+          'insurance' => 'Insurance',
+          'consumer_electronics' => 'Consumer Electronics & Appliances',
+          'fitness_wellness' => 'Fitness & Wellness',
+          'notable_individuals' => 'Notable Individuals',
+          'standards_certification' => 'Standards & Certification',
+          'ai_systems_automation' => 'AI Systems & Automation',
+          'basic_services_infrastructure' => 'Basic Services & Infrastructure',
+        ],
+      ],
+    ];
+    
+    $field_storage = \Drupal\field\Entity\FieldStorageConfig::create($field_storage_config);
+    $field_storage->save();
+    $messages[] = t('Created field_entity_category storage');
+    $logger->info('Created field_entity_category storage');
+  }
+  else {
+    $messages[] = t('Field storage field_entity_category already exists');
+    $logger->info('Field storage field_entity_category already exists');
+  }
+  
+  // Check if field instance already exists
+  $field = \Drupal\field\Entity\FieldConfig::loadByName('node', 'evaluated_entity', 'field_entity_category');
+  
+  if (!$field) {
+    // Create field instance
+    $field_config = [
+      'field_name' => 'field_entity_category',
+      'entity_type' => 'node',
+      'bundle' => 'evaluated_entity',
+      'label' => 'Entity Category',
+      'description' => 'The category this entity belongs to (e.g., Tech Companies, Government Agencies, Healthcare Organizations)',
+      'required' => FALSE, // Not required to preserve existing nodes
+      'translatable' => FALSE,
+    ];
+    
+    $field = \Drupal\field\Entity\FieldConfig::create($field_config);
+    $field->save();
+    $messages[] = t('Added field_entity_category to evaluated_entity content type');
+    $logger->info('Added field_entity_category to evaluated_entity content type');
+  }
+  else {
+    $messages[] = t('Field field_entity_category already exists on evaluated_entity');
+    $logger->info('Field field_entity_category already exists on evaluated_entity');
+  }
+  
+  // Update form display
+  $form_display = $entity_type_manager
+    ->getStorage('entity_form_display')
+    ->load('node.evaluated_entity.default');
+    
+  if ($form_display && !$form_display->getComponent('field_entity_category')) {
+    $form_display->setComponent('field_entity_category', [
+      'type' => 'options_select',
+      'weight' => 1,
+      'settings' => [],
+    ]);
+    $form_display->save();
+    $messages[] = t('Updated form display for entity category field');
+    $logger->info('Updated form display for entity category field');
+  }
+  
+  // Update view display
+  $view_display = $entity_type_manager
+    ->getStorage('entity_view_display')
+    ->load('node.evaluated_entity.default');
+    
+  if ($view_display && !$view_display->getComponent('field_entity_category')) {
+    $view_display->setComponent('field_entity_category', [
+      'type' => 'list_default',
+      'weight' => 1,
+      'label' => 'above',
+      'settings' => [],
+    ]);
+    $view_display->save();
+    $messages[] = t('Updated view display for entity category field');
+    $logger->info('Updated view display for entity category field');
+  }
+  
+  // Clear cache
+  drupal_flush_all_caches();
+  $messages[] = t('Cleared all caches');
+  
+  return implode(' | ', $messages);
+}

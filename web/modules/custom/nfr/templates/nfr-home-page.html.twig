@@ -1,0 +1,296 @@
+{#
+/**
+ * @file
+ * NFR Home Page Template
+ *
+ * Available variables:
+ * - authenticated: Boolean indicating if user is logged in
+ * - role_links: Array of role-specific links
+ */
+#}
+
+<div class="nfr-home-page">
+  
+  {# CRITICAL DISCLAIMER #}
+  <section class="nfr-disclaimer-alert">
+    <div class="container">
+      <div class="disclaimer-box">
+        <div class="disclaimer-icon">⚠️</div>
+        <div class="disclaimer-content">
+          <h1 class="disclaimer-heading">THIS IS NOT THE OFFICIAL CDC NFR SYSTEM</h1>
+          <p class="disclaimer-text">
+            <strong>IMPORTANT:</strong> This is a <strong>RECREATION</strong> and <strong>DEMONSTRATION</strong> of the CDC National Firefighter Registry system 
+            for educational and development purposes only. This is <strong>NOT</strong> affiliated with, endorsed by, or connected to the 
+            Centers for Disease Control and Prevention (CDC) or the National Institute for Occupational Safety and Health (NIOSH).
+          </p>
+          <div class="official-links">
+            <p><strong>For the OFFICIAL CDC National Firefighter Registry, please visit:</strong></p>
+            <ul>
+              <li>
+                <a href="https://www.cdc.gov/niosh/firefighters/ffcancerregistry.html" target="_blank" rel="noopener noreferrer" class="official-link">
+                  🔗 CDC/NIOSH Firefighter Cancer Registry Homepage
+                </a>
+              </li>
+              <li>
+                <a href="https://wwwn.cdc.gov/FFRegistry" target="_blank" rel="noopener noreferrer" class="official-link">
+                  🔗 Official NFR Enrollment Portal
+                </a>
+              </li>
+              <li>
+                <a href="https://www.cdc.gov/niosh/firefighters/default.html" target="_blank" rel="noopener noreferrer" class="official-link">
+                  🔗 CDC/NIOSH Firefighter Health & Safety Resources
+                </a>
+              </li>
+            </ul>
+            <p class="disclaimer-footer">
+              <strong>DO NOT</strong> submit real personal health information or employment data to this demonstration system. 
+              All enrollment and data collection must be done through the official CDC NFR portal listed above.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  {# Hero Section #}
+  <section class="nfr-hero">
+    <div class="hero-content">
+      <h1>National Firefighter Registry</h1>
+      <p class="hero-subtitle">Advancing Cancer Research for America's Firefighters</p>
+      
+      {% if not authenticated %}
+        <div class="hero-actions">
+          <a href="/user/register" class="btn btn-primary btn-large">Join the Registry</a>
+          <a href="/user/login" class="btn btn-secondary btn-large">Sign In</a>
+        </div>
+      {% else %}
+        <div class="hero-actions">
+          {% if role_links.primary %}
+            <a href="{{ role_links.primary.url }}" class="btn btn-primary btn-large">
+              {{ role_links.primary.title }}
+            </a>
+          {% endif %}
+          {% if role_links.enrollment %}
+            <a href="{{ role_links.enrollment.url }}" class="btn btn-secondary btn-large">
+              {{ role_links.enrollment.title }}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {# Mission Statement #}
+  <section class="nfr-mission">
+    <div class="container">
+      <h2>Our Mission</h2>
+      <p class="lead">
+        The National Firefighter Registry (NFR) is a collaborative research initiative between the Centers for Disease Control and Prevention (CDC), 
+        the National Institute for Occupational Safety and Health (NIOSH), and firefighters across the United States. Our mission is to better 
+        understand cancer risks among firefighters and develop evidence-based prevention strategies to protect those who protect us.
+      </p>
+    </div>
+  </section>
+
+  {# Purpose Section #}
+  <section class="nfr-purpose">
+    <div class="container">
+      <h2>Why the NFR Exists</h2>
+      <div class="purpose-grid">
+        <div class="purpose-card">
+          <div class="purpose-icon">🔬</div>
+          <h3>Advance Research</h3>
+          <p>
+            Create the largest and most comprehensive database of firefighter cancer incidence to enable groundbreaking research 
+            into occupational cancer risks and prevention strategies.
+          </p>
+        </div>
+        
+        <div class="purpose-card">
+          <div class="purpose-icon">🛡️</div>
+          <h3>Protect Firefighters</h3>
+          <p>
+            Identify specific risk factors and exposure patterns to develop targeted interventions, safety protocols, and 
+            protective equipment that reduce cancer risk for firefighters nationwide.
+          </p>
+        </div>
+        
+        <div class="purpose-card">
+          <div class="purpose-icon">📊</div>
+          <h3>Inform Policy</h3>
+          <p>
+            Provide evidence-based data to support policy decisions, workers' compensation claims, and resource allocation 
+            for firefighter health and safety programs.
+          </p>
+        </div>
+        
+        <div class="purpose-card">
+          <div class="purpose-icon">🤝</div>
+          <h3>Support Firefighters</h3>
+          <p>
+            Connect firefighters with health resources, early detection programs, and support services while maintaining 
+            privacy and confidentiality through secure data management.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# History Section #}
+  <section class="nfr-history">
+    <div class="container">
+      <h2>Our History</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-year">2018</div>
+          <div class="timeline-content">
+            <h3>Congressional Authorization</h3>
+            <p>
+              Congress passed the Firefighter Cancer Registry Act, authorizing CDC/NIOSH to develop and maintain a 
+              voluntary registry to monitor and track cancer incidence among firefighters.
+            </p>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-year">2019-2021</div>
+          <div class="timeline-content">
+            <h3>Development Phase</h3>
+            <p>
+              CDC/NIOSH conducted extensive stakeholder engagement with fire service organizations, health researchers, 
+              and privacy experts to design a scientifically rigorous yet user-friendly registry system.
+            </p>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-year">2022</div>
+          <div class="timeline-content">
+            <h3>Pilot Program</h3>
+            <p>
+              Launched pilot program with select fire departments to test enrollment processes, data collection methods, 
+              and linkage procedures with state cancer registries.
+            </p>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-year">2024</div>
+          <div class="timeline-content">
+            <h3>National Rollout</h3>
+            <p>
+              Expanded registry access to all U.S. firefighters and began partnerships with state cancer registries 
+              for comprehensive cancer surveillance and research.
+            </p>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-year">2026</div>
+          <div class="timeline-content">
+            <h3>Growing Impact</h3>
+            <p>
+              The NFR continues to expand, providing critical data for research while supporting firefighter health 
+              and safety initiatives nationwide.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# Quick Links for Authenticated Users #}
+  {% if authenticated and role_links %}
+    <section class="nfr-quick-links">
+      <div class="container">
+        <h2>Quick Links</h2>
+        <div class="quick-links-grid">
+          {% if role_links.primary %}
+            <div class="quick-link-card">
+              <h3>{{ role_links.primary.title }}</h3>
+              <p>{{ role_links.primary.description }}</p>
+              <a href="{{ role_links.primary.url }}" class="btn btn-primary">Access Dashboard</a>
+            </div>
+          {% endif %}
+          
+          {% if role_links.enrollment %}
+            <div class="quick-link-card">
+              <h3>{{ role_links.enrollment.title }}</h3>
+              <p>{{ role_links.enrollment.description }}</p>
+              <a href="{{ role_links.enrollment.url }}" class="btn btn-secondary">Get Started</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# Call to Action for Anonymous Users #}
+  {% if not authenticated %}
+    <section class="nfr-cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Join Thousands of Firefighters Making a Difference</h2>
+          <p>
+            Your participation helps researchers understand cancer risks and develop better protection strategies 
+            for firefighters nationwide. Registration takes just a few minutes.
+          </p>
+          <div class="cta-stats">
+            <div class="stat">
+              <div class="stat-value">50,000+</div>
+              <div class="stat-label">Firefighters Enrolled</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">All 50</div>
+              <div class="stat-label">States Represented</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">100%</div>
+              <div class="stat-label">Privacy Protected</div>
+            </div>
+          </div>
+          <a href="/user/register" class="btn btn-primary btn-large">Create Your Account</a>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# Resources Section #}
+  <section class="nfr-resources">
+    <div class="container">
+      <h2>Learn More</h2>
+      <div class="resource-grid">
+        <div class="resource-card">
+          <h3>📖 Documentation</h3>
+          <p>Access research protocols, questionnaires, and technical documentation.</p>
+          <a href="/nfr/documentation" class="btn btn-link">View Documentation</a>
+        </div>
+        
+        <div class="resource-card">
+          <h3>📊 Public Data</h3>
+          <p>Explore de-identified statistics and research findings from the registry.</p>
+          <a href="/nfr/data" class="btn btn-link">View Data Dashboard</a>
+        </div>
+        
+        <div class="resource-card">
+          <h3>❓ FAQs</h3>
+          <p>Find answers to common questions about participation and privacy.</p>
+          <a href="/nfr/faq" class="btn btn-link">Read FAQs</a>
+        </div>
+        
+        <div class="resource-card">
+          <h3>🔬 CDC NIOSH Resources</h3>
+          <p>Explore firefighter health and safety resources, research, and training materials.</p>
+          <a href="https://www.cdc.gov/niosh/firefighters/resources/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-link">Visit CDC Resources</a>
+        </div>
+        
+        <div class="resource-card">
+          <h3>📧 Contact Us</h3>
+          <p>Have questions? Our team is here to help you get started.</p>
+          <a href="/nfr/contact" class="btn btn-link">Contact Support</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,23 @@
+forseti.footer.about:
+  title: 'About'
+  route_name: forseti.about
+  menu_name: footer
+  weight: -50
+
+forseti.footer.privacy:
+  title: 'Privacy'
+  route_name: forseti.privacy
+  menu_name: footer
+  weight: -40
+
+forseti.footer.safety_map:
+  title: 'Safety Map'
+  route_name: forseti.safety_map
+  menu_name: footer
+  weight: -20
+
+forseti.footer.mobile_app:
+  title: 'Mobile App'
+  route_name: forseti.mobile_app
+  menu_name: footer
+  weight: -10

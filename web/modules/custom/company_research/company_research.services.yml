@@ -1,0 +1,42 @@
+services:
+  logger.channel.company_research:
+    parent: logger.channel_base
+    arguments: ['company_research']
+
+  company_research.orchestrator:
+    class: Drupal\company_research\Service\CompanyResearchOrchestrator
+    arguments:
+      - '@database'
+      - '@logger.channel.company_research'
+      - '@config.factory'
+      - '@company_research.company_discovery'
+      - '@company_research.careers_discovery'
+      - '@company_research.ats_detection'
+      - '@company_research.auth_analysis'
+
+  company_research.company_discovery:
+    class: Drupal\company_research\Service\CompanyDiscoveryService
+    arguments:
+      - '@http_client'
+      - '@logger.channel.company_research'
+      - '@config.factory'
+
+  company_research.careers_discovery:
+    class: Drupal\company_research\Service\CareersPageDiscoveryService
+    arguments:
+      - '@http_client'
+      - '@logger.channel.company_research'
+
+  company_research.ats_detection:
+    class: Drupal\company_research\Service\ATSDetectionService
+    arguments:
+      - '@http_client'
+      - '@logger.channel.company_research'
+      - '@ai_conversation.ai_api_service'
+
+  company_research.auth_analysis:
+    class: Drupal\company_research\Service\AuthenticationAnalysisService
+    arguments:
+      - '@http_client'
+      - '@logger.channel.company_research'
+      - '@ai_conversation.ai_api_service'

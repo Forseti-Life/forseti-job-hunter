@@ -1,0 +1,299 @@
+/**
+ * NFR Public Data Dashboard Styles
+ */
+
+.nfr-public-data-dashboard {
+  background: transparent;
+}
+
+/* Map Container */
+#us-map-container {
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+#heat-map-svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Map Tooltip */
+.map-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  pointer-events: none;
+  display: none;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 212, 255, 0.5);
+}
+
+.map-tooltip strong {
+  color: #00d4ff;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Fallback styles for grid-based map (if SVG fails to load) */
+.simple-us-map {
+  width: 100%;
+}
+
+.us-map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.map-region {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.region-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 2px solid #00d4ff;
+  padding-bottom: 0.5rem;
+}
+
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.state-box {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.state-box:hover,
+.state-box.hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0, 212, 255, 0.3);
+  border-color: #00d4ff;
+}
+
+.state-code {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.state-name {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.state-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #00d4ff;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Color Levels */
+.state-level-0 {
+  background: rgba(224, 243, 255, 0.1);
+}
+
+.state-level-1 {
+  background: rgba(153, 213, 255, 0.2);
+}
+
+.state-level-2 {
+  background: rgba(82, 183, 255, 0.3);
+}
+
+.state-level-3 {
+  background: rgba(0, 153, 255, 0.4);
+}
+
+.state-level-4 {
+  background: rgba(0, 102, 204, 0.5);
+}
+
+.state-level-5 {
+  background: rgba(0, 51, 153, 0.6);
+}
+
+/* Map Tooltip */
+.map-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.map-tooltip .tooltip-state {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.map-tooltip .tooltip-count {
+  color: #00d4ff;
+  font-weight: bold;
+}
+
+/* Map Legend */
+#map-legend {
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.legend-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-scale {
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: white;
+}
+
+.legend-color {
+  width: 30px;
+  height: 20px;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+/* Statistics Cards */
+.stat-icon {
+  opacity: 0.8;
+}
+
+.stat-value {
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* Progress Bars */
+.progress {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.progress-bar {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #us-map {
+    height: 400px;
+  }
+  
+  .stat-value {
+    font-size: 2rem !important;
+  }
+  
+  .legend-scale {
+    flex-direction: column;
+  }
+  
+  .legend-item {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Call to Action Card */
+.bg-gradient {
+  border: none;
+}
+
+.bg-gradient .btn-light {
+  background: white;
+  color: #667eea;
+  border: none;
+  font-weight: 600;
+}
+
+.bg-gradient .btn-light:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.bg-gradient .btn-outline-light {
+  border: 2px solid white;
+  color: white;
+  font-weight: 600;
+}
+
+.bg-gradient .btn-outline-light:hover {
+  background: white;
+  color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+/* Chart Containers */
+canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+.card-forseti .card-body canvas {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Chart styling adjustments for dark theme */
+.card-forseti h3,
+.card-forseti h5 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+/* Ensure chart text is visible */
+.chartjs-render-monitor {
+  animation: none !important;
+}

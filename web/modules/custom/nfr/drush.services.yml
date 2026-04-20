@@ -1,0 +1,11 @@
+services:
+  nfr.commands:
+    class: Drupal\nfr\Commands\NFRCommands
+    arguments: ['@database', '@nfr.neris_integration', '@nfr.cancer_registry_linkage', '@nfr.data_export']
+    tags:
+      - { name: drush.command }  
+  nfr.correlation_commands:
+    class: Drupal\nfr\Commands\NFRCorrelationCommands
+    arguments: ['@nfr.correlation_analysis']
+    tags:
+      - { name: drush.command }

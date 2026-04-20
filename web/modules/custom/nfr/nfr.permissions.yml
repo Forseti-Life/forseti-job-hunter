@@ -1,0 +1,38 @@
+access nfr dashboard:
+  title: 'Access NFR Dashboard'
+  description: 'Allow users to access the National Firefighter Registry dashboard'
+
+administer nfr:
+  title: 'Administer NFR'
+  description: 'Configure National Firefighter Registry settings'
+  restrict access: true
+
+manage firefighters:
+  title: 'Manage Firefighters'
+  description: 'Create, edit, and delete firefighter records'
+
+view firefighter records:
+  title: 'View Firefighter Records'
+  description: 'View firefighter registry records'
+
+view cancer data:
+  title: 'View Cancer Data'
+  description: 'Access cancer incidence and statistics data'
+
+manage cancer data:
+  title: 'Manage Cancer Data'
+  description: 'Create, edit, and delete cancer records'
+
+export nfr data:
+  title: 'Export NFR Data'
+  description: 'Export registry data for analysis'
+  restrict access: true
+
+view nfr reports:
+  title: 'View NFR Reports'
+  description: 'Access research reports and analytics'
+
+manage state registry linkages:
+  title: 'Manage State Registry Linkages'
+  description: 'Configure and manage state cancer registry integrations'
+  restrict access: true

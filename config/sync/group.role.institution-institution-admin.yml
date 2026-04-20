@@ -1,0 +1,20 @@
+uuid: 1e988783-4e1d-445d-b6ea-a2ceaf337853
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.institution
+id: institution-institution-admin
+label: 'Institution Administrator'
+weight: -10
+admin: false
+scope: individual
+global_role: null
+group_type: institution
+permissions:
+  - 'administer group'
+  - 'administer members'
+  - 'delete group'
+  - 'edit group'
+  - 'leave group'
+  - 'view group'

@@ -1,0 +1,55 @@
+dashboard-styling:
+  dependencies:
+    - core/drupal
+
+# Logging framework
+logger:
+  version: 1.0
+  js:
+    js/amisafe-logger.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+
+# Core crime map library
+crime-map:
+  version: 8.4  # Use local API endpoints to avoid CORS issues
+  js:
+    js/crime-map.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/drupalSettings
+    - amisafe/logger
+    - amisafe/external-libraries
+
+# External libraries
+external-libraries:
+  version: 4.0  # Cache bust for complete H3 grid system
+  css:
+    theme:
+      https://unpkg.com/leaflet@1.9.4/dist/leaflet.css: { type: external }
+  js:
+    https://unpkg.com/leaflet@1.9.4/dist/leaflet.js: { type: external }
+    https://cdn.jsdelivr.net/npm/h3-js@4.1.0/dist/h3-js.umd.js: { type: external }
+    https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js: { type: external }
+    https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js: { type: external }
+# Mobile app download page
+mobile-download:
+  version: 1.0
+  dependencies:
+    - core/drupal
+
+# Log viewer interface
+log-viewer:
+  version: 1.0
+  css:
+    theme:
+      css/log-viewer.css: {}
+  js:
+    js/log-viewer.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/jquery.once
+    - core/drupalSettings

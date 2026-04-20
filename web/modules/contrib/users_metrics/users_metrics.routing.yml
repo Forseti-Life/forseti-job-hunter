@@ -1,0 +1,7 @@
+users_metrics.settings:
+  path: '/admin/config/people/users-metrics'
+  defaults:
+    _form: '\Drupal\users_metrics\Form\SettingsForm'
+    _title: 'Users Metrics Settings'
+  requirements:
+    _permission: 'administer users metrics'

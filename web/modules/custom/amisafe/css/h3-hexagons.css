@@ -1,0 +1,276 @@
+/**
+ * @file
+ * H3 Hexagon specific styling for AmISafe Crime Map
+ */
+
+/* H3 Hexagon layer styling */
+.h3-hexagon-layer {
+  position: relative;
+  z-index: 400;
+}
+
+/* Individual H3 hexagon elements */
+.h3-hexagon {
+  fill-opacity: 0.7;
+  stroke: var(--neon-blue, #00ffff);
+  stroke-width: 1px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.h3-hexagon:hover {
+  fill-opacity: 0.9;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 10px currentColor);
+  animation: hexagon-pulse 1s infinite;
+}
+
+/* Hexagon pulse animation on hover */
+@keyframes hexagon-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px currentColor); 
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 15px currentColor); 
+    transform: scale(1.05);
+  }
+}
+
+/* Crime density color classes */
+.h3-hexagon.density-0 {
+  fill: #0a0a0a;
+  stroke: #333;
+}
+
+.h3-hexagon.density-low {
+  fill: #1a4d4d;
+  stroke: var(--neon-blue, #00ffff);
+}
+
+.h3-hexagon.density-medium-low {
+  fill: var(--neon-green, #00ff00);
+  stroke: var(--neon-blue, #00ffff);
+}
+
+.h3-hexagon.density-medium {
+  fill: var(--neon-yellow, #ffff00);
+  stroke: var(--neon-orange, #ff8800);
+}
+
+.h3-hexagon.density-medium-high {
+  fill: var(--neon-orange, #ff8800);
+  stroke: var(--neon-red, #ff0000);
+}
+
+.h3-hexagon.density-high {
+  fill: var(--neon-red, #ff0000);
+  stroke: #ffffff;
+  animation: danger-pulse 2s infinite;
+}
+
+/* Danger pulse for high-crime areas */
+@keyframes danger-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px var(--neon-red, #ff0000)); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px var(--neon-red, #ff0000)); 
+  }
+}
+
+/* Hexagon selection states */
+.h3-hexagon.selected {
+  stroke-width: 3px;
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 15px #ffffff);
+  animation: selected-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes selected-glow {
+  0% { filter: drop-shadow(0 0 10px #ffffff); }
+  100% { filter: drop-shadow(0 0 25px #ffffff); }
+}
+
+.h3-hexagon.highlighted {
+  stroke-width: 2px;
+  stroke: var(--neon-yellow, #ffff00);
+  filter: drop-shadow(0 0 10px var(--neon-yellow, #ffff00));
+}
+
+/* Multi-resolution hexagon sizing */
+.h3-resolution-6 .h3-hexagon {
+  stroke-width: 0.5px;
+}
+
+.h3-resolution-7 .h3-hexagon {
+  stroke-width: 1px;
+}
+
+.h3-resolution-8 .h3-hexagon {
+  stroke-width: 1px;
+}
+
+.h3-resolution-9 .h3-hexagon {
+  stroke-width: 1.5px;
+}
+
+.h3-resolution-10 .h3-hexagon {
+  stroke-width: 2px;
+}
+
+/* Hexagon clustering for overlapping areas */
+.h3-cluster {
+  position: relative;
+}
+
+.h3-cluster .h3-hexagon {
+  z-index: 1;
+}
+
+.h3-cluster .h3-hexagon.cluster-center {
+  z-index: 10;
+  stroke-width: 3px;
+  stroke: var(--neon-blue, #00ffff);
+}
+
+/* Loading state for hexagons */
+.h3-hexagon.loading {
+  fill: transparent;
+  stroke: var(--neon-blue, #00ffff);
+  stroke-width: 1px;
+  stroke-dasharray: 5, 5;
+  animation: dash-rotate 2s linear infinite;
+}
+
+@keyframes dash-rotate {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+/* Hexagon labels for high zoom levels */
+.h3-hexagon-label {
+  font-family: var(--terminal-font, 'Courier New', monospace);
+  font-size: 10px;
+  fill: var(--neon-green, #00ff00);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  text-shadow: 0 0 3px currentColor;
+}
+
+/* Crime type specific hexagon styling */
+.h3-hexagon.crime-homicide {
+  stroke: var(--neon-red, #ff0000);
+  filter: drop-shadow(0 0 5px var(--neon-red, #ff0000));
+}
+
+.h3-hexagon.crime-robbery {
+  stroke: var(--neon-orange, #ff8800);
+  filter: drop-shadow(0 0 5px var(--neon-orange, #ff8800));
+}
+
+.h3-hexagon.crime-assault {
+  stroke: var(--neon-yellow, #ffff00);
+  filter: drop-shadow(0 0 5px var(--neon-yellow, #ffff00));
+}
+
+.h3-hexagon.crime-burglary {
+  stroke: var(--neon-green, #00ff00);
+  filter: drop-shadow(0 0 5px var(--neon-green, #00ff00));
+}
+
+.h3-hexagon.crime-theft {
+  stroke: var(--neon-blue, #00ffff);
+  filter: drop-shadow(0 0 5px var(--neon-blue, #00ffff));
+}
+
+.h3-hexagon.crime-auto-theft {
+  stroke: #0088ff;
+  filter: drop-shadow(0 0 5px #0088ff);
+}
+
+/* Temporal animation classes */
+.h3-temporal-fade-in {
+  animation: fade-in-hexagon 0.5s ease-out;
+}
+
+.h3-temporal-fade-out {
+  animation: fade-out-hexagon 0.5s ease-out;
+}
+
+@keyframes fade-in-hexagon {
+  0% { 
+    fill-opacity: 0; 
+    stroke-opacity: 0;
+    transform: scale(0.8);
+  }
+  100% { 
+    fill-opacity: 0.7; 
+    stroke-opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-out-hexagon {
+  0% { 
+    fill-opacity: 0.7; 
+    stroke-opacity: 1;
+    transform: scale(1);
+  }
+  100% { 
+    fill-opacity: 0; 
+    stroke-opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* Hexagon pattern overlay for empty areas */
+.h3-pattern-overlay {
+  fill: none;
+  stroke: rgba(0, 255, 255, 0.1);
+  stroke-width: 0.5px;
+  stroke-dasharray: 2, 2;
+  opacity: 0.3;
+}
+
+/* Performance optimizations for large hexagon sets */
+.h3-layer-optimized .h3-hexagon {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Accessibility improvements */
+.h3-hexagon:focus {
+  outline: 2px solid var(--neon-yellow, #ffff00);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .h3-hexagon {
+    stroke-width: 2px;
+    filter: contrast(1.5);
+  }
+  
+  .h3-hexagon-label {
+    font-weight: bold;
+    text-shadow: 1px 1px 0 black;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .h3-hexagon {
+    transition: none;
+    animation: none;
+  }
+  
+  .h3-hexagon:hover {
+    animation: none;
+  }
+  
+  .h3-hexagon.density-high {
+    animation: none;
+  }
+}

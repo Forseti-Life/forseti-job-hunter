@@ -1,0 +1,534 @@
+/**
+ * Forseti Safety Content Pages
+ * Unified styling for all Forseti content pages
+ */
+
+/* === Override Animated Header Colors === */
+.large-header {
+  background: #1a1a2e !important;
+}
+
+.large-header.home-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #00d4ff 100%) !important;
+}
+
+.large-header.page-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #00d4ff 100%) !important;
+}
+
+/* === Hero Sections === */
+.safety-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #ffffff;
+  padding: 4rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.safety-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.ai-monitoring-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.ai-icon {
+  width: 24px;
+  height: 24px;
+  color: #00d4ff;
+}
+
+.hero-tagline {
+  font-size: 1.5rem;
+  color: #00d4ff;
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+}
+
+.hero-mission {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* === Philly Focus Banner === */
+.philly-focus-banner {
+  background: linear-gradient(135deg, #1a1a2e 0%, #00d4ff 100%);
+  color: #ffffff;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.philly-focus-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(0, 212, 255, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.philly-focus-banner .container {
+  position: relative;
+  z-index: 1;
+}
+
+.location-icon {
+  font-size: 1.3rem;
+  margin-right: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* === Status Cards === */
+.safety-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.status-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #00d4ff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 212, 255, 0.2);
+}
+
+.status-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.status-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.status-description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.status-metric {
+  display: flex;
+  flex-direction: column;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00d4ff;
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* === Power Level Hierarchy === */
+.power-level-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.power-level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 212, 255, 0.15);
+}
+
+.power-level-card.level-pinnacle {
+  border-left: 5px solid #00d4ff;
+}
+
+.power-level-badge {
+  font-size: 1.1rem;
+  padding: 0.5rem 0.9rem;
+  margin-right: 1rem;
+}
+
+.power-level-badge.level-0 {
+  font-size: 1.2rem;
+  padding: 0.5rem 1rem;
+}
+
+.power-level-table {
+  background: #1a1a2e;
+}
+
+.power-level-table th {
+  min-width: 120px;
+  padding: 1rem;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.power-level-table td {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.dimension-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.dimension-card:hover {
+  transform: translateY(-2px);
+}
+
+.dimension-card h5 {
+  color: #00d4ff;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.dimension-card p {
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* === Feature Sections === */
+.features-section {
+  padding: 4rem 0;
+  background: #f8f9fa;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.feature-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.feature-description {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* === CTA Sections === */
+.cta-section {
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #ffffff;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.cta-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.cta-section p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+/* === Buttons === */
+.btn {
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.btn-light {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+.btn-light:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-outline-light {
+  background: transparent;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.btn-outline-light:hover {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+.btn-primary {
+  background: #00d4ff;
+  color: #ffffff;
+  border-color: #00d4ff;
+}
+
+.btn-primary:hover {
+  background: #00b8e6;
+  border-color: #00b8e6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #00d4ff;
+  border-color: #00d4ff;
+}
+
+.btn-outline-primary:hover {
+  background: #00d4ff;
+  color: #ffffff;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  color: #666;
+  border-color: #666;
+}
+
+.btn-outline-secondary:hover {
+  background: #666;
+  color: #ffffff;
+}
+
+.btn-lg {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+}
+
+/* === Content Sections === */
+.content-section {
+  padding: 4rem 0;
+}
+
+.content-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.content-section h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.content-section p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #666;
+}
+
+/* === Info Boxes === */
+.info-box {
+  background: #f8f9fa;
+  border-left: 4px solid #00d4ff;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 8px;
+}
+
+.info-box.warning {
+  border-left-color: #ffc107;
+  background: #fff8e1;
+}
+
+.info-box.success {
+  border-left-color: #28a745;
+  background: #e8f5e9;
+}
+
+/* === Community Elements === */
+.community-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.community-feature {
+  text-align: center;
+  padding: 2rem;
+}
+
+.community-feature-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  color: #00d4ff;
+}
+
+.community-feature h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.community-feature p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .safety-hero {
+    padding: 2rem 0;
+  }
+
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .hero-tagline {
+    font-size: 1.2rem;
+  }
+
+  .hero-mission {
+    font-size: 1rem;
+  }
+
+  .status-card,
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* === Utility Classes === */
+.text-center {
+  text-align: center;
+}
+
+.my-5 {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+.mb-4 {
+  margin-bottom: 2rem;
+}
+
+.mb-5 {
+  margin-bottom: 3rem;
+}
+
+.me-3 {
+  margin-right: 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}

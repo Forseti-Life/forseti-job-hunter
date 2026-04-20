@@ -1,0 +1,83 @@
+copilot_agent_tracker.langgraph_dashboard_tab:
+  route_name: copilot_agent_tracker.langgraph_dashboard
+  title: 'Overview'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 0
+
+copilot_agent_tracker.langgraph_session_tab:
+  route_name: copilot_agent_tracker.langgraph_session
+  title: 'Session Health'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 1
+
+copilot_agent_tracker.langgraph_parity_tab:
+  route_name: copilot_agent_tracker.langgraph_parity
+  title: 'Parity Health'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 2
+
+copilot_agent_tracker.langgraph_feature_progress_tab:
+  route_name: copilot_agent_tracker.langgraph_feature_progress
+  title: 'Feature Flow'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 3
+
+copilot_agent_tracker.langgraph_release_status_tab:
+  route_name: copilot_agent_tracker.langgraph_release_status
+  title: 'Release Control'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 4
+
+copilot_agent_tracker.langgraph_release_notes_tab:
+  route_name: copilot_agent_tracker.langgraph_release_notes
+  title: 'Release Evidence'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 5
+
+copilot_agent_tracker.langgraph_release_troubleshooting_tab:
+  route_name: copilot_agent_tracker.langgraph_release_troubleshooting
+  title: 'Release Triage'
+  base_route: copilot_agent_tracker.langgraph_dashboard
+  weight: 6
+
+copilot_agent_tracker.langgraph_console_home_tab:
+  route_name: copilot_agent_tracker.langgraph_console_home
+  title: 'Home'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 0
+
+copilot_agent_tracker.langgraph_console_build_tab:
+  route_name: copilot_agent_tracker.langgraph_console_build
+  title: 'Build'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 1
+
+copilot_agent_tracker.langgraph_console_test_tab:
+  route_name: copilot_agent_tracker.langgraph_console_test
+  title: 'Test'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 2
+
+copilot_agent_tracker.langgraph_console_run_tab:
+  route_name: copilot_agent_tracker.langgraph_console_run
+  title: 'Run'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 3
+
+copilot_agent_tracker.langgraph_console_observe_tab:
+  route_name: copilot_agent_tracker.langgraph_console_observe
+  title: 'Observe'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 4
+
+copilot_agent_tracker.langgraph_console_release_tab:
+  route_name: copilot_agent_tracker.langgraph_console_release
+  title: 'Release'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 5
+
+copilot_agent_tracker.langgraph_console_admin_tab:
+  route_name: copilot_agent_tracker.langgraph_console_admin
+  title: 'Admin'
+  base_route: copilot_agent_tracker.langgraph_console_home
+  weight: 6

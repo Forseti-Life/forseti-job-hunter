@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ * Contains nfr.module.
+ *
+ * National Firefighter Registry (NFR) module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_modules_uninstalled().
+ * 
+ * Prevent deletion of NFR tables when module is uninstalled.
+ * This preserves all collected data, consent records, and user information.
+ */
+function nfr_modules_uninstalled($modules) {
+  if (in_array('nfr', $modules)) {
+    // Get database schema
+    $schema = \Drupal::database()->schema();
+    
+    // List of tables that should be preserved
+    $preserve_tables = [
+      'nfr_user_profile',
+      'nfr_work_history',
+      'nfr_job_titles',
+      'nfr_incident_frequency',
+      'nfr_major_incidents',
+      'nfr_other_employment',
+      'nfr_cancer_diagnoses',
+      'nfr_consent',
+      'nfr_questionnaire',
+      'nfr_section_completion',
+      'nfr_follow_up_surveys',
+    ];
+    
+    // Note: This hook runs AFTER uninstall, so tables are already dropped.
+    // The proper solution is to NOT uninstall the module, or to back up data first.
+    // For now, we document this limitation.
+    $existing = 0;
+    foreach ($preserve_tables as $table) {
+      if ($schema->tableExists($table)) {
+        $existing++;
+      }
+    }
+    
+    if ($existing > 0) {
+      \Drupal::messenger()->addWarning(t('NFR module uninstalled. @count data tables were preserved.', ['@count' => $existing]));
+    } else {
+      \Drupal::messenger()->addError(t('NFR module uninstalled. WARNING: All data tables were deleted. To preserve data, do NOT uninstall the module - only disable it, or back up the database first.'));
+    }
+  }
+}
+
+/**
+ * Implements hook_help().
+ */
+function nfr_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.nfr':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The National Firefighter Registry (NFR) is a CDC cancer surveillance and health tracking system for firefighters.') . '</p>';
+      $output .= '<p>' . t('Key features include:') . '</p>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Cancer incidence tracking and reporting') . '</li>';
+      $output .= '<li>' . t('Linkages to state cancer registries') . '</li>';
+      $output .= '<li>' . t('Integration with USFA NERIS data') . '</li>';
+      $output .= '<li>' . t('Longitudinal health data collection') . '</li>';
+      $output .= '<li>' . t('Summary data analysis and dashboards') . '</li>';
+      $output .= '</ul>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function nfr_theme() {
+  return [
+    'nfr_dashboard' => [
+      'variables' => [
+        'data' => NULL,
+      ],
+      'template' => 'nfr-dashboard',
+    ],
+    'nfr_documentation' => [
+      'variables' => [
+        'development_docs' => [],
+        'reporting_docs' => [],
+        'cdc_docs' => [],
+      ],
+      'template' => 'nfr-documentation',
+    ],
+    'nfr_documentation_page' => [
+      'variables' => [
+        'title' => NULL,
+        'content' => NULL,
+        'file_info' => [],
+      ],
+      'template' => 'nfr-documentation-page',
+    ],    'nfr_public_page' => [
+      'variables' => [
+        'page_id' => '',
+        'content' => [],
+      ],
+      'template' => 'nfr-public-page',
+    ],
+    'nfr_home_page' => [
+      'variables' => [
+        'authenticated' => FALSE,
+        'role_links' => [],
+      ],
+      'template' => 'nfr-home-page',
+    ],
+    'nfr_enrollment_page' => [
+      'variables' => [
+        'page_id' => '',
+        'content' => [],
+      ],
+      'template' => 'nfr-enrollment-page',
+    ],
+    'nfr_dashboard_page' => [
+      'variables' => [
+        'page_id' => '',
+        'content' => [],
+      ],
+      'template' => 'nfr-dashboard-page',
+    ],
+    'nfr_admin_page' => [
+      'variables' => [
+        'page_id' => '',
+        'content' => [],
+      ],
+      'template' => 'nfr-admin-page',
+    ],
+    'nfr_navigation_menu' => [
+      'variables' => [
+        'menu_items' => [],
+      ],
+      'template' => 'nfr-navigation-menu',
+    ],
+  ];
+}

@@ -1,0 +1,1223 @@
+<?php
+
+/**
+ * @file
+ * Contains job_hunter.module.
+ * 
+ * This module provides job application automation functionality including
+ * job tracking, application workflow management, and external service integration.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function job_hunter_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.job_hunter':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Job Application Automation module provides comprehensive tools for managing job applications, tracking application status, and automating workflow processes.') . '</p>';
+      $output .= '<h3>' . t('Features') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Job application tracking and management') . '</li>';
+      $output .= '<li>' . t('Automated workflow processes') . '</li>';
+      $output .= '<li>' . t('Integration with external job boards and services') . '</li>';
+      $output .= '<li>' . t('Customizable application templates') . '</li>';
+      $output .= '<li>' . t('Status tracking and notifications') . '</li>';
+      $output .= '</ul>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function job_hunter_theme() {
+  return [
+    'profile_completeness' => [
+      'variables' => [
+        'completeness' => 0,
+        'is_complete' => FALSE,
+        'validation_errors' => [],
+        'missing_fields' => [],
+      ],
+      'template' => 'profile-completeness',
+    ],
+    'profile_summary' => [
+      'variables' => [
+        'summary' => [],
+        'user' => NULL,
+      ],
+      'template' => 'profile-summary',
+    ],
+    'job_seeker_profile' => [
+      'variables' => [
+        'profile' => NULL,
+        'consolidated' => [],
+        'user' => NULL,
+        'edit_url' => NULL,
+      ],
+      'template' => 'job-seeker-profile',
+    ],
+    'job_application_dashboard_wrapper' => [
+      'variables' => [
+        'navigation' => [],
+        'content' => [],
+      ],
+      'template' => 'job-application-dashboard-wrapper',
+    ],
+    'job_application_dashboard' => [
+      'variables' => [
+        'applications' => [],
+        'stats' => [],
+      ],
+      'template' => 'job-application-dashboard',
+    ],
+    'job_application_form' => [
+      'variables' => [
+        'job_info' => [],
+        'form_elements' => [],
+      ],
+      'template' => 'job-application-form',
+    ],
+    'job_hunter_home' => [
+      'variables' => [
+        'user_profile' => [],
+        'job_discovery' => [],
+        'dashboard' => [],
+        'statistics' => [],
+        'navigation' => [],
+        'queue_status' => [],
+        'show_queue_controls' => FALSE,
+      ],
+      'template' => 'job-hunter-home',
+    ],
+    'job_hunter_navigation' => [
+      'variables' => [
+        'navigation' => [],
+      ],
+      'template' => 'job-hunter-navigation',
+    ],
+    'job_hunter_queue_management' => [
+      'variables' => [
+        'queue_items' => [],
+        'queue_status' => [],
+      ],
+      'template' => 'job-hunter-queue-management',
+    ],
+    'documentation_home' => [
+      'variables' => [
+        'doc_links' => [],
+        'directory_path' => NULL,
+      ],
+      'template' => 'documentation-home',
+    ],
+    'job_discovery_start' => [
+      'variables' => [
+        'user' => NULL,
+        'profile' => NULL,
+        'keywords' => [],
+      ],
+      'template' => 'job-discovery-start',
+    ],
+    'job_discovery_company_selection' => [
+      'variables' => [
+        'user' => NULL,
+        'profile' => NULL,
+        'companies' => [],
+        'keywords' => [],
+      ],
+      'template' => 'job-discovery-company-selection',
+    ],
+    'job_discovery_company_search' => [
+      'variables' => [
+        'user' => NULL,
+        'profile' => NULL,
+        'company' => NULL,
+        'keywords' => [],
+        'job_opportunities' => [],
+      ],
+      'template' => 'job-discovery-company-search',
+    ],
+    'job_discovery_page' => [
+      'variables' => [
+        'default_keywords' => '',
+        'default_location' => '',
+        'default_remote_pref' => '',
+        'default_salary_min' => '',
+        'default_salary_max' => '',
+        'default_employment_type' => '',
+        'default_relocation' => '',
+        'has_google_cloud' => FALSE,
+        'has_adzuna' => FALSE,
+        'has_usajobs' => FALSE,
+        'has_serpapi' => FALSE,
+      ],
+      'template' => 'job-discovery-page',
+    ],
+    'my_jobs' => [
+      'variables' => [
+        'jobs' => [],
+        'pipeline_stages' => [],
+        'companies' => [],
+        'platforms' => [],
+        'filter_company' => '',
+        'filter_status' => '',
+        'filter_platform' => '',
+        'return_url' => '/jobhunter/my-jobs',
+        'current_page' => 0,
+        'total_pages' => 1,
+        'total_jobs' => 0,
+        'user_has_skills' => FALSE,
+      ],
+      'template' => 'my-jobs',
+    ],
+    'my_jobs_archive' => [
+      'variables' => [
+        'jobs' => [],
+        'current_page' => 0,
+        'total_pages' => 1,
+        'total_jobs' => 0,
+      ],
+      'template' => 'my-jobs-archive',
+    ],
+    'application_submission' => [
+      'variables' => [
+        'is_job_specific' => FALSE,
+        'job_snapshot' => NULL,
+        'summary' => [
+          'total' => 0,
+          'submitted' => 0,
+          'processing' => 0,
+          'manual_required' => 0,
+          'failed' => 0,
+        ],
+        'stage_counts' => [
+          'approval_pending' => 0,
+          'application_pending' => 0,
+          'processing' => 0,
+          'submitted' => 0,
+          'manual_required' => 0,
+          'failed' => 0,
+        ],
+        'ready_jobs' => [],
+        'approval_jobs' => [],
+        'recent_applications' => [],
+        'selected_job' => NULL,
+        'selected_workflow_status' => '',
+        'selected_application' => NULL,
+        'journey_steps' => [],
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission',
+    ],
+    'application_submission_step2' => [
+      'variables' => [
+        'job_id' => 0,
+        'job_title' => '',
+        'company_name' => '',
+        'original_job_url' => '',
+        'resolved_url' => '',
+        'ats_platform' => '',
+        'confidence' => '',
+        'resolution_steps' => [],
+        'is_direct_link' => FALSE,
+        'has_career_page' => FALSE,
+        'is_resolved' => FALSE,
+        'verification' => [],
+        'step2_cache_exists' => FALSE,
+        'step2_last_run_at' => '',
+        'step2_ran_this_request' => FALSE,
+        'run_step2_csrf_token' => '',
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission-step2',
+    ],
+    'application_submission_step3' => [
+      'variables' => [
+        'job_id' => 0,
+        'job_title' => '',
+        'company_name' => '',
+        'apply_url' => '',
+        'auth_identification' => [],
+        'step3_cache_exists' => FALSE,
+        'step3_last_run_at' => '',
+        'step3_ran_this_request' => FALSE,
+        'run_step3_csrf_token' => '',
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission-step3',
+    ],
+    'application_submission_step4' => [
+      'variables' => [
+        'job_id' => 0,
+        'job_title' => '',
+        'company_name' => '',
+        'company_id' => 0,
+        'apply_url' => '',
+        'auth_url' => '',
+        'auth_type' => 'unknown',
+        'ats_platform' => 'unknown',
+        'user_email' => '',
+        'user_phone' => '',
+        'user_name' => '',
+        'prerequisites' => [],
+        'account_status' => 'unknown',
+        'account_evidence' => '',
+        'account_ready' => FALSE,
+        'email_verified' => FALSE,
+        'phone_verified' => FALSE,
+        'verification_method' => '',
+        'account_created_at' => '',
+        'has_stored_credential' => FALSE,
+        'stored_username' => '',
+        'default_username' => '',
+        'default_password' => '',
+        'step4_cache_exists' => FALSE,
+        'step4_last_run_at' => '',
+        'step4_ran_this_request' => FALSE,
+        'run_step4_csrf_token' => '',
+        'verification_result' => [],
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission-step4',
+    ],
+    'application_submission_step5' => [
+      'variables' => [
+        'job_id' => 0,
+        'job_title' => '',
+        'company_name' => '',
+        'company_id' => 0,
+        'apply_url' => '',
+        'auth_url' => '',
+        'auth_type' => 'unknown',
+        'ats_platform' => 'unknown',
+        'account_ready' => FALSE,
+        'browser_verified' => FALSE,
+        'has_stored_credential' => FALSE,
+        'prerequisites_met' => FALSE,
+        'job_confirmed_on_site' => FALSE,
+        'apply_control_located' => FALSE,
+        'submission_attempted' => FALSE,
+        'submission_started' => FALSE,
+        'submission_completed' => FALSE,
+        'submission_status' => 'not_started',
+        'submission_result' => [],
+        'confirmation' => '',
+        'attempt_count' => 0,
+        'last_outcome' => '',
+        'last_error' => '',
+        'last_attempt_at' => '',
+        'has_tailored_resume' => FALSE,
+        'resume_pdf_basename' => '',
+        'resume_upload_result' => [],
+        'resume_uploaded' => FALSE,
+        'wd_flow_steps' => [],
+        'wd_current_step' => 1,
+        'wd_all_complete' => FALSE,
+        'section_a_status' => 'incomplete',
+        'section_b_status' => 'incomplete',
+        'section_c_status' => 'incomplete',
+        'all_pass' => FALSE,
+        'step5_cache_exists' => FALSE,
+        'step5_last_run_at' => '',
+        'step5_ran_this_request' => FALSE,
+        'run_step5_csrf_token' => '',
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission-step5',
+    ],
+    'application_submission_step_stub' => [
+      'variables' => [
+        'job_id' => 0,
+        'job_title' => '',
+        'company_name' => '',
+        'step' => 0,
+        'step_title' => '',
+        'step_description' => '',
+        'return_url' => '/jobhunter/application-submission',
+      ],
+      'template' => 'application-submission-step-stub',
+    ],
+    'company_research_page' => [
+      'variables' => [
+        'companies' => [],
+      ],
+      'template' => 'company-research-page',
+    ],
+    'target_companies' => [
+      'variables' => [
+        'total_companies' => 0,
+        'active_companies' => 0,
+        'total_jobs' => 0,
+        'target_companies' => [],
+        'job_companies' => [],
+        'existing_companies' => [],
+      ],
+      'template' => 'target-companies',
+    ],
+    'job_search_results' => [
+      'variables' => [
+        'results' => [],
+        'search_params' => [],
+        'total_results' => 0,
+        'sources_searched' => [],
+        'diagnostics' => [],
+        'pagination' => [],
+        'current_page' => 0,
+        'save_job_csrf_token' => '',
+      ],
+      'template' => 'job-search-results',
+    ],
+    'node__company' => [
+      'template' => 'node--company',
+      'base hook' => 'node',
+    ],
+    'tailor_resume' => [
+      'variables' => [
+        'user' => NULL,
+        'profile' => NULL,
+        'profile_json' => NULL,
+        'job' => NULL,
+        'job_id' => NULL,
+        'job_extracted' => NULL,
+        'job_skills' => NULL,
+        'job_keywords' => NULL,
+        'skills_gap' => [],
+        'tailored_resume' => NULL,
+        'tailoring_status' => 'pending',
+        'pdf_path' => NULL,
+        'pdf_generated' => NULL,
+        'pdf_history' => [],
+      ],
+      'template' => 'tailor-resume',
+    ],
+    'job_tailoring_combined' => [
+      'variables' => [
+        'user' => NULL,
+        'profile' => NULL,
+        'profile_json' => NULL,
+        'job' => NULL,
+        'job_id' => NULL,
+        'job_extracted' => NULL,
+        'job_skills' => NULL,
+        'job_keywords' => NULL,
+        'skills_gap' => [],
+        'tailored_resume' => NULL,
+        'tailoring_status' => 'pending',
+        'pdf_path' => NULL,
+        'pdf_generated' => NULL,
+        'pdf_history' => [],
+        'confidence_score' => 0,
+        'save_resume_url' => '',
+      ],
+      'template' => 'job-tailoring-combined',
+    ],
+    'interview_prep_page' => [
+      'variables' => [
+        'job' => NULL,
+        'job_id' => NULL,
+        'notes_text' => '',
+        'save_url' => '',
+        'ai_tips_url' => '',
+        'ai_tips_csrf_token' => '',
+      ],
+      'template' => 'interview-prep-page',
+    ],
+    'cover_letter_display' => [
+      'variables' => [
+        'job' => NULL,
+        'job_id' => NULL,
+        'cover_letter' => NULL,
+        'tailoring_status' => 'pending',
+        'cover_letter_html' => '',
+        'pdf_path' => NULL,
+        'generate_url' => '',
+        'save_url' => '',
+      ],
+      'template' => 'cover-letter-display',
+    ],
+    'google_jobs_integration_home' => [
+      'variables' => [
+        'stats' => [],
+        'recent_jobs' => [],
+        'documentation_url' => NULL,
+      ],
+      'template' => 'google-jobs-integration-home',
+    ],
+    'google_jobs_job_detail' => [
+      'variables' => [
+        'job' => NULL,
+        'company' => NULL,
+        'sync' => NULL,
+        'validation_log' => [],
+        'sync_validation_errors' => [],
+      ],
+      'template' => 'google-jobs-job-detail',
+    ],
+    'opportunity_management_page' => [
+      'variables' => [
+        'stats' => NULL,
+        'saved_jobs' => [],
+        'search_history' => [],
+        'companies' => [],
+        'filters' => [],
+      ],
+      'template' => 'opportunity-management-page',
+    ],
+    'credentials_management' => [
+      'variables' => [
+        'credentials' => [],
+        'companies' => [],
+        'ats_platforms' => [],
+        'add_form' => NULL,
+      ],
+      'template' => 'credentials-management',
+    ],
+    'user_profile_dashboard' => [
+      'variables' => [
+        'user' => NULL,
+      ],
+      'template' => 'user-profile-dashboard',
+    ],
+    'google_jobs_search' => [
+      'variables' => [
+        'query' => '',
+        'results' => [],
+        'total_results' => 0,
+        'current_page' => 1,
+        'total_pages' => 0,
+        'page_size' => 10,
+        'has_search' => FALSE,
+        'error_message' => NULL,
+        'saved_searches' => [],
+        'save_search_url' => '',
+        'max_saved_searches' => 10,
+      ],
+      'template' => 'google-jobs-search',
+    ],
+    'saved_searches_page' => [
+      'variables' => [
+        'saved_searches' => [],
+        'saved_searches_count' => 0,
+        'max_saved_searches' => 10,
+      ],
+      'template' => 'saved-searches-page',
+    ],
+    'google_jobs_search_detail' => [
+      'variables' => [
+        'job' => NULL,
+        'company' => NULL,
+      ],
+      'template' => 'google-jobs-search-detail',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function job_hunter_theme_suggestions_profile_alter(array &$suggestions, array $variables) {
+  $profile = $variables['elements']['#profile'];
+  if ($profile->bundle() == 'job_seeker') {
+    $suggestions[] = 'profile__job_seeker__form';
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function job_hunter_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Attach styling to job seeker profile forms
+  if (strpos($form_id, 'profile_job_seeker_') === 0) {
+    $form['#attached']['library'][] = 'job_hunter/user_profile';
+  }
+  
+  // List of Job Hunter form IDs that need navigation
+  // Note: Forms rendered through controllers should NOT be in this list
+  // as they are wrapped by the controller instead
+  $job_hunter_forms = [
+    'job_hunter_settings_form',
+    'job_seeker_form',
+    'job_application_form',
+    'bulk_actions_form',
+    'job_hunter_user_profile_form',
+    'job_hunter_add_job_posting_form',
+  ];
+  
+  // Check if this is a Job Hunter form that needs navigation
+  if (in_array($form_id, $job_hunter_forms)) {
+    // Create navigation block
+    $block_manager = \Drupal::service('plugin.manager.block');
+    $plugin_block = $block_manager->createInstance('job_hunter_navigation', []);
+    $navigation = $plugin_block->build();
+    
+    // Wrap form with navigation using job-hunter-layout class to match CSS
+    $form['#prefix'] = '<div class="job-hunter-layout"><aside class="job-hunter-sidebar">' . 
+                       \Drupal::service('renderer')->render($navigation) . 
+                       '</aside><main class="job-hunter-content">' . 
+                       ($form['#prefix'] ?? '');
+    $form['#suffix'] = ($form['#suffix'] ?? '') . '</main></div>';
+    
+    // Attach navigation CSS and home CSS for layout styles
+    $form['#attached']['library'][] = 'job_hunter/job-hunter-navigation';
+    $form['#attached']['library'][] = 'job_hunter/job-hunter-home';
+  }
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function job_hunter_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->getType() === 'company') {
+    $build['#attached']['library'][] = 'job_hunter/company_profile';
+  }
+}
+
+/**
+ * Implements hook_cron().
+ * 
+ * Handles periodic tasks like checking application status updates,
+ * sending notifications, and cleaning up old data.
+ */
+function job_hunter_cron() {
+  $logger = \Drupal::logger('job_hunter');
+  $database = \Drupal::database();
+  
+  try {
+    // Import cached external job search results into main job_requirements table
+    // This allows external API results to become searchable in Forseti DB
+    
+    // Get unimported external job results from last 7 days
+    $results = $database->select('jobhunter_job_search_results', 'r')
+      ->fields('r')
+      ->isNull('imported_to_job_id')
+      ->condition('created', time() - (7 * 24 * 60 * 60), '>')
+      ->orderBy('created', 'DESC')
+      ->range(0, 100)  // Import 100 jobs per cron run
+      ->execute()
+      ->fetchAll();
+    
+    if (empty($results)) {
+      $logger->info('✅ Cron: No new external job results to import.');
+      return;
+    }
+    
+    $imported_count = 0;
+    $skipped_count = 0;
+    
+    foreach ($results as $result) {
+      try {
+        $job_data = json_decode($result->job_data_json, TRUE);
+        
+        if (empty($job_data)) {
+          $logger->warning('⚠️ Cron: Skipping result ID @id - invalid JSON', ['@id' => $result->id]);
+          $skipped_count++;
+          continue;
+        }
+        
+        // Extract job_hash from data for content-based deduplication
+        $job_hash = $job_data['job_hash'] ?? NULL;
+        
+        // Check if this job already exists (hash-based first, then external_job_id fallback)
+        $existing = NULL;
+        if ($job_hash && $database->schema()->fieldExists('jobhunter_job_requirements', 'job_hash')) {
+          $existing = $database->select('jobhunter_job_requirements', 'j')
+            ->fields('j', ['id'])
+            ->condition('job_hash', $job_hash)
+            ->execute()
+            ->fetchField();
+        }
+        
+        // Fallback to external_job_id check if no hash match
+        if (!$existing) {
+          $existing = $database->select('jobhunter_job_requirements', 'j')
+            ->fields('j', ['id'])
+            ->condition('external_job_id', $result->external_job_id)
+            ->execute()
+            ->fetchField();
+        }
+        
+        if ($existing) {
+          // Mark as imported (already exists)
+          $database->update('jobhunter_job_search_results')
+            ->fields(['imported_to_job_id' => $existing, 'imported_at' => time()])
+            ->condition('id', $result->id)
+            ->execute();
+          $skipped_count++;
+          continue;
+        }
+        
+        // Determine company_id (try to match by name or create placeholder)
+        $company_id = 1; // Default/unknown company
+        if (!empty($job_data['company'])) {
+          $company_name_field = $database->schema()->fieldExists('jobhunter_companies', 'name') ? 'name' : 'company_name';
+          $existing_company = $database->select('jobhunter_companies', 'c')
+            ->fields('c', ['id'])
+            ->condition($company_name_field, $job_data['company'])
+            ->execute()
+            ->fetchField();
+          
+          if ($existing_company) {
+            $company_id = $existing_company;
+          }
+        }
+        
+        // Determine source platform from result source
+        $source_map = [
+          'Google Jobs' => 'google_cloud',
+          'Adzuna' => 'adzuna',
+          'USAJobs' => 'usajobs',
+          'Google Jobs (SerpAPI)' => 'serpapi',
+        ];
+        $source_field = $database->schema()->fieldExists('jobhunter_job_requirements', 'external_source')
+          ? 'external_source'
+          : 'source';
+        $external_source = $source_map[$job_data['source']] ?? 'external_api';
+
+        $job_title = substr((string) ($job_data['title'] ?? 'Unknown'), 0, 255);
+        $location = substr((string) ($job_data['location'] ?? 'Unknown'), 0, 255);
+        $employment_type = substr((string) ($job_data['employment_type'] ?? 'Full-time'), 0, 50);
+        $job_url = substr((string) ($job_data['url'] ?? ''), 0, 512);
+        $external_job_id = substr((string) ($result->external_job_id ?? ''), 0, 512);
+        $via = !empty($job_data['via']) ? substr((string) $job_data['via'], 0, 255) : NULL;
+        $thumbnail = !empty($job_data['thumbnail']) ? substr((string) $job_data['thumbnail'], 0, 512) : NULL;
+        $share_link = !empty($job_data['share_link']) ? substr((string) $job_data['share_link'], 0, 512) : NULL;
+        
+        // Insert into main job_requirements table
+        $new_job_id = $database->insert('jobhunter_job_requirements')
+          ->fields([
+            'company_id' => $company_id,
+            'job_title' => $job_title,
+            'job_description' => $job_data['description'] ?? '',
+            'requirements' => '',
+            'salary_range' => $job_data['salary_range'] ?? 'Not specified',
+            'location' => $location,
+            'remote_option' => (stripos((string) ($job_data['location'] ?? ''), 'remote') !== FALSE) ? 'remote' : 'onsite',
+            'employment_type' => $employment_type,
+            'job_url' => $job_url,
+            'status' => 'active',
+            'created' => time(),
+            'updated' => time(),
+            $source_field => $external_source,
+            'external_job_id' => $external_job_id,
+            'job_hash' => $job_hash,
+            'ai_extraction_status' => 'pending',
+            // SerpAPI rich metadata fields
+            'via' => $via,
+            'thumbnail' => $thumbnail,
+            'share_link' => $share_link,
+            'work_from_home' => !empty($job_data['work_from_home']) ? 1 : 0,
+            'health_insurance' => !empty($job_data['health_insurance']) ? 1 : 0,
+            'dental_coverage' => !empty($job_data['dental_coverage']) ? 1 : 0,
+            'paid_time_off' => !empty($job_data['paid_time_off']) ? 1 : 0,
+            'job_highlights' => !empty($job_data['job_highlights']) ? json_encode($job_data['job_highlights']) : NULL,
+            'apply_options' => !empty($job_data['apply_options']) ? json_encode($job_data['apply_options']) : NULL,
+          ])
+          ->execute();
+        
+        // Mark result as imported
+        $database->update('jobhunter_job_search_results')
+          ->fields([
+            'imported_to_job_id' => $new_job_id,
+            'imported_at' => time(),
+          ])
+          ->condition('id', $result->id)
+          ->execute();
+        
+        $imported_count++;
+      }
+      catch (\Exception $e) {
+        $logger->error('❌ Cron: Failed to import result ID @id: @error', [
+          '@id' => $result->id,
+          '@error' => $e->getMessage(),
+        ]);
+        $skipped_count++;
+      }
+    }
+    
+    $logger->info('✅ Cron: Imported @imported new jobs, skipped @skipped duplicates/errors', [
+      '@imported' => $imported_count,
+      '@skipped' => $skipped_count,
+    ]);
+  }
+  catch (\Exception $e) {
+    $logger->error('❌ Cron job import failed: @error', ['@error' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ * 
+ * Display profile completeness message to users on login.
+ */
+function job_hunter_user_login($account) {
+  // Check if user has job application profile fields
+  if ($account->hasField('field_profile_completeness')) {
+    $completeness = $account->get('field_profile_completeness')->value ?? 0;
+    
+    // Show message if profile is incomplete
+    if ($completeness < 70) {
+      $profile_url = \Drupal\Core\Url::fromRoute('job_hunter.my_profile');
+      \Drupal::messenger()->addWarning(
+        t('Your job application profile is @percent% complete. <a href="@url">Complete your profile</a> to start applying for jobs.', [
+          '@percent' => $completeness,
+          '@url' => $profile_url->toString(),
+        ])
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_login_form.
+ */
+function job_hunter_form_user_login_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Add custom submit handler to redirect to job hunter after login
+  $form['#submit'][] = 'job_hunter_user_login_submit';
+}
+
+/**
+ * Custom submit handler for user login form.
+ */
+function job_hunter_user_login_submit($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  // Redirect to job hunter dashboard after login
+  $form_state->setRedirect('job_hunter.dashboard');
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ * 
+ * Add profile management links to user profile pages.
+ */
+function job_hunter_entity_view_alter(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+  if ($entity->getEntityTypeId() === 'user' && $display->getMode() === 'full') {
+    $current_user = \Drupal::currentUser();
+    
+    // Only show for the profile owner or admins
+    if ($current_user->id() == $entity->id() || $current_user->hasPermission('administer users')) {
+      $profile_url = \Drupal\Core\Url::fromRoute('job_hunter.user_profile_dashboard', ['user' => $entity->id()]);
+      
+      $build['job_profile_link'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['job-profile-actions']],
+        '#weight' => -10,
+      ];
+      
+      $build['job_profile_link']['link'] = [
+        '#type' => 'link',
+        '#title' => t('Manage Job Application Profile'),
+        '#url' => $profile_url,
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'job-profile-button'],
+        ],
+      ];
+      
+      // Add completeness indicator if available
+      if ($entity->hasField('field_profile_completeness')) {
+        $completeness = $entity->get('field_profile_completeness')->value ?? 0;
+        $status_class = $completeness >= 70 ? 'complete' : ($completeness >= 40 ? 'partial' : 'incomplete');
+        
+        $build['job_profile_link']['status'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => t('Profile @percent% complete', ['@percent' => $completeness]),
+          '#attributes' => [
+            'class' => ['profile-status', 'status-' . $status_class],
+          ],
+        ];
+      }
+      
+      $build['#attached']['library'][] = 'job_hunter/user_profile';
+    }
+  }
+}
+
+
+
+/**
+ * Implements hook_user_insert().
+ * 
+ * Initialize profile completeness for new users.
+ */
+function job_hunter_user_insert(\Drupal\user\UserInterface $user) {
+  // Initialize profile completeness to 0 for new users
+  if ($user->hasField('field_profile_completeness')) {
+    $user->set('field_profile_completeness', 0);
+    $user->save();
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function job_hunter_entity_update(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Handle user entity updates, specifically resume file uploads
+  if ($entity->getEntityTypeId() === 'user' && $entity->hasField('field_resume_file')) {
+    // Queue text extraction to prevent timeouts during form submission
+    _job_hunter_queue_text_extraction($entity);
+  }
+  
+  // Handle profile entity resume file uploads (new approach)
+  if ($entity->getEntityTypeId() === 'profile' && $entity->bundle() === 'job_seeker') {
+    if ($entity->hasField('field_resume_file')) {
+      // Queue text extraction for profile when resume file changes
+      _job_hunter_queue_profile_text_extraction($entity);
+    }
+  }
+}
+
+/**
+ * Queue resume text extraction for background processing.
+ */
+function _job_hunter_queue_text_extraction(\Drupal\user\Entity\User $user) {
+  $resume_file_field = $user->get('field_resume_file');
+  
+  // Only queue if there's a file to process
+  if (!$resume_file_field->isEmpty()) {
+    $queue = \Drupal::queue('job_hunter_text_extraction');
+    $queue->createItem([
+      'user_id' => $user->id(),
+      'file_id' => $resume_file_field->target_id,
+    ]);
+    
+    \Drupal::logger('job_hunter')->info('Queued text extraction for user @uid', ['@uid' => $user->id()]);
+  }
+}
+
+/**
+ * Queue resume text extraction for profile entities.
+ */
+function _job_hunter_queue_profile_text_extraction(\Drupal\profile\Entity\Profile $profile) {
+  $resume_file_field = $profile->get('field_resume_file');
+  
+  // Only queue if there's a file to process
+  if (!$resume_file_field->isEmpty()) {
+    $queue = \Drupal::queue('job_hunter_profile_text_extraction');
+    $queue->createItem([
+      'profile_id' => $profile->id(),
+      'user_id' => $profile->getOwnerId(),
+      'file_id' => $resume_file_field->target_id,
+    ]);
+    
+    \Drupal::logger('job_hunter')->info('Queued profile text extraction for user @uid, profile @pid', [
+      '@uid' => $profile->getOwnerId(),
+      '@pid' => $profile->id()
+    ]);
+  }
+}
+
+/**
+ * Extract text from uploaded resume file and populate text field.
+ */
+function _job_hunter_extract_resume_text(\Drupal\user\Entity\User $user) {
+  if (!$user->hasField('field_resume_file') || !$user->hasField('field_primary_resume_text')) {
+    return;
+  }
+  
+  $resume_file_field = $user->get('field_resume_file');
+  if ($resume_file_field->isEmpty()) {
+    return;
+  }
+  
+  $file_id = $resume_file_field->target_id;
+  $file = \Drupal\file\Entity\File::load($file_id);
+  
+  if (!$file) {
+    return;
+  }
+  
+  $file_uri = $file->getFileUri();
+  $file_path = \Drupal::service('file_system')->realpath($file_uri);
+  $mime_type = $file->getMimeType();
+  
+  // Set execution time limit to prevent timeouts
+  set_time_limit(30);
+  
+  $extracted_text = '';
+  
+  try {
+    \Drupal::logger('job_hunter')->info('Starting text extraction for file: @filename (Type: @mime_type)', [
+      '@filename' => $file->getFilename(),
+      '@mime_type' => $mime_type
+    ]);
+    
+    switch ($mime_type) {
+      case 'application/pdf':
+        $extracted_text = _job_hunter_extract_pdf_text($file_path);
+        break;
+        
+      case 'application/msword':
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        $extracted_text = _job_hunter_extract_doc_text($file_path, $mime_type);
+        break;
+        
+      default:
+        \Drupal::logger('job_hunter')->warning('Unsupported file type for text extraction: @mime_type', ['@mime_type' => $mime_type]);
+        return;
+    }
+    
+    if (!empty($extracted_text)) {
+      // Truncate very long text to prevent database issues
+      if (strlen($extracted_text) > 50000) {
+        $extracted_text = substr($extracted_text, 0, 50000) . "\n\n[Content truncated due to length]";
+      }
+      
+      $user->set('field_primary_resume_text', $extracted_text);
+      $user->save();
+      
+      \Drupal::logger('job_hunter')->info('Resume text extracted and saved for user @uid (Length: @length chars)', [
+        '@uid' => $user->id(),
+        '@length' => strlen($extracted_text)
+      ]);
+    } else {
+      \Drupal::logger('job_hunter')->warning('No text extracted from file: @filename', [
+        '@filename' => $file->getFilename()
+      ]);
+    }
+    
+  } catch (Exception $e) {
+    \Drupal::logger('job_hunter')->error('Error extracting resume text: @error', ['@error' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Extract text from PDF file.
+ */
+function _job_hunter_extract_pdf_text($file_path) {
+  $text = '';
+  
+  // Try pdftotext command with timeout protection
+  if (shell_exec('which pdftotext')) {
+    // Add timeout to prevent hanging on large/complex PDFs
+    $command = sprintf('timeout 20s pdftotext %s -', escapeshellarg($file_path));
+    $text = shell_exec($command);
+    
+    if ($text === null) {
+      \Drupal::logger('job_hunter')->warning('PDF text extraction timed out or failed for file: @file', ['@file' => $file_path]);
+      return '';
+    }
+  }
+  
+  return trim($text);
+}
+
+/**
+ * Extract text from Word document.
+ */
+function _job_hunter_extract_doc_text($file_path, $mime_type) {
+  $text = '';
+  
+  if ($mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    // DOCX file with timeout protection
+    if (shell_exec('which docx2txt')) {
+      $command = sprintf('timeout 15s docx2txt %s -', escapeshellarg($file_path));
+      $text = shell_exec($command);
+      
+      if ($text === null) {
+        \Drupal::logger('job_hunter')->warning('DOCX text extraction timed out for file: @file', ['@file' => $file_path]);
+        return '';
+      }
+    }
+  } else {
+    // DOC file (older format) with timeout protection
+    if (shell_exec('which antiword')) {
+      $command = sprintf('timeout 15s antiword %s', escapeshellarg($file_path));
+      $text = shell_exec($command);
+      
+      if ($text === null) {
+        \Drupal::logger('job_hunter')->warning('DOC text extraction timed out for file: @file', ['@file' => $file_path]);
+        return '';
+      }
+    }
+  }
+  
+  return trim($text);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for file entities.
+ * 
+ * Automatically clean up queue items when a file is deleted to prevent
+ * orphaned queue items from remaining in the system.
+ */
+function job_hunter_file_delete(Drupal\file\FileInterface $file) {
+  $queue_factory = \Drupal::service('queue');
+  $database = \Drupal::database();
+  
+  // List of queues that might reference files
+  $queues_to_check = [
+    'job_hunter_genai_parsing',
+    'job_hunter_text_extraction',
+    'job_hunter_profile_text_extraction',
+  ];
+  
+  foreach ($queues_to_check as $queue_name) {
+    // Query the queue table to find items referencing this file
+    $query = $database->select('queue', 'q')
+      ->fields('q', ['item_id', 'data'])
+      ->condition('q.name', $queue_name);
+    
+    $results = $query->execute()->fetchAll();
+    
+    foreach ($results as $row) {
+      // Unserialize the data to check if it references our file
+      $item_data = unserialize($row->data);
+      
+      if (isset($item_data['fid']) && $item_data['fid'] == $file->id()) {
+        // Delete this queue item
+        $database->delete('queue')
+          ->condition('item_id', $row->item_id)
+          ->execute();
+        
+        \Drupal::logger('job_hunter')->info('Removed orphaned queue item @item_id from @queue for deleted file @fid', [
+          '@item_id' => $row->item_id,
+          '@queue' => $queue_name,
+          '@fid' => $file->id(),
+        ]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements template_preprocess_company_research_page().
+ */
+function job_hunter_preprocess_company_research_page(&$variables) {
+  $companies = $variables['companies'];
+  
+  // Calculate statistics.
+  $stats = [
+    'total_companies' => count($companies),
+    'active_count' => 0,
+    'total_jobs' => 0,
+    'total_apps' => 0,
+  ];
+  
+  foreach ($companies as $company) {
+    if (!empty($company['active'])) {
+      $stats['active_count']++;
+    }
+    $stats['total_jobs'] += $company['job_count'] ?? 0;
+    $stats['total_apps'] += $company['app_count'] ?? 0;
+  }
+  
+  $variables['stats'] = $stats;
+}
+/**
+ * Implements hook_form_user_register_form_alter().
+ *
+ * Customize user registration form to include job search profile fields.
+ */
+function job_hunter_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  // Add job search profile section
+  $form['job_search_profile'] = [
+    '#type' => 'details',
+    '#title' => t('Job Search Profile'),
+    '#description' => t('Help us customize your job search experience by providing some basic information.'),
+    '#weight' => -5,
+    '#open' => TRUE,
+  ];
+
+  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
+  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
+  $field_descriptions = $profile_service->getFieldDescriptions();
+
+  // Move job search fields into organized section if they exist
+  $profile_fields = [
+    'field_resume_file',
+    'field_professional_summary',
+    'field_work_authorization',
+    'field_available_start_date',
+    'field_remote_preference',
+  ];
+
+  foreach ($profile_fields as $field_name) {
+    if (isset($form[$field_name])) {
+      $form['job_search_profile'][$field_name] = $form[$field_name];
+      if (isset($field_descriptions[$field_name])) {
+        $form['job_search_profile'][$field_name]['widget'][0]['#description'] = $field_descriptions[$field_name];
+      }
+      unset($form[$field_name]);
+      
+      // Make key fields required
+      if (in_array($field_name, ['field_resume_file', 'field_work_authorization', 'field_available_start_date'])) {
+        $form['job_search_profile'][$field_name]['widget']['#required'] = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_user_form_alter().
+ *
+ * Customize user profile edit form with organized job search sections.
+ */
+function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  // Organize job search fields into collapsible sections
+  $form['job_search_info'] = [
+    '#type' => 'details',
+    '#title' => t('Job Search Information'),
+    '#collapsible' => TRUE,
+    '#open' => TRUE,
+    '#weight' => -5,
+  ];
+
+  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
+  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
+  $field_descriptions = $profile_service->getFieldDescriptions();
+
+  // Core job search fields
+  $profile_fields = [
+    'field_resume_file',
+    'field_professional_summary',
+    'field_skills_summary',
+    'field_work_authorization',
+    'field_salary_expectation_min',
+    'field_salary_expectation_max',
+    'field_available_start_date',
+    'field_remote_preference',
+    'field_relocation_willing',
+    'field_keywords_interested',
+    'field_target_companies',
+  ];
+
+  foreach ($profile_fields as $field_name) {
+    if (isset($form[$field_name])) {
+      $form['job_search_info'][$field_name] = $form[$field_name];
+      if (isset($field_descriptions[$field_name])) {
+        if (isset($form['job_search_info'][$field_name]['widget'])) {
+          $form['job_search_info'][$field_name]['widget']['#description'] = $field_descriptions[$field_name];
+        }
+      }
+      unset($form[$field_name]);
+    }
+  }
+
+  // Add custom submit handler to update profile completeness
+  $form['#submit'][] = 'job_hunter_user_form_submit';
+}
+
+/**
+ * Custom submit handler for user profile form.
+ *
+ * Updates profile completeness after user saves changes.
+ */
+function job_hunter_user_form_submit(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /** @var \Drupal\user\UserInterface $user */
+  $user = $form_state->getFormObject()->getEntity();
+
+  // Update profile completeness
+  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
+  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
+  $profile_service->updateProfileCompleteness($user);
+
+  // Notify user if profile is now complete
+  if ($profile_service->isProfileComplete($user)) {
+    \Drupal::messenger()->addStatus(t('Profile is now complete! You can start exploring job opportunities.'));
+  }
+}

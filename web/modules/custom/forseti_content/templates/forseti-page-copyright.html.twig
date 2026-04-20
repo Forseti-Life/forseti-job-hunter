@@ -1,0 +1,75 @@
+{#
+/**
+ * @file
+ * Template for Copyright & DMCA page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - copyright_notice: Copyright notice section
+ * - ownership: Content ownership section
+ * - fair_use: Permitted uses section
+ * - dmca_policy: DMCA policy section
+ * - dmca_contact: DMCA contact section
+ * - counter_notice: Counter-notification section
+ * - repeat_infringers: Repeat infringer policy
+ * - trademark: Trademark section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-info-cyan">
+        <h4>{{ copyright_notice.title }}</h4>
+        <p class="mb-0">{{ copyright_notice.content }}</p>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ ownership.title }}</h2>
+      
+      <h4>{{ ownership.forseti_content.title }}</h4>
+      <ul>
+        {% for item in ownership.forseti_content.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h4 class="mt-4">{{ ownership.user_content.title }}</h4>
+      <p>{{ ownership.user_content.content }}</p>
+      
+      <h4 class="mt-4">{{ ownership.public_data.title }}</h4>
+      <p>{{ ownership.public_data.content }}</p>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ fair_use.title }}</h2>
+      <ul>
+        {% for item in fair_use.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ dmca_policy.title }}</h2>
+      <p>{{ dmca_policy.content }}</p>
+      <ul>
+        {% for item in dmca_policy.requirements %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="alert alert-warning mt-4">
+        <h4>{{ dmca_contact.title }}</h4>
+        <p class="mb-0">{{ dmca_contact.content|raw }}</p>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ counter_notice.title }}</h2>
+      <p>{{ counter_notice.content }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ repeat_infringers.title }}</h2>
+      <p>{{ repeat_infringers.content }}</p>
+      
+      <div class="alert alert-info mt-4">
+        <h4>{{ trademark.title }}</h4>
+        <p class="mb-0">{{ trademark.content }}</p>
+      </div>
+    </div>
+  </div>
+</div>

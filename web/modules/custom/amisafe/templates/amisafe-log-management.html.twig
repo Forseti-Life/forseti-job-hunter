@@ -1,0 +1,122 @@
+{#
+/**
+ * @file
+ * Template for the AmISafe User Console Logs management page.
+ *
+ * Available variables:
+ * - logs: Array of log objects with the following properties:
+ *   - id: Log ID
+ *   - user_id: User identifier
+ *   - log_content: Console log content
+ *   - device_info: Device information (JSON string)
+ *   - app_version: Mobile app version
+ *   - uploaded_at: Unix timestamp of upload
+ */
+#}
+
+<div class="amisafe-log-management">
+  <div class="log-management-header">
+    <h1>{{ 'User Console Logs'|t }}</h1>
+    <p class="description">{{ 'Review console logs uploaded from mobile devices. Only the most recent log per user is stored.'|t }}</p>
+  </div>
+
+  {% if logs is empty %}
+    <div class="no-logs-message">
+      <p>{{ 'No log files available. Users can upload logs from the mobile app.'|t }}</p>
+      <div class="api-info">
+        <h3>{{ 'API Endpoint Information'|t }}</h3>
+        <p><strong>{{ 'Upload URL'|t }}:</strong> <code>/api/amisafe/log/upload</code></p>
+        <p><strong>{{ 'Method'|t }}:</strong> POST</p>
+        <p><strong>{{ 'Required Fields'|t }}:</strong></p>
+        <ul>
+          <li><code>user_id</code> - {{ 'User identifier (email, device ID, etc.)'|t }}</li>
+          <li><code>log_content</code> - {{ 'Console log content'|t }}</li>
+        </ul>
+        <p><strong>{{ 'Optional Fields'|t }}:</strong></p>
+        <ul>
+          <li><code>device_info</code> - {{ 'Device information (JSON)'|t }}</li>
+          <li><code>app_version</code> - {{ 'App version string'|t }}</li>
+        </ul>
+      </div>
+    </div>
+  {% else %}
+    <div class="log-list">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>{{ 'User ID'|t }}</th>
+            <th>{{ 'App Version'|t }}</th>
+            <th>{{ 'Device'|t }}</th>
+            <th>{{ 'Uploaded'|t }}</th>
+            <th>{{ 'Actions'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr class="log-row" data-log-id="{{ log.id }}">
+              <td class="user-id">{{ log.user_id }}</td>
+              <td class="app-version">{{ log.app_version|default('N/A') }}</td>
+              <td class="device-info">
+                {% if log.device_info %}
+                  <button class="show-device-info" data-device-info="{{ log.device_info }}">
+                    {{ 'View Device Info'|t }}
+                  </button>
+                {% else %}
+                  {{ 'N/A'|t }}
+                {% endif %}
+              </td>
+              <td class="uploaded-at">{{ log.uploaded_at|date('Y-m-d H:i:s') }}</td>
+              <td class="actions">
+                <button class="view-log-btn" data-log-id="{{ log.id }}">{{ 'View Log'|t }}</button>
+                <button class="delete-log-btn" data-log-id="{{ log.id }}">{{ 'Delete'|t }}</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+
+{# Log viewer modal #}
+<div id="log-viewer-modal" class="log-modal" style="display: none;">
+  <div class="log-modal-content">
+    <div class="log-modal-header">
+      <h2 id="log-modal-title">{{ 'Console Log'|t }}</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="log-modal-body">
+      <div class="log-metadata">
+        <div class="metadata-item">
+          <strong>{{ 'User ID'|t }}:</strong> <span id="log-user-id"></span>
+        </div>
+        <div class="metadata-item">
+          <strong>{{ 'App Version'|t }}:</strong> <span id="log-app-version"></span>
+        </div>
+        <div class="metadata-item">
+          <strong>{{ 'Uploaded'|t }}:</strong> <span id="log-uploaded-at"></span>
+        </div>
+      </div>
+      <div class="log-content-wrapper">
+        <div class="log-actions">
+          <button id="copy-log-btn" class="copy-btn">{{ 'Copy to Clipboard'|t }}</button>
+          <button id="download-log-btn" class="download-btn">{{ 'Download'|t }}</button>
+        </div>
+        <pre id="log-content-display" class="log-content"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Device info modal #}
+<div id="device-info-modal" class="log-modal" style="display: none;">
+  <div class="log-modal-content">
+    <div class="log-modal-header">
+      <h2>{{ 'Device Information'|t }}</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="log-modal-body">
+      <pre id="device-info-display" class="device-info-content"></pre>
+    </div>
+  </div>
+</div>

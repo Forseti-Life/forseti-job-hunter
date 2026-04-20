@@ -1,0 +1,237 @@
+copilot_agent_tracker.dashboard:
+  path: '/admin/reports/copilot-agent-tracker'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::legacyDashboardRedirect'
+    _title: 'LangGraph Dashboard'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.agent:
+  path: '/admin/reports/copilot-agent-tracker/agent/{agent_id}'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::agent'
+    _title: 'Agent'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.agent_inbox_item:
+  path: '/admin/reports/copilot-agent-tracker/agent/{agent_id}/inbox/{item_id}'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::agentInboxItem'
+    _title: 'Inbox item'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.waiting_on_keith:
+  path: '/admin/reports/waitingonkeith'
+  defaults:
+     _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::waitingOnKeithRedirect'
+     _title: 'Waiting on Keith'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.release_notes:
+  path: '/admin/reports/copilot-agent-tracker/releases'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::releaseNotes'
+    _title: 'Release Notes'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.architecture:
+  path: '/admin/reports/copilot-agent-tracker/architecture'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::architecture'
+    _title: 'Agentic Architecture'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.release_notes_release:
+  path: '/admin/reports/copilot-agent-tracker/releases/{release_id}'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::releaseNotesRelease'
+    _title: 'Release Status'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.release_notes_release_testingresults:
+  path: '/admin/reports/copilot-agent-tracker/releases/{release_id}/testingresults'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::releaseTestingResults'
+    _title: 'Testing Results'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.waiting_on_keith_message:
+  path: '/admin/reports/waitingonkeith/{item_id}'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::waitingOnKeithMessage'
+    _title: 'Inbox message'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.waiting_on_keith_approve:
+  path: '/admin/reports/waitingonkeith/{item_id}/approve'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::approveWaitingOnKeithItem'
+    _title: 'Approve'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.dismiss_sent_message:
+  path: '/admin/reports/waitingonkeith/sent/{reply_id}/dismiss'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::dismissSentMessage'
+    _title: 'Dismiss sent message'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.api_event:
+  path: '/api/copilot-agent-tracker/event'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\ApiController::event'
+  methods: [POST]
+  requirements:
+    _csrf_request_header_mode: TRUE
+    # Token-gated in controller; route must be reachable by non-browser senders.
+    _access: 'TRUE'
+  options:
+    _format: json
+
+copilot_agent_tracker.langgraph_session:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/session'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphSessionMonitoring'
+    _title: 'LangGraph Session Health'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_dashboard:
+  path: '/admin/reports/copilot-agent-tracker/langgraph'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphDashboard'
+    _title: 'LangGraph Dashboard'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_feature_progress:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/feature-progress'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphFeatureProgress'
+    _title: 'LangGraph Feature Flow'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_parity:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/parity'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphParityHealth'
+    _title: 'LangGraph Engine / Parity Health'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_release_status:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/release-status'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphReleaseStatus'
+    _title: 'LangGraph Release Control'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_release_notes:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/release-notes'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphReleaseNotes'
+    _title: 'LangGraph Release Evidence'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_release_troubleshooting:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/release-troubleshooting'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphReleaseTroubleshooting'
+    _title: 'LangGraph Release Triage'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_process_flow:
+  path: '/admin/reports/copilot-agent-tracker/langgraph/process-flow'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\DashboardController::langGraphProcessFlow'
+    _title: 'Process Flow'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.llm_management:
+  path: '/admin/reports/copilot-agent-tracker/llm-management'
+  defaults:
+    _form: '\Drupal\copilot_agent_tracker\Form\LlmManagementForm'
+    _title: 'LLM Management'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_home:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::home'
+    _title: 'LangGraph Console Home'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_build:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/build'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::build'
+    _title: 'Build'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_test:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/test'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::test'
+    _title: 'Test'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_run:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/run'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::run'
+    _title: 'Run'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_observe:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/observe'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::observe'
+    _title: 'Observe'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_release:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/release'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::release'
+    _title: 'Release'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_admin:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::admin'
+    _title: 'Admin'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+
+copilot_agent_tracker.langgraph_console_subsection:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/{section}/{subsection}'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleStubController::subsection'
+    _title: 'Subsection'
+  requirements:
+    _permission: 'administer copilot agent tracker'
+    section: 'home|build|test|run|observe|release|admin'
+    subsection: '[a-z0-9-]+'

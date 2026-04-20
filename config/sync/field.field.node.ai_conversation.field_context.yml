@@ -1,0 +1,22 @@
+uuid: 82e3386c-a1ff-40d7-a539-94b7660f2489
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_context
+    - node.type.ai_conversation
+  module:
+    - text
+id: node.ai_conversation.field_context
+field_name: field_context
+entity_type: node
+bundle: ai_conversation
+label: Context
+description: 'System prompt or conversation context'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

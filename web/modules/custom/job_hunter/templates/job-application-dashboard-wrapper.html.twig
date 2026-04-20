@@ -1,0 +1,21 @@
+{#
+/**
+ * @file
+ * Wrapper template for dashboard with navigation.
+ *
+ * Available variables:
+ * - navigation: Rendered navigation block
+ * - content: Dashboard content
+ */
+#}
+<div class="job-hunter-layout">
+  {% if navigation is not empty %}
+  <aside class="job-hunter-sidebar">
+    {{ navigation }}
+  </aside>
+  {% endif %}
+  
+  <main class="job-hunter-content">
+    {{ content }}
+  </main>
+</div>

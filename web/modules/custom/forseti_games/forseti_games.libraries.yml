@@ -1,0 +1,20 @@
+game-home:
+  version: 1.x
+  css:
+    theme:
+      css/game-home.css: {}
+  dependencies:
+    - core/drupal
+
+block-matcher:
+  version: 2.2.0
+  css:
+    theme:
+      css/block-matcher.css: {}
+  js:
+    https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js: { type: external, minified: true }
+    js/block-matcher-3d.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

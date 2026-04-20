@@ -1,0 +1,22 @@
+uuid: 43c28bd6-cedd-4ca7-af85-359a58f91cca
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_creativity_desc
+    - node.type.evaluated_entity
+  module:
+    - text
+id: node.evaluated_entity.field_sub_creativity_desc
+field_name: field_sub_creativity_desc
+entity_type: node
+bundle: evaluated_entity
+label: 'Creativity Description'
+description: 'AI-provided description for Creativity sub-dimension'
+required: false
+translatable: true
+default_value: null
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

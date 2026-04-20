@@ -1,0 +1,25 @@
+uuid: 4edc1dc4-08f1-48d5-8628-dddde14c8af7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_info_flow
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_info_flow
+field_name: field_sub_info_flow
+entity_type: node
+bundle: evaluated_entity
+label: 'Information Flow Control'
+description: 'Sub-dimension power level (0-9) for Information Flow Control'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

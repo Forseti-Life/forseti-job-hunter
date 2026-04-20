@@ -1,0 +1,11 @@
+name: Company Research
+description: Automates discovery of company career pages, ATS platform identification, and authentication analysis
+type: module
+package: Forseti
+core_version_requirement: ^9 || ^10 || ^11
+dependencies:
+  - drupal:node
+  - drupal:field
+  - drupal:user
+  - drupal:system
+  - ai_conversation:ai_conversation

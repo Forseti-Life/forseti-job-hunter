@@ -1,0 +1,25 @@
+uuid: 651a6fd6-12a4-4310-9770-fd4da853583c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_learning
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_learning
+field_name: field_sub_learning
+entity_type: node
+bundle: evaluated_entity
+label: Learning
+description: 'Sub-dimension power level (0-9) for Learning'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

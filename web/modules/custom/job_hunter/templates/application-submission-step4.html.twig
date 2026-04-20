@@ -1,0 +1,445 @@
+{#
+/**
+ * @file
+ * Dedicated Step 4 page: Create / Manage Account on the ATS platform.
+ *
+ * Two-path workflow:
+ *   Path A — Stored credentials exist for this company → show them, confirm.
+ *   Path B — No stored credentials → show ATS URL, form to store credentials.
+ *
+ * After credentials are stored, a "Verify Authentication" button launches a
+ * stealth browser to log in and confirm the identity (email in account menu).
+ *
+ * Variables:
+ *   job_id                - int
+ *   job_title             - string
+ *   company_name          - string
+ *   company_id            - int
+ *   apply_url             - string  (resolved apply URL from Step 2)
+ *   auth_url              - string  (effective auth URL from Step 3)
+ *   auth_type             - string  (auth classification from Step 3)
+ *   ats_platform          - string
+ *   user_email            - string
+ *   user_phone            - string
+ *   user_name             - string
+ *   prerequisites         - array   (readiness checks with label/met/value)
+ *   account_status        - string  (unknown|pending_verification|verified|not_required)
+ *   account_evidence      - string
+ *   account_ready         - bool
+ *   email_verified        - bool
+ *   phone_verified        - bool
+ *   verification_method   - string
+ *   account_created_at    - string
+ *   has_stored_credential - bool
+ *   stored_username       - string
+ *   default_username      - string  (email or "keith.aumiller")
+ *   default_password      - string  ("Unsecure01!abc")
+ *   step4_cache_exists    - bool
+ *   step4_last_run_at     - string
+ *   step4_ran_this_request - bool
+ *   run_step4_csrf_token  - string
+ *   verification_result   - array   (raw result from AccountVerificationService)
+ *   return_url            - string
+ */
+#}
+
+{# Display-friendly labels for auth_type. #}
+{% set auth_type_labels = {
+  'direct':            'Direct (no login required)',
+  'email_password':    'Email + password login',
+  'email_only':        'Email-only / magic link',
+  'sso_google':        'SSO — Google',
+  'sso_linkedin':      'SSO — LinkedIn',
+  'sso_microsoft':     'SSO — Microsoft / Azure AD',
+  'sso_apple':         'SSO — Apple Sign-In',
+  'company_sso':       'Company SSO / external IdP',
+  'registration_first':'Registration required first',
+  'captcha_blocked':   'Blocked by CAPTCHA / bot-detection',
+  'unknown':           'Unknown (could not classify)'
+} %}
+
+{# Display-friendly labels for account_status. #}
+{% set status_labels = {
+  'unknown':               'Not started',
+  'pending_verification':  'Pending verification',
+  'verified':              'Verified and ready',
+  'not_required':          'Not required (direct application)'
+} %}
+
+<div class="application-submission-page">
+  <h1>{{ 'Step 4: Account Management'|t }}</h1>
+  <p>{{ 'Ensure you have a valid account on the destination ATS platform with stored credentials.'|t }}</p>
+
+  {# ── Requisition context ─────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Requisition Context'|t }}</h3>
+    <p><strong>{{ 'Job'|t }}:</strong> <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">{{ job_title }}</a></p>
+    <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}{% if company_id %} <small>(ID: {{ company_id }})</small>{% endif %}</p>
+    <p><strong>{{ 'ATS Platform'|t }}:</strong> {{ ats_platform|default('unknown') }}</p>
+    <p>
+      <strong>{{ 'Auth Type (from Step 3)'|t }}:</strong>
+      {{ auth_type_labels[auth_type]|default(auth_type) }}
+    </p>
+    <p>
+      <strong>{{ 'Destination URL'|t }}:</strong>
+      {% if auth_url %}
+        <a href="{{ auth_url }}" target="_blank" rel="noopener">{{ auth_url }}</a>
+      {% else %}
+        <em>{{ 'Not available — complete Steps 2 & 3 first.'|t }}</em>
+      {% endif %}
+    </p>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {# PATH A — Stored Credentials Exist                                        #}
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {% if has_stored_credential %}
+
+    <div class="job-info-box" style="border-left: 4px solid #28a745;">
+      <h3>✅ {{ 'Stored Credentials Found'|t }}</h3>
+      <p>{{ 'An account already exists for'|t }} <strong>{{ company_name }}</strong>. {{ 'Your credentials are encrypted and stored securely.'|t }}</p>
+
+      <table class="queue-status-table">
+        <thead>
+          <tr>
+            <th>{{ 'Field'|t }}</th>
+            <th>{{ 'Value'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ 'Username'|t }}</td>
+            <td><code>{{ stored_username }}</code></td>
+          </tr>
+          <tr>
+            <td>{{ 'Password'|t }}</td>
+            <td><code>••••••••••</code> <small>({{ 'encrypted in database'|t }})</small></td>
+          </tr>
+          <tr>
+            <td>{{ 'Company'|t }}</td>
+            <td>{{ company_name }}</td>
+          </tr>
+          <tr>
+            <td>{{ 'ATS Platform'|t }}</td>
+            <td>{{ ats_platform|default('unknown') }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {% if not account_ready %}
+        <p style="margin-top: 12px;">{{ 'Credentials are stored but the account has not been confirmed as ready. Click below to confirm or run browser verification.'|t }}</p>
+        <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}" style="display: inline-block;">
+          <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
+          <input type="hidden" name="step4_action" value="confirm_existing" />
+          <button type="submit" class="button button--primary">
+            {{ 'Confirm Account Ready'|t }}
+          </button>
+        </form>
+        <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}" style="display: inline-block; margin-left: 8px;">
+          <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
+          <input type="hidden" name="step4_action" value="verify_authentication" />
+          <button type="submit" class="button button--secondary" title="{{ 'Launch stealth browser, log in, and verify your identity on the ATS'|t }}">
+            🔐 {{ 'Verify via Browser'|t }}
+          </button>
+        </form>
+      {% else %}
+        <p style="margin-top: 12px;">
+          <span class="badge badge--success">{{ 'Account Confirmed & Ready'|t }}</span>
+        </p>
+        <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}" style="margin-top: 8px;">
+          <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
+          <input type="hidden" name="step4_action" value="verify_authentication" />
+          <button type="submit" class="button button--secondary" title="{{ 'Re-verify authentication via stealth browser'|t }}">
+            🔐 {{ 'Re-verify via Browser'|t }}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+
+    {# Option to update credentials #}
+    <div class="job-info-box">
+      <h3>{{ 'Update Credentials'|t }}</h3>
+      <p>{{ 'If your credentials have changed, you can store updated ones below. This will overwrite the existing entry.'|t }}</p>
+      <details>
+        <summary>{{ 'Show credential update form'|t }}</summary>
+        <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}" style="margin-top: 12px;">
+          <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
+          <input type="hidden" name="step4_action" value="store_credentials" />
+          <div style="margin-bottom: 8px;">
+            <label for="credential_username"><strong>{{ 'Username / Email'|t }}:</strong></label><br />
+            <input type="text" id="credential_username" name="credential_username"
+                   value="{{ stored_username }}" style="width: 350px; padding: 4px 8px;" />
+          </div>
+          <div style="margin-bottom: 8px;">
+            <label for="credential_password"><strong>{{ 'Password'|t }}:</strong></label><br />
+            <input type="text" id="credential_password" name="credential_password"
+                   value="{{ default_password }}" style="width: 350px; padding: 4px 8px;" />
+          </div>
+          <button type="submit" class="button button--secondary">
+            {{ 'Update Stored Credentials'|t }}
+          </button>
+        </form>
+      </details>
+    </div>
+
+    {# ── Browser Verification Result ────────────────────────────────────── #}
+    {% if verification_result is not empty %}
+      <div class="job-info-box" style="border-left: 4px solid {{ verification_result.verified ? '#28a745' : (verification_result.ok ? '#ffc107' : '#dc3545') }};">
+        <h3>
+          {% if verification_result.verified %}
+            ✅ {{ 'Browser Verification: PASSED'|t }}
+          {% elseif verification_result.ok %}
+            ⚠️ {{ 'Browser Verification: INCONCLUSIVE'|t }}
+          {% else %}
+            ❌ {{ 'Browser Verification: FAILED'|t }}
+          {% endif %}
+        </h3>
+
+        <table class="queue-status-table">
+          <thead>
+            <tr>
+              <th>{{ 'Detail'|t }}</th>
+              <th>{{ 'Value'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if verification_result.verified_email %}
+              <tr>
+                <td>{{ 'Verified Email'|t }}</td>
+                <td><code>{{ verification_result.verified_email }}</code></td>
+              </tr>
+            {% endif %}
+            {% if verification_result.user_home_url %}
+              <tr>
+                <td>{{ 'User Home URL'|t }}</td>
+                <td><a href="{{ verification_result.user_home_url }}" target="_blank" rel="noopener">{{ verification_result.user_home_url }}</a></td>
+              </tr>
+            {% endif %}
+            {% if verification_result.page_title %}
+              <tr>
+                <td>{{ 'Page Title'|t }}</td>
+                <td>{{ verification_result.page_title }}</td>
+              </tr>
+            {% endif %}
+            {% if verification_result.evidence %}
+              <tr>
+                <td>{{ 'Evidence'|t }}</td>
+                <td>{{ verification_result.evidence }}</td>
+              </tr>
+            {% endif %}
+            {% if verification_result.error %}
+              <tr>
+                <td>{{ 'Error'|t }}</td>
+                <td style="color: #dc3545;">{{ verification_result.error }}</td>
+              </tr>
+            {% endif %}
+            <tr>
+              <td>{{ 'Outcome'|t }}</td>
+              <td>
+                {% if verification_result.verified %}
+                  <span class="badge badge--success">{{ 'VERIFIED'|t }}</span>
+                {% elseif verification_result.ok %}
+                  <span class="badge badge--warning">{{ 'NEEDS REVIEW'|t }}</span>
+                {% else %}
+                  <span class="badge badge--error">{{ 'FAILED'|t }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {% if verification_result.screenshots is not empty %}
+          <details style="margin-top: 8px;">
+            <summary>{{ 'Screenshots captured'|t }} ({{ verification_result.screenshots|length }})</summary>
+            <ul>
+              {% for screenshot in verification_result.screenshots %}
+                <li><small>{{ screenshot }}</small></li>
+              {% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {# PATH B — No Stored Credentials                                           #}
+  {# ══════════════════════════════════════════════════════════════════════════ #}
+  {% else %}
+
+    <div class="job-info-box" style="border-left: 4px solid #ffc107;">
+      <h3>⚠️ {{ 'No Stored Credentials'|t }}</h3>
+      <p>{{ 'No account credentials were found for'|t }} <strong>{{ company_name }}</strong>. {{ 'You need to create an account on the ATS platform and store your credentials below.'|t }}</p>
+
+      {# ── Step 1: Open ATS URL ─────────────────────────────────────────── #}
+      <h4>{{ '1. Create Your Account'|t }}</h4>
+      {% if auth_url %}
+        <p>
+          {{ 'Open the ATS platform and register a new account:'|t }}<br />
+          <a href="{{ auth_url }}" target="_blank" rel="noopener" class="button button--primary" style="display: inline-block; margin-top: 6px;">
+            {{ 'Open ATS Login Page →'|t }}
+          </a>
+        </p>
+      {% else %}
+        <p><em>{{ 'ATS destination URL not available — complete Steps 2 & 3 first.'|t }}</em></p>
+      {% endif %}
+
+      {% if auth_type == 'email_password' %}
+        <p>{{ 'Look for a "Create Account" or "Sign Up" link. Register using the email and password below, then verify your email.'|t }}</p>
+      {% elseif auth_type == 'email_only' %}
+        <p>{{ 'Enter your email to receive a magic link or one-time code. After signing in, store the credentials below.'|t }}</p>
+      {% elseif auth_type starts with 'sso_' %}
+        <p>{{ 'Click the SSO sign-in button (Google, LinkedIn, etc.) to authenticate. Then store the credentials used below.'|t }}</p>
+      {% elseif auth_type == 'registration_first' %}
+        <p>{{ 'Complete the full registration form on the ATS. Then store the credentials used below.'|t }}</p>
+      {% elseif auth_type == 'direct' %}
+        <p>{{ 'This application does not require account creation. You can proceed directly. Store a placeholder if desired.'|t }}</p>
+      {% else %}
+        <p>{{ 'Complete Step 3 to identify the auth type, then create your account on the ATS.'|t }}</p>
+      {% endif %}
+
+      {# ── Step 2: Store credentials ──────────────────────────────────── #}
+      <h4 style="margin-top: 16px;">{{ '2. Store Your Credentials'|t }}</h4>
+      <p>{{ 'After creating your account, enter the username and password you used. These will be encrypted and stored securely.'|t }}</p>
+
+      <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}">
+        <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
+        <input type="hidden" name="step4_action" value="store_credentials" />
+        <div style="margin-bottom: 8px;">
+          <label for="credential_username"><strong>{{ 'Username / Email'|t }}:</strong></label><br />
+          <input type="text" id="credential_username" name="credential_username"
+                 value="{{ default_username }}" style="width: 350px; padding: 4px 8px;" />
+          <br /><small>{{ 'Default: your email or "keith.aumiller"'|t }}</small>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <label for="credential_password"><strong>{{ 'Password'|t }}:</strong></label><br />
+          <input type="text" id="credential_password" name="credential_password"
+                 value="{{ default_password }}" style="width: 350px; padding: 4px 8px;" />
+          <br /><small>{{ 'Default: Unsecure01!abc'|t }}</small>
+        </div>
+        <button type="submit" class="button button--primary">
+          {{ 'Store Credentials & Mark Account Ready'|t }}
+        </button>
+      </form>
+    </div>
+
+  {% endif %}
+
+  {# ── User profile info (for reference) ───────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'User Profile'|t }}</h3>
+    <table class="queue-status-table">
+      <thead>
+        <tr>
+          <th>{{ 'Field'|t }}</th>
+          <th>{{ 'Value'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ 'Full Name'|t }}</td>
+          <td>{{ user_name ? user_name : '—' }}</td>
+          <td>
+            {% if user_name %}
+              <span class="badge badge--success">{{ 'Available'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'Missing'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'Email Address'|t }}</td>
+          <td>{{ user_email ? user_email : '—' }}</td>
+          <td>
+            {% if user_email %}
+              <span class="badge badge--success">{{ 'Available'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'Missing'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ 'Phone Number'|t }}</td>
+          <td>{{ user_phone ? user_phone : '—' }}</td>
+          <td>
+            {% if user_phone %}
+              <span class="badge badge--success">{{ 'Available'|t }}</span>
+            {% else %}
+              <span class="badge badge--warning">{{ 'Missing'|t }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  {# ── Prerequisites ───────────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Prerequisites'|t }}</h3>
+    {% for prereq in prerequisites %}
+      <p>
+        <label>
+          <input type="checkbox" disabled {% if prereq.met %}checked{% endif %} />
+          {{ prereq.label|t }}
+        </label>
+        {% if prereq.value %}
+          <br /><small>{{ prereq.value }}</small>
+        {% endif %}
+      </p>
+    {% endfor %}
+  </div>
+
+  {# ── Account status summary ──────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Account Status'|t }}</h3>
+
+    <p>
+      <strong>{{ 'Status'|t }}:</strong>
+      {% if account_status == 'verified' %}
+        <span class="badge badge--success">{{ status_labels[account_status]|default(account_status) }}</span>
+      {% elseif account_status == 'not_required' %}
+        <span class="badge badge--success">{{ status_labels[account_status]|default(account_status) }}</span>
+      {% elseif account_status == 'pending_verification' %}
+        <span class="badge badge--warning">{{ status_labels[account_status]|default(account_status) }}</span>
+      {% else %}
+        <span class="badge badge--info">{{ status_labels[account_status]|default(account_status) }}</span>
+      {% endif %}
+    </p>
+
+    {% if verification_method %}
+      <p><strong>{{ 'Verification Method'|t }}:</strong>
+        {% if verification_method == 'playwright_browser' %}
+          {{ 'Automated browser login (Playwright stealth)'|t }}
+        {% else %}
+          {{ verification_method }}
+        {% endif %}
+      </p>
+    {% endif %}
+
+    {% if account_created_at %}
+      <p><strong>{{ 'Account Created At'|t }}:</strong> {{ account_created_at }}</p>
+    {% endif %}
+
+    {% if account_evidence %}
+      <p><strong>{{ 'Evidence'|t }}:</strong> {{ account_evidence }}</p>
+    {% endif %}
+
+    {% if step4_last_run_at %}
+      <p><strong>{{ 'Last Updated'|t }}:</strong> {{ step4_last_run_at }}</p>
+    {% endif %}
+
+    <p>
+      <strong>{{ 'Step 4 Outcome'|t }}:</strong>
+      {% if account_ready %}
+        <span class="badge badge--success">{{ 'PASS'|t }}</span>
+      {% else %}
+        <span class="badge badge--warning">{{ 'INCOMPLETE'|t }}</span>
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Back link ────────────────────────────────────────────────────────────── #}
+  <div class="page-actions">
+    <a href="{{ return_url }}" class="button button--secondary">{{ 'Back to Requisition Flow'|t }}</a>
+  </div>
+</div>

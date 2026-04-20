@@ -1,0 +1,206 @@
+uuid: 9522f741-27f1-4941-92bb-6e098a56a8c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.evaluated_entity.field_authority_permission
+    - field.field.node.evaluated_entity.field_entity_category
+    - field.field.node.evaluated_entity.field_information_access
+    - field.field.node.evaluated_entity.field_network_position
+    - field.field.node.evaluated_entity.field_resource_control
+    - field.field.node.evaluated_entity.field_source_conversation
+    - field.field.node.evaluated_entity.field_sub_api_access
+    - field.field.node.evaluated_entity.field_sub_api_access_desc
+    - field.field.node.evaluated_entity.field_sub_audit
+    - field.field.node.evaluated_entity.field_sub_audit_desc
+    - field.field.node.evaluated_entity.field_sub_budget_auth
+    - field.field.node.evaluated_entity.field_sub_budget_auth_desc
+    - field.field.node.evaluated_entity.field_sub_centrality
+    - field.field.node.evaluated_entity.field_sub_centrality_desc
+    - field.field.node.evaluated_entity.field_sub_classification
+    - field.field.node.evaluated_entity.field_sub_classification_desc
+    - field.field.node.evaluated_entity.field_sub_coalition
+    - field.field.node.evaluated_entity.field_sub_coalition_desc
+    - field.field.node.evaluated_entity.field_sub_computational
+    - field.field.node.evaluated_entity.field_sub_computational_desc
+    - field.field.node.evaluated_entity.field_sub_connectivity
+    - field.field.node.evaluated_entity.field_sub_connectivity_desc
+    - field.field.node.evaluated_entity.field_sub_creativity
+    - field.field.node.evaluated_entity.field_sub_creativity_desc
+    - field.field.node.evaluated_entity.field_sub_data_storage
+    - field.field.node.evaluated_entity.field_sub_data_storage_desc
+    - field.field.node.evaluated_entity.field_sub_execution
+    - field.field.node.evaluated_entity.field_sub_execution_desc
+    - field.field.node.evaluated_entity.field_sub_financial
+    - field.field.node.evaluated_entity.field_sub_financial_desc
+    - field.field.node.evaluated_entity.field_sub_granularity
+    - field.field.node.evaluated_entity.field_sub_granularity_desc
+    - field.field.node.evaluated_entity.field_sub_human
+    - field.field.node.evaluated_entity.field_sub_human_desc
+    - field.field.node.evaluated_entity.field_sub_info_flow
+    - field.field.node.evaluated_entity.field_sub_info_flow_desc
+    - field.field.node.evaluated_entity.field_sub_institutional
+    - field.field.node.evaluated_entity.field_sub_institutional_desc
+    - field.field.node.evaluated_entity.field_sub_learning
+    - field.field.node.evaluated_entity.field_sub_learning_desc
+    - field.field.node.evaluated_entity.field_sub_legal
+    - field.field.node.evaluated_entity.field_sub_legal_desc
+    - field.field.node.evaluated_entity.field_sub_memory
+    - field.field.node.evaluated_entity.field_sub_memory_desc
+    - field.field.node.evaluated_entity.field_sub_network_bandwidth
+    - field.field.node.evaluated_entity.field_sub_network_bandwidth_desc
+    - field.field.node.evaluated_entity.field_sub_network_effects
+    - field.field.node.evaluated_entity.field_sub_network_effects_desc
+    - field.field.node.evaluated_entity.field_sub_override
+    - field.field.node.evaluated_entity.field_sub_override_desc
+    - field.field.node.evaluated_entity.field_sub_planning
+    - field.field.node.evaluated_entity.field_sub_planning_desc
+    - field.field.node.evaluated_entity.field_sub_policy
+    - field.field.node.evaluated_entity.field_sub_policy_desc
+    - field.field.node.evaluated_entity.field_sub_reasoning
+    - field.field.node.evaluated_entity.field_sub_reasoning_desc
+    - field.field.node.evaluated_entity.field_sub_restriction
+    - field.field.node.evaluated_entity.field_sub_restriction_desc
+    - field.field.node.evaluated_entity.field_sub_scope
+    - field.field.node.evaluated_entity.field_sub_scope_desc
+    - field.field.node.evaluated_entity.field_sub_sources
+    - field.field.node.evaluated_entity.field_sub_sources_desc
+    - field.field.node.evaluated_entity.field_sub_temporal
+    - field.field.node.evaluated_entity.field_sub_temporal_desc
+    - field.field.node.evaluated_entity.field_sub_trust_reputation
+    - field.field.node.evaluated_entity.field_sub_trust_reputation_desc
+    - field.field.node.evaluated_entity.field_synthesis_application
+    - field.field.node.evaluated_entity.field_total_power
+    - node.type.evaluated_entity
+  module:
+    - path
+id: node.evaluated_entity.default
+targetEntityType: node
+bundle: evaluated_entity
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_entity_category:
+    type: options_select
+    weight: 7
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 5
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  promote:
+    type: boolean_checkbox
+    weight: 3
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 6
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  sticky:
+    type: boolean_checkbox
+    weight: 4
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 1
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  field_authority_permission: true
+  field_information_access: true
+  field_network_position: true
+  field_resource_control: true
+  field_source_conversation: true
+  field_sub_api_access: true
+  field_sub_api_access_desc: true
+  field_sub_audit: true
+  field_sub_audit_desc: true
+  field_sub_budget_auth: true
+  field_sub_budget_auth_desc: true
+  field_sub_centrality: true
+  field_sub_centrality_desc: true
+  field_sub_classification: true
+  field_sub_classification_desc: true
+  field_sub_coalition: true
+  field_sub_coalition_desc: true
+  field_sub_computational: true
+  field_sub_computational_desc: true
+  field_sub_connectivity: true
+  field_sub_connectivity_desc: true
+  field_sub_creativity: true
+  field_sub_creativity_desc: true
+  field_sub_data_storage: true
+  field_sub_data_storage_desc: true
+  field_sub_execution: true
+  field_sub_execution_desc: true
+  field_sub_financial: true
+  field_sub_financial_desc: true
+  field_sub_granularity: true
+  field_sub_granularity_desc: true
+  field_sub_human: true
+  field_sub_human_desc: true
+  field_sub_info_flow: true
+  field_sub_info_flow_desc: true
+  field_sub_institutional: true
+  field_sub_institutional_desc: true
+  field_sub_learning: true
+  field_sub_learning_desc: true
+  field_sub_legal: true
+  field_sub_legal_desc: true
+  field_sub_memory: true
+  field_sub_memory_desc: true
+  field_sub_network_bandwidth: true
+  field_sub_network_bandwidth_desc: true
+  field_sub_network_effects: true
+  field_sub_network_effects_desc: true
+  field_sub_override: true
+  field_sub_override_desc: true
+  field_sub_planning: true
+  field_sub_planning_desc: true
+  field_sub_policy: true
+  field_sub_policy_desc: true
+  field_sub_reasoning: true
+  field_sub_reasoning_desc: true
+  field_sub_restriction: true
+  field_sub_restriction_desc: true
+  field_sub_scope: true
+  field_sub_scope_desc: true
+  field_sub_sources: true
+  field_sub_sources_desc: true
+  field_sub_temporal: true
+  field_sub_temporal_desc: true
+  field_sub_trust_reputation: true
+  field_sub_trust_reputation_desc: true
+  field_synthesis_application: true
+  field_total_power: true

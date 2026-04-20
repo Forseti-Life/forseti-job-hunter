@@ -1,0 +1,289 @@
+/**
+ * @file
+ * Professional User Profile Styles for St. Louis Integration
+ * Targets existing Radix user structure with professional styling
+ */
+
+// Target the main user article
+.professional-user-profile {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin: 2rem 0;
+  padding: 3rem 2rem;
+  position: relative;
+  overflow: hidden;
+
+  // Subtle animated background
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.1), transparent);
+    animation: profileShimmer 4s infinite;
+    z-index: 1;
+  }
+
+  // All content gets proper z-index
+  > * {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+// Target Radix user article structure
+.user.user--full.professional-user-profile,
+.block--system-main .user.user--full {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin: 2rem 0;
+  padding: 3rem 2rem;
+  position: relative;
+  overflow: hidden;
+
+  // Shimmer effect
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.1), transparent);
+    animation: profileShimmer 4s infinite;
+    z-index: 1;
+  }
+
+  // All child elements get proper z-index
+  > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  // Style all fields
+  .field {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(100, 181, 246, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(100, 181, 246, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(100, 181, 246, 0.1);
+    }
+
+    .field__label {
+      color: #64b5f6 !important;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+
+      &::before {
+        content: '▸';
+        margin-right: 0.5rem;
+        color: #64b5f6;
+      }
+    }
+
+    .field__item {
+      color: #e0e0e0 !important;
+      font-size: 1rem;
+      line-height: 1.6;
+
+      p {
+        margin-bottom: 0.5rem;
+        color: #e0e0e0 !important;
+      }
+
+      a {
+        color: #90caf9 !important;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(144, 202, 249, 0.1);
+
+        &:hover {
+          color: #ffffff !important;
+          background: rgba(144, 202, 249, 0.2);
+          transform: translateX(4px);
+        }
+      }
+    }
+
+    // Special styling for professional summary (first field)
+    &.field--name-field-professional-summary {
+      background: rgba(100, 181, 246, 0.1);
+      border: 2px solid rgba(100, 181, 246, 0.2);
+      order: -1; // Move to top
+
+      .field__label {
+        color: #ffffff !important;
+        font-size: 1.2rem;
+        
+        &::before {
+          content: '★';
+          color: #ffd54f;
+        }
+      }
+
+      .field__item {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #ffffff !important;
+      }
+    }
+
+    // Boolean fields (Yes/No values)
+    &.field--type-boolean {
+      .field__item {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+
+        &:contains("On") {
+          background: rgba(76, 175, 80, 0.2);
+          color: #a5d6a7 !important;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        &:contains("Off") {
+          background: rgba(244, 67, 54, 0.2);
+          color: #ef9a9a !important;
+          border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+      }
+    }
+
+    // Link fields
+    &.field--type-link {
+      .field__item a {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(100, 181, 246, 0.15);
+        border: 1px solid rgba(100, 181, 246, 0.3);
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+
+        &::before {
+          content: '🔗';
+          margin-right: 0.5rem;
+        }
+
+        &[href*="linkedin"]::before {
+          content: '💼';
+        }
+
+        &[href*="github"]::before {
+          content: '💻';
+        }
+
+        &:hover {
+          background: rgba(100, 181, 246, 0.25);
+          border-color: rgba(100, 181, 246, 0.5);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(100, 181, 246, 0.2);
+        }
+      }
+    }
+  }
+
+  // "Member for" form item styling
+  .form-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(100, 181, 246, 0.1);
+    color: #e0e0e0 !important;
+
+    .label {
+      color: #64b5f6 !important;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+@keyframes profileShimmer {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .user.user--full.professional-user-profile,
+  .block--system-main .user.user--full {
+    margin: 1rem 0;
+    padding: 1.5rem 1rem;
+
+    .field {
+      padding: 1rem;
+      margin-bottom: 1rem;
+
+      .field__label {
+        font-size: 0.9rem;
+      }
+
+      .field__item {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .user.user--full.professional-user-profile,
+  .block--system-main .user.user--full {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc;
+
+    &::before {
+      display: none;
+    }
+
+    .field {
+      background: #f9f9f9 !important;
+      border: 1px solid #cccccc !important;
+
+      .field__label {
+        color: #000000 !important;
+      }
+
+      .field__item,
+      .field__item p {
+        color: #333333 !important;
+      }
+    }
+  }
+}

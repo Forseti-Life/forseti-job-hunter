@@ -1,0 +1,1710 @@
+# Job Hunter Routes
+# Complete routing configuration for job hunter module
+# Routes accessible to authenticated users
+
+# Job Hunter Dashboard (Main Landing Page)
+job_hunter.dashboard:
+  path: '/jobhunter'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::dashboard'
+    _title: 'Job Hunter Dashboard'
+  requirements:
+    _permission: 'access job hunter'
+
+# Job Hunter Home (alternate entry point)
+job_hunter.home:
+  path: '/jobhunter/home'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::home'
+    _title: 'Job Hunter'
+  requirements:
+    _permission: 'access job hunter'
+
+# Queue Management Routes (Admin only)
+job_hunter.queue_run:
+  path: '/jobhunter/queue/run'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::runQueueAjax'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_run_all:
+  path: '/jobhunter/queue/run-all'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::runAllQueuesAjax'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_status:
+  path: '/jobhunter/queue/status'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::getQueueStatusAjax'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.queue_logs:
+  path: '/jobhunter/queue/logs'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::getQueueLogsAjax'
+  methods: [GET]
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.queue_management:
+  path: '/jobhunter/queue-management'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::queueManagement'
+    _title: 'Queue Management'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Opportunity Management Routes (Admin only)
+job_hunter.opportunity_management:
+  path: '/jobhunter/opportunity-management'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\OpportunityManagementController::managementPage'
+    _title: 'Opportunity Management'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.opportunity_delete_job:
+  path: '/jobhunter/opportunity/delete-job'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\OpportunityManagementController::deleteJobAjax'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.opportunity_delete_search:
+  path: '/jobhunter/opportunity/delete-search'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\OpportunityManagementController::deleteSearchHistoryAjax'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.opportunity_bulk_delete:
+  path: '/jobhunter/opportunity/bulk-delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\OpportunityManagementController::bulkDeleteAjax'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_delete_item:
+  path: '/jobhunter/queue/delete-item'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::deleteQueueItem'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_suspend_item:
+  path: '/jobhunter/queue/suspend-item'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::suspendQueueItem'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_delete_file:
+  path: '/jobhunter/queue/delete-file'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::deleteFile'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_pause:
+  path: '/jobhunter/queue/pause'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::pauseQueueProcessing'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_resume:
+  path: '/jobhunter/queue/resume'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::resumeQueueProcessing'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_suspended:
+  path: '/jobhunter/queue/suspended'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::getSuspendedItems'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.queue_retry_suspended:
+  path: '/jobhunter/queue/retry-suspended'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::retrySuspendedItem'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+    _permission: 'administer job application automation'
+
+job_hunter.queue_clear_genai_cache:
+  path: '/jobhunter/queue/clear-genai-cache'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::clearGenAiCache'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+
+# Module Settings
+job_hunter.settings:
+  path: '/jobhunter/settings'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\SettingsForm'
+    _title: 'Job Application Automation Settings'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation Home
+job_hunter.documentation:
+  path: '/jobhunter/documentation'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::index'
+    _title: 'Documentation'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation - README
+job_hunter.documentation.readme:
+  path: '/jobhunter/documentation/readme'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::viewDocument'
+    _title: 'Documentation Home'
+    file: 'README.md'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation - Architecture
+job_hunter.documentation.architecture:
+  path: '/jobhunter/documentation/architecture'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::viewDocument'
+    _title: 'Architecture'
+    file: 'ARCHITECTURE.md'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation - Process Flow
+job_hunter.documentation.process_flow:
+  path: '/jobhunter/documentation/process-flow'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::viewDocument'
+    _title: 'Process Flows'
+    file: 'PROCESS_FLOW.md'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation - FAQ
+job_hunter.documentation.faq:
+  path: '/jobhunter/documentation/faq'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::viewDocument'
+    _title: 'FAQ'
+    file: 'FAQ.md'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Job Seeker Profile View - Redirect to Edit
+job_hunter.user_job_seeker_view:
+  path: '/jobhunter/profile'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::redirectToEdit'
+    _title: 'My Profile'
+  requirements:
+    _permission: 'access job hunter'
+
+# Job Discovery - Company-Specific Discovery Page
+job_hunter.company_job_discovery:
+  path: '/jobhunter/job-discovery/company/{company}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::companyJobDiscovery'
+    _title: 'Job Discovery'
+  requirements:
+    _permission: 'access job hunter'
+    company: \d+
+
+# Job Discovery - Unified Search Results (GET)
+job_hunter.job_discovery_search:
+  path: '/jobhunter/job-discovery/search'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::jobDiscoverySearchResults'
+    _title: 'Job Search Results'
+  requirements:
+    _permission: 'access job hunter'
+  methods: [GET]
+
+# Job Discovery - AJAX Search Endpoint (POST, legacy for company-specific discovery)
+job_hunter.job_discovery_search_ajax:
+  path: '/jobhunter/job-discovery/search-ajax'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::jobDiscoverySearch'
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+  methods: [POST]
+
+# Job Discovery - Save Job Endpoint
+job_hunter.save_job:
+  path: '/jobhunter/job-discovery/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::saveJob'
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+  methods: [POST]
+
+# Job Discovery - Legacy Save Job Link Endpoint (GET)
+job_hunter.addposting:
+  path: '/jobhunter/addposting'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::addPostingFromSearch'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    # _csrf_token: controller-level CSRF validation implemented in POST handler (addPostingFromSearch validates X-CSRF-Token header / csrf_token body param)
+  methods: [GET, POST]
+
+# Target Companies Management
+# DISABLED - No longer needed
+# job_hunter.manage_target_companies:
+#   path: '/jobhunter/target-companies'
+#   defaults:
+#     _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::manageTargetCompanies'
+#     _title: 'Manage Target Companies'
+#   requirements:
+#     _permission: 'administer job application automation'
+# 
+# job_hunter.save_target_companies:
+#   path: '/jobhunter/target-companies/save'
+#   defaults:
+#     _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::saveTargetCompanies'
+#   requirements:
+#     _permission: 'administer job application automation'
+#   methods: [POST]
+
+# Step 3: AI Job Discovery
+job_hunter.job_discovery:
+  path: '/jobhunter/job-discovery'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::jobDiscovery'
+    _title: 'AI Job Discovery'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.my_jobs:
+  path: '/jobhunter/my-jobs'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::myJobs'
+    _title: 'My Jobs'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.my_jobs_bulk_archive:
+  path: '/jobhunter/my-jobs/bulk-archive'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::myJobsBulkArchive'
+    _title: 'Bulk Archive Jobs'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+
+job_hunter.my_jobs_archive:
+  path: '/jobhunter/my-jobs/archive'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::myJobsArchive'
+    _title: 'Archived Jobs'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.job_archive:
+  path: '/jobhunter/my-jobs/{job_id}/archive'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::archiveJob'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.job_unarchive:
+  path: '/jobhunter/my-jobs/{job_id}/unarchive'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::unarchiveJob'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.toggle_job_applied:
+  path: '/jobhunter/my-jobs/{job_id}/applied'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::toggleJobApplied'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    job_id: '\d+'
+  methods: [POST]
+
+# Step 4: Application Submission
+job_hunter.application_submission:
+  path: '/jobhunter/application-submission'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmission'
+    _title: 'Application Submission'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.application_submission_job:
+  path: '/jobhunter/application-submission/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmission'
+    _title: 'Application Submission'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_short:
+  path: '/application-submission'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmission'
+    _title: 'Application Submission'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.application_submission_job_short:
+  path: '/application-submission/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmission'
+    _title: 'Application Submission'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step2:
+  path: '/jobhunter/application-submission/{job_id}/resolve-redirect-chain'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionResolveRedirectChain'
+    _title: 'Resolve Redirect Chain'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step2_short:
+  path: '/application-submission/{job_id}/resolve-redirect-chain'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionResolveRedirectChain'
+    _title: 'Resolve Redirect Chain'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step3:
+  path: '/jobhunter/application-submission/{job_id}/identify-auth-path'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionIdentifyAuthPath'
+    _title: 'Identify Authentication Path'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step3_post:
+  path: '/jobhunter/application-submission/{job_id}/identify-auth-path'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionIdentifyAuthPath'
+    _title: 'Identify Authentication Path'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step3_short:
+  path: '/application-submission/{job_id}/identify-auth-path'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionIdentifyAuthPath'
+    _title: 'Identify Authentication Path'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step3_short_post:
+  path: '/application-submission/{job_id}/identify-auth-path'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionIdentifyAuthPath'
+    _title: 'Identify Authentication Path'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step4:
+  path: '/jobhunter/application-submission/{job_id}/create-account'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionCreateAccount'
+    _title: 'Create Account'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step4_post:
+  path: '/jobhunter/application-submission/{job_id}/create-account'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionCreateAccount'
+    _title: 'Create Account'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step4_short:
+  path: '/application-submission/{job_id}/create-account'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionCreateAccount'
+    _title: 'Create Account'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step4_short_post:
+  path: '/application-submission/{job_id}/create-account'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionCreateAccount'
+    _title: 'Create Account'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step5:
+  path: '/jobhunter/application-submission/{job_id}/submit-application'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionSubmitApplication'
+    _title: 'Submit Application'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step5_post:
+  path: '/jobhunter/application-submission/{job_id}/submit-application'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionSubmitApplication'
+    _title: 'Submit Application'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step5_short:
+  path: '/application-submission/{job_id}/submit-application'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionSubmitApplication'
+    _title: 'Submit Application'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+
+job_hunter.application_submission_step5_short_post:
+  path: '/application-submission/{job_id}/submit-application'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::applicationSubmissionSubmitApplication'
+    _title: 'Submit Application'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+
+job_hunter.application_submission_step5_screenshot:
+  path: '/jobhunter/application-submission/{job_id}/screenshot/{filename}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionScreenshot'
+    _title: 'Screenshot Preview'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+    filename: '[A-Za-z0-9._-]+'
+
+job_hunter.application_submission_step5_screenshot_short:
+  path: '/application-submission/{job_id}/screenshot/{filename}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionScreenshot'
+    _title: 'Screenshot Preview'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+    filename: '[A-Za-z0-9._-]+'
+
+job_hunter.application_submission_step_stub:
+  path: '/jobhunter/application-submission/{job_id}/step/{step}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionStepStub'
+    _title: 'Application Submission Step'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+    step: '\d+'
+
+job_hunter.application_submission_step_stub_post:
+  path: '/jobhunter/application-submission/{job_id}/step/{step}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionStepStub'
+    _title: 'Application Submission Step'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+    step: '\d+'
+
+job_hunter.application_submission_step_stub_short:
+  path: '/application-submission/{job_id}/step/{step}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionStepStub'
+    _title: 'Application Submission Step'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+    step: '\d+'
+
+job_hunter.application_submission_step_stub_short_post:
+  path: '/application-submission/{job_id}/step/{step}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationSubmissionStepStub'
+    _title: 'Application Submission Step'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    job_id: '\d+'
+    step: '\d+'
+
+# Application automation: initiate apply for a job (POST)
+job_hunter.job_apply:
+  path: '/jobhunter/jobs/{job_id}/apply'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::applyToJob'
+    _title: 'Apply to Job'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    job_id: '\d+'
+  methods: [POST]
+
+# Application status JSON endpoint
+job_hunter.application_status:
+  path: '/jobhunter/jobs/{job_id}/application-status'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::applicationStatus'
+    _title: 'Application Status'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: '\d+'
+  methods: [GET]
+
+# Step 5: Interview & Follow-up
+job_hunter.interview_followup:
+  path: '/jobhunter/interview-followup'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::interviewFollowup'
+    _title: 'Interview & Follow-up'
+  requirements:
+    _permission: 'access job hunter'
+
+# Step 6: Analytics
+job_hunter.analytics:
+  path: '/jobhunter/analytics'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::analytics'
+    _title: 'Analytics & Optimization'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Add/Import Companies
+job_hunter.bulk_import_companies:
+  path: '/jobhunter/bulk-import-companies'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::bulkImportForm'
+    _title: 'Add Companies'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Application Management Routes
+job_hunter.add:
+  path: '/jobhunter/applications/add'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\JobApplicationForm'
+    _title: 'Add Job Application'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.edit:
+  path: '/jobhunter/applications/{job_application}/edit'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\JobApplicationForm'
+    _title: 'Edit Job Application'
+  requirements:
+    _permission: 'administer job application automation'
+    _entity_access: 'job_application.update'
+
+job_hunter.view:
+  path: '/jobhunter/applications/{job_application}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::view'
+    _title_callback: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::getTitle'
+  requirements:
+    _permission: 'administer job application automation'
+    _entity_access: 'job_application.view'
+
+# Workflow Management Routes
+job_hunter.workflow:
+  path: '/jobhunter/applications/{job_application}/workflow'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\WorkflowController::manage'
+    _title: 'Manage Application Workflow'
+  requirements:
+    _permission: 'administer job application automation'
+    _entity_access: 'job_application.update'
+
+job_hunter.bulk_actions:
+  path: '/jobhunter/bulk-actions'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\BulkActionsForm'
+    _title: 'Bulk Actions'
+  requirements:
+    _permission: 'administer job application automation'
+
+# User Profile Management Routes
+job_hunter.user_profile_dashboard:
+  path: '/jobhunter/profile/dashboard'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::dashboard'
+    _title: 'Job Application Profile'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.user_profile_summary:
+  path: '/jobhunter/profile/summary'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::profileDashboard'
+    _title: 'Profile Status'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.user_profile_edit:
+  path: '/jobhunter/profile/edit'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\UserProfileForm'
+    _title: 'Edit Job Application Profile'
+  requirements:
+    _permission: 'access job hunter'
+
+# Download Resume File
+job_hunter.download_resume:
+  path: '/jobhunter/resume/download/{file}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::downloadResume'
+  requirements:
+    _permission: 'access job hunter'
+    file: \d+
+
+# Delete Resume File
+job_hunter.delete_resume:
+  path: '/jobhunter/resume/delete/{resume_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::deleteResume'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    resume_id: \d+
+
+# Current User Profile Shortcuts
+job_hunter.my_profile:
+  path: '/jobhunter/my-profile'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::myProfile'
+    _title: 'My Job Application Profile'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.my_profile_edit:
+  path: '/jobhunter/my-profile/edit'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::myProfileEdit'
+    _title: 'Edit My Job Application Profile'
+  requirements:
+    _permission: 'access job hunter'
+
+# Tailor Resume for Specific Job
+job_hunter.tailor_resume:
+  path: '/jobhunter/tailor-resume/{job}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::tailorResume'
+    _title: 'Tailor Resume for Job'
+  requirements:
+    _permission: 'access job hunter'
+    job: \d+
+
+# AJAX endpoint for resume tailoring
+job_hunter.tailor_resume_ajax:
+  path: '/jobhunter/tailor-resume/ajax'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::tailorResumeAjax'
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+  methods: [POST]
+
+# AJAX endpoint for tailoring status check
+job_hunter.tailor_resume_status_ajax:
+  path: '/jobhunter/tailor-resume/status'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::tailorResumeStatusAjax'
+  requirements:
+    _permission: 'access job hunter'
+  methods: [GET]
+
+# AJAX endpoint for adding skill to profile
+job_hunter.add_skill_to_profile_ajax:
+  path: '/jobhunter/profile/add-skill'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::addSkillToProfileAjax'
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+  methods: [POST]
+
+# AJAX endpoint for refreshing skills gap analysis
+job_hunter.refresh_skills_gap_ajax:
+  path: '/jobhunter/tailor-resume/refresh-skills-gap'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::refreshSkillsGapAjax'
+  requirements:
+    _permission: 'access job hunter'
+    _csrf_token: 'TRUE'
+    _csrf_request_header_mode: 'TRUE'
+  methods: [POST]
+
+# Company Research
+job_hunter.company_research:
+  path: '/jobhunter/companyresearch'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyResearchController::researchPage'
+    _title: 'Company Research'
+  requirements:
+    _permission: 'access job hunter'
+
+# Company Management Routes
+job_hunter.companies_list:
+  path: '/jobhunter/companies/list'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::listCompanies'
+    _title: 'Companies'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.company_add:
+  path: '/jobhunter/companies/add'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::addForm'
+    _title: 'Add Company'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.company_edit:
+  path: '/jobhunter/companies/{company_id}/edit'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\CompanyForm'
+    _title: 'Edit Company'
+  requirements:
+    _permission: 'administer job application automation'
+    company_id: \d+
+
+job_hunter.company_delete:
+  path: '/jobhunter/companies/{company_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::deleteCompany'
+  requirements:
+    _permission: 'administer job application automation'
+    company_id: \d+
+
+# Job Requirement Management Routes
+# NOTE: /jobhunter/jobs has been consolidated into /jobhunter/job-discovery
+# This route now redirects to the unified job discovery page
+job_hunter.jobs_list:
+  path: '/jobhunter/jobs'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationActionController::listJobsRedirect'
+  requirements:
+    _permission: 'access job hunter'
+
+# Paste job posting (main entry point for job tailoring workflow)
+job_hunter.job_paste:
+  path: '/jobhunter/jobs/paste'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\AddJobPostingForm'
+    _title: 'Add Job Posting'
+  requirements:
+    _permission: 'access job hunter'
+
+# Backward compatibility alias for old URL
+job_hunter.job_paste_legacy:
+  path: '/jobhunter/job/paste'
+  defaults:
+    _form: '\Drupal\job_hunter\Form\AddJobPostingForm'
+    _title: 'Add Job Posting'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.job_retry_parsing:
+  path: '/jobhunter/jobs/{job_id}/retry-parsing'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobPostingController::retryParsing'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.job_retry_parsing_legacy:
+  path: '/jobhunter/job/{job_id}/retry-parsing'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobPostingController::retryParsing'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+# DEPRECATED: Old manual add routes removed - use job_hunter.job_paste instead
+# job_hunter.job_add and job_hunter.job_add_for_company have been removed
+# to ensure all job postings go through the AI-powered workflow
+
+job_hunter.job_edit:
+  path: '/jobhunter/jobs/{job_id}/edit'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::editJobForm'
+    _title: 'Edit Job Requirement'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.job_edit_legacy:
+  path: '/jobhunter/job/{job_id}/edit'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::editJobForm'
+    _title: 'Edit Job Requirement'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.job_view:
+  path: '/jobhunter/jobs/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::viewJob'
+    _title: 'View Job'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.job_view_legacy:
+  path: '/jobhunter/job/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::viewJob'
+    _title: 'View Job'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.job_tailoring:
+  path: '/jobhunter/jobtailoring/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::jobTailoring'
+    _title: 'Job & Resume Tailoring'
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    job_id: \d+
+
+job_hunter.job_tailoring_save_resume:
+  path: '/jobhunter/jobtailoring/{job_id}/save-resume'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::saveResume'
+    _title: 'Save Resume to Profile'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.job_delete:
+  path: '/jobhunter/jobs/{job_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::deleteJob'
+  requirements:
+    _permission: 'administer job application automation'
+    job_id: \d+
+
+job_hunter.job_delete_legacy:
+  path: '/jobhunter/job/{job_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::deleteJob'
+  requirements:
+    _permission: 'administer job application automation'
+    job_id: \d+
+
+# Generate Tailored Resume PDF (AJAX)
+job_hunter.generate_tailored_resume_pdf:
+  path: '/jobhunter/jobs/{job_id}/resume/generate'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::generateTailoredPdf'
+    _title: 'Generate Resume PDF'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+# Generate Tailored Resume PDF and redirect back (non-AJAX)
+job_hunter.generate_tailored_resume_pdf_redirect:
+  path: '/jobhunter/jobs/{job_id}/resume/generate/return'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::generateTailoredPdfAndReturn'
+    _title: 'Generate Resume PDF'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+# Download Tailored Resume as PDF
+job_hunter.download_tailored_resume_pdf:
+  path: '/jobhunter/jobs/{job_id}/resume/pdf'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::downloadTailoredPdf'
+    _title: 'Download Resume PDF'
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+# Download specific PDF by history ID
+job_hunter.download_pdf_by_id:
+  path: '/jobhunter/resume/pdf/{pdf_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::downloadPdfById'
+    _title: 'Download Resume PDF'
+  requirements:
+    _permission: 'access job hunter'
+    pdf_id: \d+
+
+# Delete specific PDF by history ID
+job_hunter.delete_pdf:
+  path: '/jobhunter/resume/pdf/{pdf_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::deletePdf'
+    _title: 'Delete Resume PDF'
+  methods: [POST, DELETE]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    pdf_id: \d+
+
+# Download Base Resume as PDF
+job_hunter.download_base_resume_pdf:
+  path: '/jobhunter/resume/pdf'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ResumeController::downloadBasePdf'
+    _title: 'Download Resume PDF'
+  requirements:
+    _permission: 'access job hunter'
+
+# 6. Future Routes (Commented Out)
+# job_hunter.settings:
+#   path: '/admin/config/services/job-application-automation'
+#   defaults:
+#     _form: '\Drupal\job_hunter\Form\SettingsForm'
+#     _title: 'Job Application Automation Settings'
+#   requirements:
+#     _permission: 'administer job application automation'
+
+# Google Jobs Integration Routes
+job_hunter.google_jobs_home:
+  path: '/jobhunter/googlejobsintegration'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::home'
+    _title: 'Google Jobs Integration'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.google_jobs_job_detail:
+  path: '/jobhunter/googlejobsintegration/job/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::jobDetail'
+    _title: 'Job Details - Google Jobs'
+  requirements:
+    _permission: 'administer job application automation'
+    job_id: \d+
+
+job_hunter.google_jobs_toggle_sync:
+  path: '/jobhunter/googlejobsintegration/toggle-sync'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::toggleJobSync'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+  options:
+    _csrf_request_header_mode: 'true'
+
+job_hunter.google_jobs_generate_structured_data:
+  path: '/jobhunter/googlejobsintegration/generate'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::generateStructuredData'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+  options:
+    _csrf_request_header_mode: 'true'
+
+job_hunter.google_jobs_validate:
+  path: '/jobhunter/googlejobsintegration/validate'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::validateStructuredData'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'administer job application automation'
+  options:
+    _csrf_request_header_mode: 'true'
+
+job_hunter.google_jobs_list:
+  path: '/jobhunter/googlejobsintegration/jobs-list'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsIntegrationController::getJobsList'
+  methods: [GET]
+  requirements:
+    _permission: 'administer job application automation'
+
+# Documentation - Google Jobs Integration
+job_hunter.documentation.google_jobs:
+  path: '/jobhunter/documentation/google-jobs-integration'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\DocumentationController::viewDocument'
+    _title: 'Google Jobs Integration'
+    file: 'GOOGLE_JOB_SEARCH_API_INTEGRATION.md'
+  requirements:
+    _permission: 'administer job application automation'
+
+# Google Jobs Search Routes (via Cloud Talent Solution API)
+job_hunter.google_jobs_search:
+  path: '/jobhunter/googlejobssearch'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::searchPage'
+    _title: 'Google Jobs Search'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.google_jobs_search_detail:
+  path: '/jobhunter/googlejobsdetail/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::searchJobDetail'
+    _title: 'Job Details'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    job_id: \d+
+
+job_hunter.google_jobs_search_api:
+  path: '/jobhunter/api/googlejobs/search'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::apiSearch'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.google_jobs_import:
+  path: '/jobhunter/api/googlejobs/import'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::apiImport'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+
+job_hunter.google_jobs_batch_import:
+  path: '/jobhunter/api/googlejobs/batch-import'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::apiBatchImport'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+
+job_hunter.google_jobs_details:
+  path: '/jobhunter/api/googlejobs/details/{job_name}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::apiGetJobDetails'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+
+# Error Queue Management Routes (Admin only)
+job_hunter.error_queue_list:
+  path: '/admin/job-hunter/errors'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ErrorQueueController::listErrors'
+    _title: 'Error Queue'
+  requirements:
+    _permission: 'administer job application automation'
+
+job_hunter.error_queue_view:
+  path: '/admin/job-hunter/errors/{error_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ErrorQueueController::viewError'
+    _title: 'View Error'
+  requirements:
+    _permission: 'administer job application automation'
+    error_id: '\d+'
+
+job_hunter.error_queue_mark_fixed:
+  path: '/admin/job-hunter/errors/{error_id}/fix'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ErrorQueueController::markFixed'
+  requirements:
+    _permission: 'administer job application automation'
+    error_id: '\d+'
+
+job_hunter.error_queue_count:
+  path: '/api/job-hunter/error-count'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ErrorQueueController::getErrorCount'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.credentials:
+  path: '/jobhunter/settings/credentials'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CredentialController::credentialsPage'
+    _title: 'ATS Credentials'
+  requirements:
+    _permission: 'access job hunter'
+
+job_hunter.credentials_delete:
+  path: '/jobhunter/settings/credentials/{credential_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CredentialController::deleteCredential'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    credential_id: '\d+'
+
+job_hunter.credentials_test:
+  path: '/jobhunter/settings/credentials/{credential_id}/test'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CredentialController::testCredential'
+  methods: [POST]
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access job hunter'
+    credential_id: '\d+'
+
+job_hunter.cover_letter:
+  path: '/jobhunter/coverletter/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::coverLetter'
+    _title: 'Cover Letter'
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    job_id: \d+
+
+job_hunter.cover_letter_generate:
+  path: '/jobhunter/coverletter/{job_id}/generate'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::coverLetterGenerate'
+    _title: 'Generate Cover Letter'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.cover_letter_save:
+  path: '/jobhunter/coverletter/{job_id}/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::coverLetterSave'
+    _title: 'Save Cover Letter'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.interview_prep:
+  path: '/jobhunter/interview-prep/{job_id}'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::interviewPrep'
+    _title: 'Interview Prep'
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    job_id: \d+
+
+job_hunter.interview_prep_save:
+  path: '/jobhunter/interview-prep/{job_id}/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::interviewPrepSave'
+    _title: 'Save Interview Notes'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.interview_round_save:
+  path: '/jobhunter/interview-rounds/{job_id}/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::interviewRoundSave'
+    _title: 'Save Interview Round'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.interview_prep_ai_tips:
+  path: '/jobhunter/interview-prep/{job_id}/ai-tips'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::interviewPrepAiTips'
+    _title: 'Get AI Interview Tips'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+job_hunter.saved_search_save:
+  path: '/jobhunter/saved-search/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::savedSearchSave'
+    _title: 'Save Search'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+job_hunter.saved_search_delete:
+  path: '/jobhunter/saved-search/{saved_search_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::savedSearchDelete'
+    _title: 'Delete Saved Search'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    saved_search_id: \d+
+
+
+job_hunter.saved_searches:
+  path: '/jobhunter/saved-searches'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\GoogleJobsSearchController::savedSearches'
+    _title: 'Saved Searches'
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Application Notes — load existing notes (GET, no CSRF)
+job_hunter.application_notes_load:
+  path: '/jobhunter/jobs/{job_id}/notes'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::applicationNotesLoad'
+    _title: 'Application Notes'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    job_id: \d+
+
+# Application Notes — save notes (POST, CSRF-protected)
+job_hunter.application_notes_save:
+  path: '/jobhunter/jobs/{job_id}/notes/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::applicationNotesSave'
+    _title: 'Save Application Notes'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+# Tailoring Feedback — save rating (POST, CSRF-protected)
+job_hunter.tailoring_feedback_save:
+  path: '/jobhunter/tailor-feedback'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\UserProfileController::tailoringFeedbackSave'
+    _title: 'Save Tailoring Feedback'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+# Application Deadline Tracker — status dashboard
+job_hunter.status_dashboard:
+  path: '/jobhunter/status'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::statusDashboard'
+    _title: 'Application Status'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Application Deadline Tracker — upcoming deadlines list
+job_hunter.deadlines:
+  path: '/jobhunter/deadlines'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::deadlinesList'
+    _title: 'Upcoming Deadlines'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Application Deadline Tracker — save deadline dates (POST, CSRF-protected)
+job_hunter.deadline_save:
+  path: '/jobhunter/jobs/{job_id}/deadline/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::deadlineSave'
+    _title: 'Save Deadline'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+# Bulk Status Update — Application Status Dashboard (GET)
+job_hunter.applications_dashboard:
+  path: '/jobhunter/applications'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::applicationsDashboard'
+    _title: 'My Applications'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Bulk Status Update — bulk update POST (CSRF-protected, POST-only)
+job_hunter.applications_bulk_update:
+  path: '/jobhunter/applications/bulk-update'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::bulkUpdateStatus'
+    _title: 'Bulk Update Application Status'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+# Company Interest Tracker — Watchlist
+job_hunter.company_watchlist:
+  path: '/jobhunter/companies/my-list'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyWatchlist'
+    _title: 'My Company Watchlist'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Company Interest Tracker — Interest Form (GET)
+job_hunter.company_interest_form:
+  path: '/jobhunter/companies/{company_id}/interest'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyInterestForm'
+    _title: 'Track Company'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    company_id: \d+
+
+# Company Interest Tracker — Save (POST, CSRF-protected, split-route)
+job_hunter.company_interest_save:
+  path: '/jobhunter/companies/{company_id}/interest/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyInterestSave'
+    _title: 'Save Company Interest'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    company_id: \d+
+
+# Company Research Tracker — user list
+job_hunter.company_research_list:
+  path: '/jobhunter/companies'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyResearchList'
+    _title: 'My Company Research'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Company Research Tracker — research form (GET)
+job_hunter.company_research_form:
+  path: '/jobhunter/companies/{company_id}/research'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyResearchForm'
+    _title: 'Company Research'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    company_id: \d+
+
+# Company Research Tracker — save (POST, CSRF split-route)
+job_hunter.company_research_save:
+  path: '/jobhunter/companies/{company_id}/research/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::companyResearchSave'
+    _title: 'Save Company Research'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    company_id: \d+
+
+# Contact Tracker — list
+job_hunter.contacts_list:
+  path: '/jobhunter/contacts'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactsList'
+    _title: 'My Contacts'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Contact Tracker — add form (GET)
+job_hunter.contacts_add:
+  path: '/jobhunter/contacts/add'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactForm'
+    _title: 'Add Contact'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Contact Tracker — save/create (POST, CSRF split-route)
+job_hunter.contacts_save:
+  path: '/jobhunter/contacts/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactSave'
+    _title: 'Save Contact'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+# Contact Tracker — edit form (GET)
+job_hunter.contacts_edit:
+  path: '/jobhunter/contacts/{contact_id}/edit'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactForm'
+    _title: 'Edit Contact'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    contact_id: \d+
+
+# Contact Tracker — delete (POST, CSRF split-route)
+job_hunter.contacts_delete:
+  path: '/jobhunter/contacts/{contact_id}/delete'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactDelete'
+    _title: 'Delete Contact'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    contact_id: \d+
+
+# Contact Tracker — link contact to saved job (POST, CSRF split-route)
+job_hunter.contact_job_link_save:
+  path: '/jobhunter/contacts/{contact_id}/link-job'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::contactJobLinkSave'
+    _title: 'Link Contact to Job'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    contact_id: \d+
+
+# Job-board Source Preferences — form (GET)
+job_hunter.preferences:
+  path: '/jobhunter/preferences'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::sourcePreferencesForm'
+    _title: 'Job Board Preferences'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Job-board Source Preferences — save (POST, CSRF split-route)
+job_hunter.preferences_save:
+  path: '/jobhunter/preferences/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::sourcePreferencesSave'
+    _title: 'Save Source Preferences'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+# Legacy preferences routes kept for compatibility.
+job_hunter.source_preferences:
+  path: '/jobhunter/preferences/sources'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::sourcePreferencesForm'
+    _title: 'Job Board Preferences'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Job-board Source Preferences — save (POST, CSRF split-route)
+job_hunter.source_preferences_save:
+  path: '/jobhunter/preferences/sources/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::sourcePreferencesSave'
+    _title: 'Save Source Preferences'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+
+# Resume Version Labeling — edit form (GET)
+job_hunter.resume_version_edit:
+  path: '/jobhunter/resume/{resume_id}/edit'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::resumeVersionForm'
+    _title: 'Edit Resume Version'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    resume_id: \d+
+
+# Resume Version Labeling — save (POST, CSRF split-route)
+job_hunter.resume_version_save:
+  path: '/jobhunter/resume/{resume_id}/edit/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::resumeVersionSave'
+    _title: 'Save Resume Version'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    resume_id: \d+
+
+# Resume Source Link — save source_resume_id on application (POST, CSRF split-route)
+job_hunter.resume_source_save:
+  path: '/jobhunter/jobs/{job_id}/resume-source/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::resumeSourceSave'
+    _title: 'Save Resume Source'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+
+
+# Offer Comparison Page (GET)
+job_hunter.offers:
+  path: '/jobhunter/offers'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::offersPage'
+    _title: 'My Offers'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+
+# Offer Save — create or update offer details (POST, CSRF split-route)
+job_hunter.offer_save:
+  path: '/jobhunter/jobs/{job_id}/offer/save'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::offerSave'
+    _title: 'Save Offer'
+  methods: [POST]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    job_id: \d+

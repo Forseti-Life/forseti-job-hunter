@@ -1,0 +1,347 @@
+/**
+ * NFR Documentation Styles
+ * Follows Forseti theme patterns
+ */
+
+/* Documentation Index */
+.nfr-documentation-index {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.nfr-documentation-index .intro {
+  margin-bottom: 40px;
+}
+
+.nfr-documentation-index h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.nfr-documentation-index .intro-text {
+  font-size: 1.125rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Documentation Sections */
+.doc-section {
+  margin-bottom: 40px;
+}
+
+.doc-section summary {
+  font-size: 1.75rem;
+  font-weight: 600;
+  padding: 20px;
+  background: #f8f9fa;
+  border-left: 4px solid #0071bc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.doc-section[open] summary {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #0071bc;
+}
+
+.doc-section .section-content {
+  padding: 0 20px;
+}
+
+/* Documentation Item Cards */
+.doc-item {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #0071bc;
+}
+
+.doc-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.doc-item.cdc-doc {
+  border-left-color: #c41230;
+}
+
+.doc-item .doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.doc-item h3 {
+  flex: 1;
+  margin: 0;
+}
+
+.doc-item h4 {
+  margin: 0 0 12px 0;
+}
+
+.doc-item h3,
+.doc-item h4 {
+  font-weight: 600;
+}
+
+.doc-item .validation-status {
+  margin-left: 20px;
+  white-space: nowrap;
+}
+
+.doc-item .validation-status .badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.doc-item .status-details {
+  background: rgba(0, 113, 188, 0.05);
+  border-left: 3px solid #0071bc;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.doc-item .progress {
+  height: 24px;
+  margin-top: 12px;
+  background-color: #e9ecef;
+}
+
+.doc-item .progress-bar {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.doc-item h3 {
+  font-size: 1.5rem;
+}
+
+.doc-item h4 {
+  font-size: 1.25rem;
+}
+
+.doc-item h3 a,
+.doc-item h4 a {
+  color: #0071bc;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.doc-item.cdc-doc h3 a,
+.doc-item.cdc-doc h4 a {
+  color: #c41230;
+}
+
+.doc-item h3 a:hover,
+.doc-item h4 a:hover {
+  text-decoration: underline;
+}
+
+.doc-item .description {
+  color: #495057;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+.doc-meta {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Documentation Page */
+.nfr-documentation-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.breadcrumb-nav {
+  margin-bottom: 30px;
+}
+
+.breadcrumb-nav a {
+  color: #0071bc;
+  text-decoration: none;
+  font-size: 0.938rem;
+}
+
+.breadcrumb-nav a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content {
+  background: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  line-height: 1.7;
+}
+
+/* Markdown Typography */
+.markdown-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid #0071bc;
+}
+
+.markdown-content h2 {
+  font-size: 2rem;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.markdown-content h3 {
+  font-size: 1.5rem;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.markdown-content h4 {
+  font-size: 1.25rem;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  color: #495057;
+}
+
+.markdown-content p {
+  margin: 16px 0;
+  color: #212529;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 16px 0;
+  padding-left: 32px;
+}
+
+.markdown-content li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.markdown-content code {
+  background: #f8f9fa;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+  color: #c41230;
+  border: 1px solid #dee2e6;
+}
+
+.markdown-content pre {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 24px 0;
+  border: 1px solid #dee2e6;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  color: #212529;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 0.938rem;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  text-align: left;
+}
+
+.markdown-content table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #212529;
+}
+
+.markdown-content table tr:nth-child(even) {
+  background: #fcfcfc;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #0071bc;
+  padding-left: 24px;
+  margin: 24px 0;
+  color: #495057;
+  font-style: italic;
+}
+
+.markdown-content a {
+  color: #0071bc;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.markdown-content a:hover {
+  border-bottom-color: #0071bc;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 2px solid #dee2e6;
+  margin: 40px 0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: #212529;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nfr-documentation-index,
+  .nfr-documentation-page {
+    padding: 20px 15px;
+  }
+
+  .markdown-content {
+    padding: 24px;
+  }
+
+  .markdown-content h1 {
+    font-size: 2rem;
+  }
+
+  .markdown-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-content table {
+    font-size: 0.813rem;
+  }
+
+  .markdown-content table th,
+  .markdown-content table td {
+    padding: 8px 12px;
+  }
+}

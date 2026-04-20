@@ -1,0 +1,14 @@
+name: 'Users Metrics'
+type: module
+description: 'Provides statistics for user registrations and logins with D3.js charts'
+core_version_requirement: ^10.3 || ^11
+package: 'Statistics'
+configure: users_metrics.settings
+dependencies:
+  - drupal:user
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2025-11-26
+version: '1.0.0'
+project: 'users_metrics'
+datestamp: 1764154058

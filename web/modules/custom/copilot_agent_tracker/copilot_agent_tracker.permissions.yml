@@ -1,0 +1,8 @@
+administer copilot agent tracker:
+  title: 'Administer Copilot agent tracker'
+  description: 'View agent status dashboards and manage agent tracking configuration.'
+
+post copilot agent telemetry:
+  title: 'Post Copilot agent telemetry'
+  description: 'Allow posting agent status/events to the internal telemetry endpoint.'
+

@@ -1,0 +1,33 @@
+services:
+  logger.channel.agent_evaluation:
+    parent: logger.channel_base
+    arguments: ['agent_evaluation']
+
+  agent_evaluation.service:
+    class: Drupal\agent_evaluation\Service\AgentEvaluationService
+    arguments: ['@entity_type.manager', '@current_user', '@forseti_content.agent_power', '@ai_conversation.ai_api_service']
+    tags:
+      - { name: service }
+
+  agent_evaluation.field_parser:
+    class: Drupal\agent_evaluation\Service\FieldUpdateParser
+    arguments: ['@logger.factory']
+    tags:
+      - { name: service }
+
+  agent_evaluation.calculator:
+    class: Drupal\agent_evaluation\Service\EvaluationCalculator
+    tags:
+      - { name: service }
+
+  agent_evaluation.prompt_manager:
+    class: Drupal\agent_evaluation\Service\PromptManager
+    arguments: ['@config.factory', '@entity_type.manager', '@logger.channel.agent_evaluation']
+    tags:
+      - { name: service }
+
+  # Deprecated: Use ai_conversation.ai_api_service instead
+  # agent_evaluation.api_service is now an alias to the ai_conversation service
+  agent_evaluation.api_service:
+    alias: ai_conversation.ai_api_service
+    deprecated: The "%alias_id%" service is deprecated. Use '@ai_conversation.ai_api_service' directly instead

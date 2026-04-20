@@ -1,0 +1,236 @@
+/**
+ * @file
+ * Styles for Job Application Dashboard.
+ */
+
+.job-dashboard {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.user-welcome {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+/* Flow Headers */
+.flow-header {
+  margin: 40px 0 20px 0;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.flow-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.5em;
+}
+
+.flow-header .flow-description {
+  margin: 0;
+  color: #4a5568;
+}
+
+.flow-tailored {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+}
+
+.flow-tailored .flow-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.flow-automated {
+  background: #e2e8f0;
+  color: #2d3748;
+  border: 2px dashed #a0aec0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  margin-top: 10px;
+}
+
+.status-badge.not-implemented {
+  background: #fbd38d;
+  color: #744210;
+}
+
+/* Phase Sections */
+.phase-section {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  margin: 15px 0;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.phase-section.disabled {
+  opacity: 0.7;
+}
+
+.phase-profile {
+  border-left: 5px solid #48bb78;
+}
+
+.phase-tailoring {
+  border-left: 5px solid #d69e2e;
+}
+
+.phase-companies {
+  border-left: 5px solid #4299e1;
+}
+
+.phase-discovery {
+  border-left: 5px solid #9f7aea;
+}
+
+.phase-submission {
+  border-left: 5px solid #ed8936;
+}
+
+.phase-interview {
+  border-left: 5px solid #f56565;
+}
+
+.phase-analytics {
+  border-left: 5px solid #38b2ac;
+}
+
+/* Coming Soon Badge */
+.coming-soon-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #fbd38d;
+  color: #744210;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7em;
+  font-weight: bold;
+}
+
+/* Phase Content */
+.phase-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.step-indicator {
+  background: #1a365d;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.phase-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.phase-info h3 {
+  margin: 0 0 5px 0;
+  color: #2d3748;
+  font-size: 1.1em;
+}
+
+.phase-info p {
+  margin: 0;
+  color: #718096;
+  font-size: 0.9em;
+}
+
+.phase-stat {
+  text-align: center;
+  min-width: 100px;
+}
+
+.stat-number {
+  font-size: 2em;
+  font-weight: bold;
+  color: #1a365d;
+}
+
+.stat-label {
+  color: #4a5568;
+  font-size: 0.85em;
+}
+
+.phase-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.phase-button {
+  padding: 10px 18px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.phase-button.primary {
+  background: #4299e1;
+  color: white;
+}
+
+.phase-button.primary:hover {
+  background: #3182ce;
+}
+
+.phase-button:not(.primary) {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.phase-button:not(.primary):hover {
+  background: #cbd5e0;
+}
+
+/* Future Steps */
+.future-steps {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.future-placeholder ul {
+  margin: 10px 0 0 0;
+  padding-left: 20px;
+  color: #718096;
+}
+
+.future-placeholder li {
+  margin: 5px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .phase-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .phase-actions {
+    justify-content: center;
+  }
+}

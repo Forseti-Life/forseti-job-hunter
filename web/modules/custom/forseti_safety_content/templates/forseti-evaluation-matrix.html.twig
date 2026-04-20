@@ -1,0 +1,218 @@
+{#
+/**
+ * @file
+ * Template for the AI Agent Evaluation Matrix page.
+ *
+ * Available variables:
+ * - dimensions: Array of dimension names keyed by dimension ID
+ * - entities: Array of entity data with dimension scores
+ */
+#}
+
+<div class="container my-5">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="display-4 mb-3">AI Agent Evaluation Matrix</h1>
+      <p class="lead">
+        This matrix evaluates real-world companies, institutions, and systems across all nine dimensions 
+        of the Agent Power Framework framework. Each cell shows the power level (0-8) for that entity on that dimension.
+      </p>
+      <div class="alert alert-info">
+        <strong>Scale:</strong> 0 = Maximum/Perfect capability (best) | 8 = Minimum/Basic capability (worst)
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col" class="text-center align-middle" style="min-width: 200px;">
+                <strong>Company/Institution</strong>
+              </th>
+              {% for dimension_id, dimension_name in dimensions %}
+                <th scope="col" class="text-center align-middle" style="min-width: 100px;">
+                  <a href="/agent-power-framework/{{ dimension_id }}" class="text-white text-decoration-none">
+                    <strong>{{ dimension_name }}</strong>
+                  </a>
+                </th>
+              {% endfor %}
+              <th scope="col" class="text-center align-middle bg-primary" style="min-width: 100px;">
+                <strong>Total</strong>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if entities is empty %}
+              <tr>
+                <td colspan="11" class="text-center text-muted py-4">
+                  <em>Entity evaluations will be populated here.</em>
+                </td>
+              </tr>
+            {% else %}
+              {% for entity in entities %}
+                <tr>
+                  <td class="align-middle">
+                    <strong>{{ entity.name }}</strong>
+                  </td>
+                  {% for dimension_id in dimensions|keys %}
+                    <td class="text-center align-middle">
+                      {% if entity.scores[dimension_id] is defined %}
+                        <span class="badge bg-secondary">{{ entity.scores[dimension_id] }}</span>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                  <td class="text-center align-middle bg-light">
+                    {% if entity.total is defined %}
+                      <strong>{{ entity.total }}</strong>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">How to Read This Matrix</h5>
+          <ul class="mb-0">
+            <li><strong>Lower scores (0-2)</strong> indicate maximum capability on that dimension</li>
+            <li><strong>Higher scores (6-8)</strong> indicate minimum/basic capability on that dimension</li>
+            <li><strong>Total column</strong> sums all dimension scores (lower total = more powerful overall)</li>
+            <li><strong>Blank cells (—)</strong> indicate the entity's capability on that dimension is unknown</li>
+            <li><strong>Click dimension headers</strong> to view detailed descriptions and examples</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <a href="/agent-power-framework" class="btn btn-primary">
+        ← Back to Agent Power Framework Overview
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const table = document.querySelector('.table');
+  const headers = table.querySelectorAll('thead th');
+  const tbody = table.querySelector('tbody');
+  
+  // Make headers clickable and add cursor pointer
+  headers.forEach((header, index) => {
+    header.style.cursor = 'pointer';
+    header.style.userSelect = 'none';
+    header.setAttribute('data-sort-direction', 'none');
+    
+    // Add sort indicator
+    const sortIndicator = document.createElement('span');
+    sortIndicator.className = 'sort-indicator ms-2';
+    sortIndicator.innerHTML = '⇅';
+    sortIndicator.style.opacity = '0.3';
+    header.appendChild(sortIndicator);
+    
+    header.addEventListener('click', () => sortTable(index));
+  });
+  
+  function sortTable(columnIndex) {
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const currentDirection = headers[columnIndex].getAttribute('data-sort-direction');
+    const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+    
+    // Reset all headers
+    headers.forEach(h => {
+      h.setAttribute('data-sort-direction', 'none');
+      const indicator = h.querySelector('.sort-indicator');
+      if (indicator) {
+        indicator.innerHTML = '⇅';
+        indicator.style.opacity = '0.3';
+      }
+    });
+    
+    // Set current header
+    headers[columnIndex].setAttribute('data-sort-direction', newDirection);
+    const indicator = headers[columnIndex].querySelector('.sort-indicator');
+    if (indicator) {
+      indicator.innerHTML = newDirection === 'asc' ? '↑' : '↓';
+      indicator.style.opacity = '1';
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+      const cellA = a.cells[columnIndex];
+      const cellB = b.cells[columnIndex];
+      
+      let valueA, valueB;
+      
+      // Check if it's a badge (numeric score)
+      const badgeA = cellA.querySelector('.badge');
+      const badgeB = cellB.querySelector('.badge');
+      
+      if (badgeA && badgeB) {
+        // Numeric comparison
+        valueA = parseInt(badgeA.textContent) || 999;
+        valueB = parseInt(badgeB.textContent) || 999;
+      } else if (cellA.textContent.trim() === '—' || cellB.textContent.trim() === '—') {
+        // Handle empty cells (—)
+        valueA = cellA.textContent.trim() === '—' ? 999 : (parseInt(cellA.textContent) || cellA.textContent.toLowerCase());
+        valueB = cellB.textContent.trim() === '—' ? 999 : (parseInt(cellB.textContent) || cellB.textContent.toLowerCase());
+      } else {
+        // Text or number comparison
+        const textA = cellA.textContent.trim();
+        const textB = cellB.textContent.trim();
+        
+        // Try numeric comparison first
+        const numA = parseFloat(textA);
+        const numB = parseFloat(textB);
+        
+        if (!isNaN(numA) && !isNaN(numB)) {
+          valueA = numA;
+          valueB = numB;
+        } else {
+          valueA = textA.toLowerCase();
+          valueB = textB.toLowerCase();
+        }
+      }
+      
+      if (valueA < valueB) return newDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return newDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+  }
+});
+</script>
+
+<style>
+.table thead th {
+  position: relative;
+}
+
+.table thead th:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sort-indicator {
+  display: inline-block;
+  font-size: 0.8em;
+  transition: opacity 0.2s;
+}
+</style>

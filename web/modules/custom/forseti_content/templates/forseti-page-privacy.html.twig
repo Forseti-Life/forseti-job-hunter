@@ -1,0 +1,99 @@
+{#
+/**
+ * @file
+ * Template for Privacy page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - commitment: Privacy commitment section
+ * - data_collection: Data collection section
+ * - data_usage: Data usage section
+ * - never_do: What we never do section
+ * - security_measures: Array of security measure items
+ * - rights: User rights section
+ * - anonymous_reporting: Anonymous reporting section
+ * - contact_cta: Contact call-to-action
+ * - last_updated: Last updated date
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-info-cyan">
+        <h4 class="text-cyan">{{ commitment.title }}</h4>
+        <p class="mb-0">{{ commitment.content }}</p>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ data_collection.title }}</h2>
+      <h4>{{ data_collection.what_we_collect.title }}</h4>
+      <ul>
+        {% for item in data_collection.what_we_collect.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h4 class="mt-4">{{ data_collection.what_we_dont.title }}</h4>
+      <ul>
+        {% for item in data_collection.what_we_dont.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ data_usage.title }}</h2>
+      <p>{{ data_usage.intro }}</p>
+      <ul>
+        {% for item in data_usage.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="alert alert-warning mt-4">
+        <strong>{{ never_do.title }}</strong>
+        <ul class="mb-0">
+          {% for item in never_do.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ 'Security Measures'|t }}</h2>
+      <div class="row">
+        {% for measure in security_measures %}
+          <div class="col-md-6 mb-3">
+            <div class="card card-forseti p-3 h-100">
+              <h5>{{ measure.icon|raw }} {{ measure.title }}</h5>
+              <p>{{ measure.description }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ rights.title }}</h2>
+      <p>{{ rights.intro }}</p>
+      <ul>
+        {% for item in rights.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ anonymous_reporting.title }}</h2>
+      <p>{{ anonymous_reporting.intro }}</p>
+      <ul>
+        {% for item in anonymous_reporting.items %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="alert alert-info mt-5">
+        <h4>{{ contact_cta.title }}</h4>
+        <p class="mb-0">{{ contact_cta.content|raw }}</p>
+      </div>
+      
+      <p class="text-muted mt-5">
+        <small>{{ last_updated }}</small>
+      </p>
+    </div>
+  </div>
+</div>

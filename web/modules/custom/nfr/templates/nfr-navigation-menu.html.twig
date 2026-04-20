@@ -1,0 +1,58 @@
+{#
+/**
+ * @file
+ * Theme implementation for NFR navigation menu with collapsible sections.
+ *
+ * Available variables:
+ * - menu_items: Array of menu items with structure:
+ *   - title: Menu item title
+ *   - url: URL object for the menu link
+ *   - children: Array of child menu items
+ *   - weight: Weight for sorting
+ */
+#}
+<nav class="nfr-navigation-menu">
+  <div class="card card-forseti">
+    <div class="card-body p-0">
+      <ul class="nav flex-column">
+        {% for key, item in menu_items %}
+          <li class="nav-item {% if item.children %}parent{% endif %}">
+            {% if item.children %}
+              {# Parent item with collapsible children #}
+              <a href="#" 
+                 class="nav-link nav-link-parent" 
+                 data-bs-toggle="collapse" 
+                 data-bs-target="#nfr-menu-{{ key }}" 
+                 aria-expanded="false"
+                 aria-controls="nfr-menu-{{ key }}">
+                <span class="parent-title">{{ item.title }}</span>
+                <svg class="collapse-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                </svg>
+              </a>
+              <div class="collapse" id="nfr-menu-{{ key }}">
+                <ul class="nav flex-column nav-children">
+                  {% for child in item.children %}
+                    <li class="nav-item">
+                      <a href="{{ child.url }}" class="nav-link">
+                        {{ child.title }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% else %}
+              {# Standalone link without children #}
+              <a href="{{ item.url }}" class="nav-link">
+                {{ item.title }}
+              </a>
+            {% endif %}
+          </li>
+          {% if not loop.last %}
+            <li class="nav-divider"></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</nav>

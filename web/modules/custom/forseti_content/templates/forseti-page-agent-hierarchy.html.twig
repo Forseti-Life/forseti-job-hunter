@@ -1,0 +1,369 @@
+{#
+/**
+ * @file
+ * Template for Agent Power Framework page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction content array with 'lead', 'title', and 'paragraphs'
+ * - power_levels: Array of unified power level data with dimensional profiles
+ * - dimension_info: Reference information about the 9 dimensions
+ * - transparency_note: Transparency note text
+ */
+#}
+
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-11 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="lead mb-4 text-muted-light text-center">
+        {{ intro.lead }}
+      </div>
+      
+      <div class="text-center mb-4">
+        <a href="/agent-power-framework/evaluations" class="btn btn-outline-primary me-2">
+          <i class="fas fa-list"></i> View All Evaluated Entities
+        </a>
+        <a href="/agent-power-framework/us-government" class="btn btn-outline-success">
+          <i class="fas fa-flag-usa"></i> Example Assessment: US Military
+        </a>
+      </div>
+      
+      <div class="alert alert-info-cyan mb-4">
+        <h5 class="text-cyan mb-3 text-center"><i class="fas fa-chart-line me-2"></i>{{ 'Evaluate an Agent'|t }}</h5>
+        <p class="mb-3 text-center">
+          {{ 'Enter an agent name to begin evaluation.'|t }}
+        </p>
+        
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="input-group input-group-lg">
+              <input type="text" class="form-control" id="agentNameInput" placeholder="Enter agent name (e.g., ChatGPT, Elon Musk, FBI)">
+              <a href="/talk-with-forseti" class="btn btn-primary btn-lg" id="startEvaluationBtn">
+                <i class="fas fa-comment-dots"></i> {{ 'Start Evaluation'|t }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {% if intro.title or intro.paragraphs|length > 0 %}
+      <div class="alert alert-info-cyan mt-4">
+        {% if intro.title %}
+        <h4 class="text-cyan">{{ intro.title }}</h4>
+        {% endif %}
+        {% for paragraph in intro.paragraphs %}
+          <p{% if loop.last %} class="mb-0"{% else %} class="mb-2"{% endif %}>
+            {{ paragraph }}
+          </p>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'Five Dimensions of Power'|t }}</h2>
+      
+      <p class="text-muted-light mb-3">
+        {{ 'Power is multidimensional. Understanding what any agent system—human or machine—can actually do requires measuring across five fundamental dimensions: Information Access, Resource Control, Authority & Permission, Network Position, and Synthesis & Application. Each dimension contains 6 sub-dimensions (30 total) that together define capability.'|t }}
+      </p>
+      
+      <p class="text-muted-light mb-3">
+        {{ 'This framework provides a heuristic scale designed for quick evaluation of agent capabilities. Scores range from 0 (no capability) to 9+ (approaching universal capability), enabling rapid assessment of what an agent knows, what it can do, whom it can influence, and how effectively it processes information. By evaluating across all 30 sub-dimensions, we can identify the specific constraints, biases, and limitations any agent operates under.'|t }}
+      </p>
+      
+      <p class="text-muted-light mb-4">
+        {{ 'Understanding these dimensions reveals critical patterns: a filtered information agent will never access uncomfortable truths; an under-resourced agent cannot execute sophisticated plans; an isolated agent lacks network position to coordinate action. Only agents with high scores across multiple dimensions can approach comprehensive capability.'|t }}
+      </p>
+      
+      <div class="alert alert-info-cyan mb-4">
+        <h5 class="text-cyan mb-2"><i class="fas fa-chart-line me-2"></i>{{ 'Beyond the Heuristic: Advanced Metrics for High-Power Entities'|t }}</h5>
+        <p class="mb-2">{{ 'While the 0-9 scale provides rapid capability assessment, entities scoring 8 or higher require additional quantitative metrics for precise evaluation:'|t }}</p>
+        <ul class="mb-0">
+          <li><strong>Information Access (8+):</strong> Data Asset Valuation - monetary value of accessible information resources</li>
+          <li><strong>Resource Control (8+):</strong> Net Worth - total financial assets and resource value under control</li>
+          <li><strong>Authority & Permission (8+):</strong> Approval Rating - quantified public trust and legitimacy metrics</li>
+          <li><strong>Network Position (8+):</strong> Social Media Network Reach - follower counts, engagement rates, and influence metrics</li>
+          <li><strong>Synthesis & Application (8+):</strong> AI Benchmarks - standardized performance scores (MMLU, HumanEval, etc.)</li>
+        </ul>
+      </div>
+      
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+        {% for category in power_categories %}
+          <div class="col">
+            <a href="/agent-power-framework/{{ category.id }}" class="text-decoration-none">
+              <div class="card card-forseti h-100 p-4 hover-lift {% if category.status == 'planned' %}opacity-75{% endif %}">
+                <div class="d-flex align-items-start mb-3">
+                  <i class="fas fa-{{ category.icon }} fa-2x text-cyan me-3"></i>
+                  <div class="flex-grow-1">
+                    <h4 class="text-cyan mb-1">{{ category.name }}</h4>
+                    <small class="text-muted-light">
+                      {{ category.dimensions }} sub-dimension{{ category.dimensions > 1 ? 's' : '' }}
+                      {% if category.status == 'complete' %}
+                        <span class="badge bg-success ms-1">Active</span>
+                      {% elseif category.status == 'partial' %}
+                        <span class="badge bg-info ms-1">Partial</span>
+                      {% else %}
+                        <span class="badge bg-warning ms-1">Planned</span>
+                      {% endif %}
+                    </small>
+                  </div>
+                </div>
+                <p class="text-muted-light mb-3 small">{{ category.description }}</p>
+                <p class="text-muted mb-2" style="font-size: 0.8rem;">
+                  <strong>Examples:</strong> {{ category.examples }}
+                </p>
+                {% if category.id == 'information-access' %}
+                  <p class="text-info-light mb-0" style="font-size: 0.75rem; border-top: 1px solid rgba(0,212,255,0.2); padding-top: 8px;">
+                    <i class="fas fa-star me-1"></i><strong>Level 8+ Metric:</strong> Data Asset Valuation
+                  </p>
+                {% elseif category.id == 'resource-control' %}
+                  <p class="text-info-light mb-0" style="font-size: 0.75rem; border-top: 1px solid rgba(0,212,255,0.2); padding-top: 8px;">
+                    <i class="fas fa-star me-1"></i><strong>Level 8+ Metric:</strong> Net Worth
+                  </p>
+                {% elseif category.id == 'authority-permission' %}
+                  <p class="text-info-light mb-0" style="font-size: 0.75rem; border-top: 1px solid rgba(0,212,255,0.2); padding-top: 8px;">
+                    <i class="fas fa-star me-1"></i><strong>Level 8+ Metric:</strong> Approval Rating
+                  </p>
+                {% elseif category.id == 'network-position' %}
+                  <p class="text-info-light mb-0" style="font-size: 0.75rem; border-top: 1px solid rgba(0,212,255,0.2); padding-top: 8px;">
+                    <i class="fas fa-star me-1"></i><strong>Level 8+ Metric:</strong> Social Media Network Reach
+                  </p>
+                {% elseif category.id == 'synthesis-application' %}
+                  <p class="text-info-light mb-0" style="font-size: 0.75rem; border-top: 1px solid rgba(0,212,255,0.2); padding-top: 8px;">
+                    <i class="fas fa-star me-1"></i><strong>Level 8+ Metric:</strong> AI Benchmarks
+                  </p>
+                {% endif %}
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'Unified Power Levels (0-9)'|t }}</h2>
+      <p class="text-muted-light mb-4">
+        {{ 'Each unified power level represents a complete capability profile across all five dimensions and 30 sub-dimensions. These levels measure an entity\'s actual ability to know, act, and influence—from nothing (Level 0) to approaching omnipotence (Level 9, ∞). Agents typically score differently across dimensions, but unified levels show overall capability.'|t }}
+      </p>
+      
+      {# Power Level Accordion #}
+      <div class="accordion" id="powerLevelAccordion">
+        {% for power_level in power_levels %}
+          <div class="accordion-item bg-dark-secondary border-forseti mb-3">
+            <h2 class="accordion-header" id="heading{{ power_level.level }}">
+              <button class="accordion-button{% if power_level.level != 0 %} collapsed{% endif %} bg-dark-secondary text-cyan" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#collapse{{ power_level.level }}">
+                <span class="badge {{ power_level.badge }} me-3">LEVEL {{ power_level.level }}</span>
+                <strong class="fs-5">{{ power_level.name }}</strong>
+              </button>
+            </h2>
+            <div id="collapse{{ power_level.level }}" 
+                 class="accordion-collapse collapse{% if power_level.level == 0 %} show{% endif %}" 
+                 data-bs-parent="#powerLevelAccordion">
+              <div class="accordion-body">
+                <p class="lead text-muted-light mb-4">{{ power_level.description }}</p>
+                
+                <h5 class="text-cyan mb-3">{{ 'Capability Profile Across 5 Dimensions'|t }}</h5>
+                
+                {# Information Access Dimension #}
+                <h6 class="text-info mt-4 mb-2"><i class="fas fa-database me-2"></i>{{ 'Information Access'|t }} <small class="text-muted">(6 sub-dimensions)</small></h6>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                  {% set info_dims = {
+                    'scope': 'Scope & Breadth',
+                    'restriction': 'Content Restriction',
+                    'temporal': 'Temporal Reach',
+                    'sources': 'Source Diversity',
+                    'granularity': 'Data Granularity',
+                    'verification': 'Data Verification'
+                  } %}
+                  {% for key, label in info_dims %}
+                    {% if power_level.dimensions[key] is defined %}
+                      {% set dimension = power_level.dimensions[key] %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge {% if dimension.level >= 8 %}bg-success{% elseif dimension.level >= 6 %}bg-info{% elseif dimension.level >= 3 %}bg-warning{% else %}bg-danger{% endif %} small">
+                              {{ dimension.level }}
+                            </span>
+                          </div>
+                          <p class="small mb-0 text-muted-light">{{ dimension.value }}</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                
+                {# Resource Control Dimension #}
+                <h6 class="text-info mt-3 mb-2"><i class="fas fa-coins me-2"></i>{{ 'Resource Control'|t }} <small class="text-muted">(6 sub-dimensions)</small></h6>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                  {% set resource_dims = {
+                    'computational': 'Computational',
+                    'financial': 'Financial Capital',
+                    'infrastructure': 'Infrastructure',
+                    'human': 'Human Capital',
+                    'energy': 'Energy Resources',
+                    'time': 'Time Allocation'
+                  } %}
+                  {% for key, label in resource_dims %}
+                    {% if power_level.dimensions[key] is defined %}
+                      {% set dimension = power_level.dimensions[key] %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge {% if dimension.level >= 8 %}bg-success{% elseif dimension.level >= 6 %}bg-info{% elseif dimension.level >= 3 %}bg-warning{% else %}bg-danger{% endif %} small">
+                              {{ dimension.level }}
+                            </span>
+                          </div>
+                          <p class="small mb-0 text-muted-light">{{ dimension.value }}</p>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2 opacity-50">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge bg-secondary small">TBD</span>
+                          </div>
+                          <p class="small mb-0 text-muted">Pending definition</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                
+                {# Authority & Permission Dimension #}
+                <h6 class="text-info mt-3 mb-2"><i class="fas fa-gavel me-2"></i>{{ 'Authority & Permission'|t }} <small class="text-muted">(6 sub-dimensions)</small></h6>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                  {% set auth_dims = {
+                    'legal': 'Legal Authorization',
+                    'jurisdictional': 'Jurisdictional Reach',
+                    'hierarchical': 'Hierarchical Position',
+                    'financial_auth': 'Financial Authority',
+                    'territorial': 'Territorial Scope',
+                    'ethical': 'Ethical Legitimacy'
+                  } %}
+                  {% for key, label in auth_dims %}
+                    {% if power_level.dimensions[key] is defined %}
+                      {% set dimension = power_level.dimensions[key] %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge {% if dimension.level >= 8 %}bg-success{% elseif dimension.level >= 6 %}bg-info{% elseif dimension.level >= 3 %}bg-warning{% else %}bg-danger{% endif %} small">
+                              {{ dimension.level }}
+                            </span>
+                          </div>
+                          <p class="small mb-0 text-muted-light">{{ dimension.value }}</p>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2 opacity-50">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge bg-secondary small">TBD</span>
+                          </div>
+                          <p class="small mb-0 text-muted">Pending definition</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                
+                {# Network Position Dimension #}
+                <h6 class="text-info mt-3 mb-2"><i class="fas fa-network-wired me-2"></i>{{ 'Network Position'|t }} <small class="text-muted">(6 sub-dimensions)</small></h6>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                  {% set network_dims = {
+                    'trust': 'Trust Network Depth',
+                    'dependency': 'Dependency Relationships',
+                    'gatekeeping': 'Gatekeeping Power',
+                    'influence': 'Influence Reach',
+                    'reputation': 'Reputation Capital',
+                    'mobilization': 'Mobilization Capacity'
+                  } %}
+                  {% for key, label in network_dims %}
+                    {% if power_level.dimensions[key] is defined %}
+                      {% set dimension = power_level.dimensions[key] %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge {% if dimension.level >= 8 %}bg-success{% elseif dimension.level >= 6 %}bg-info{% elseif dimension.level >= 3 %}bg-warning{% else %}bg-danger{% endif %} small">
+                              {{ dimension.level }}
+                            </span>
+                          </div>
+                          <p class="small mb-0 text-muted-light">{{ dimension.value }}</p>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2 opacity-50">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge bg-secondary small">TBD</span>
+                          </div>
+                          <p class="small mb-0 text-muted">Pending definition</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                
+                {# Synthesis & Application Dimension #}
+                <h6 class="text-info mt-3 mb-2"><i class="fas fa-brain me-2"></i>{{ 'Synthesis & Application'|t }} <small class="text-muted">(6 sub-dimensions)</small></h6>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                  {% set synthesis_dims = {
+                    'synthesis': 'Information Synthesis',
+                    'creativity': 'Creativity & Novel Generation',
+                    'strategic': 'Strategic Planning Depth',
+                    'decision': 'Decision Quality',
+                    'adaptive': 'Adaptive Learning Rate',
+                    'memory': 'Memory Architecture'
+                  } %}
+                  {% for key, label in synthesis_dims %}
+                    {% if power_level.dimensions[key] is defined %}
+                      {% set dimension = power_level.dimensions[key] %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge {% if dimension.level >= 8 %}bg-success{% elseif dimension.level >= 6 %}bg-info{% elseif dimension.level >= 3 %}bg-warning{% else %}bg-danger{% endif %} small">
+                              {{ dimension.level }}
+                            </span>
+                          </div>
+                          <p class="small mb-0 text-muted-light">{{ dimension.value }}</p>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="col">
+                        <div class="card card-forseti h-100 p-2 opacity-50">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-cyan small">{{ label|t }}</strong>
+                            <span class="badge bg-secondary small">TBD</span>
+                          </div>
+                          <p class="small mb-0 text-muted">Pending definition</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="alert alert-warning mt-5">
+        <h4>{{ '⚠️ Transparency Note'|t }}</h4>
+        <p class="mb-0">{{ transparency_note }}</p>
+      </div>
+      
+      <div class="text-center mt-3">
+        <a href="/talk-with-forseti" class="btn btn-outline-primary btn-lg">{{ 'Talk with Forseti'|t }}</a>
+        <a href="/how-it-works" class="btn btn-outline-secondary btn-lg ms-2">{{ 'Back to How It Works'|t }}</a>
+      </div>
+    </div>
+  </div>
+</div>

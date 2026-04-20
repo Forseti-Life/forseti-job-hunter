@@ -1,0 +1,216 @@
+{#
+/**
+ * @file
+ * Template for Individual Metrics Profile page.
+ *
+ * Available variables:
+ * - user: The user entity.
+ * - assessment: The assessment data (id, status, scores, etc).
+ * - dimensions: Array of dimension data with categories and metrics.
+ * - has_responses: Boolean indicating if user has any responses.
+ */
+#}
+
+<div class="individual-metrics-profile container my-5">
+  {# Hero Section #}
+  <div class="bg-primary text-white py-5 mb-5 rounded">
+    <div class="text-center">
+      <h1 class="display-5 fw-bold mb-3">{{ 'Individual Metrics for @name'|t({'@name': user.getDisplayName()}) }}</h1>
+      
+      {% if assessment %}
+        <p class="lead mb-4">{{ 'View and manage your personal safety metrics'|t }}</p>
+        <div class="row text-center g-4 mt-3">
+          <div class="col-md-4">
+            <div class="p-3">
+              <div class="fs-4 fw-bold">{{ assessment.status|capitalize }}</div>
+              <div class="small text-white-50">{{ 'Status'|t }}</div>
+            </div>
+          </div>
+          {% if assessment.completed_at %}
+            <div class="col-md-4">
+              <div class="p-3">
+                <div class="fs-4 fw-bold">{{ assessment.completed_at|format_date('custom', 'M j, Y') }}</div>
+                <div class="small text-white-50">{{ 'Completed'|t }}</div>
+              </div>
+            </div>
+          {% endif %}
+          {% if assessment.overall_score %}
+            <div class="col-md-4">
+              <div class="p-3">
+                <div class="fs-4 fw-bold">{{ assessment.overall_score }}</div>
+                <div class="small text-white-50">{{ 'Overall Score'|t }}</div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="lead">{{ 'Track your personal safety metrics and compare to population averages'|t }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if has_responses %}
+    {# Dimensions Grid #}
+    <div class="metrics-dimensions">
+      {% for dimension_key, dimension in dimensions %}
+        <div class="card mb-4 shadow-sm" data-dimension="{{ dimension_key }}">
+          <div class="card-header bg-light">
+            <div class="row align-items-center">
+              <div class="col">
+                <h2 class="h4 mb-0">
+                  <button class="btn btn-link text-decoration-none text-dark p-0 dimension-toggle" 
+                          type="button"
+                          data-bs-toggle="collapse" 
+                          data-bs-target="#dimension-{{ dimension_key }}" 
+                          aria-expanded="false" 
+                          aria-controls="dimension-{{ dimension_key }}">
+                    <i class="fas fa-chevron-right toggle-icon me-2"></i>
+                    {{ dimension.name }}
+                    <span class="badge bg-secondary ms-2">{{ dimension.response_count }} {{ 'metrics'|t }}</span>
+                  </button>
+                </h2>
+              </div>
+              <div class="col-auto">
+                <a href="{{ path('safety_calculator.individual_metrics_edit', {'user': user.id(), 'dimension': dimension_key}) }}" 
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit me-1"></i>{{ 'Edit'|t }}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapse" id="dimension-{{ dimension_key }}">
+            <div class="card-body">
+              {% if dimension.categories %}
+                {% for category in dimension.categories %}
+                  <div class="category-section mb-4">
+                    <h3 class="h5 text-primary mb-3">
+                      <i class="fas fa-folder-open me-2"></i>{{ category.name }}
+                    </h3>
+                    
+                    <div class="table-responsive">
+                      <table class="table table-hover table-sm">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 80px;">{{ 'Q#'|t }}</th>
+                            <th>{{ 'Metric'|t }}</th>
+                            <th style="width: 120px;">{{ 'Your Response'|t }}</th>
+                            <th style="width: 100px;" class="text-center">{{ 'Z-Score'|t }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for metric in category.metrics %}
+                            <tr class="metric-row">
+                              <td class="text-muted">{{ metric.question_id }}</td>
+                              <td>
+                                <div class="fw-bold">{{ metric.metric_name }}</div>
+                                <small class="text-muted d-block">{{ metric.metric_description }}</small>
+                                {% if metric.reference_url %}
+                                  <small>
+                                    <a href="{{ metric.reference_url }}" target="_blank" class="text-decoration-none">
+                                      <i class="fas fa-external-link-alt me-1"></i>{{ 'Reference'|t }}
+                                    </a>
+                                  </small>
+                                {% endif %}
+                                {% if metric.population_definition %}
+                                  <small class="text-muted d-block">
+                                    <strong>{{ 'Population:'|t }}</strong> {{ metric.population_definition }}
+                                  </small>
+                                {% endif %}
+                                {% if metric.population_mean is not null %}
+                                  <small class="text-muted d-block">
+                                    <strong>{{ 'Mean:'|t }}</strong> {{ metric.population_mean|number_format(2) }}
+                                    {% if metric.population_stddev is not null %}
+                                      <strong class="ms-2">{{ 'Std Dev:'|t }}</strong> {{ metric.population_stddev|number_format(2) }}
+                                    {% endif %}
+                                  </small>
+                                {% endif %}
+                              </td>
+                              <td class="text-center">
+                                <span class="badge bg-info">{{ metric.response_value }}</span>
+                              </td>
+                              <td class="text-center">
+                                {% if metric.z_score is not null %}
+                                  {% set z_class = metric.z_score < -1 ? 'danger' : (metric.z_score > 1 ? 'success' : 'secondary') %}
+                                  <span class="badge bg-{{ z_class }} fs-6">
+                                    {{ metric.z_score|number_format(2) }}
+                                  </span>
+                                  {% if metric.z_score_calculated_at %}
+                                    <br>
+                                    <small class="text-muted" title="{{ metric.z_score_calculated_at|format_date('long') }}">
+                                      {{ metric.z_score_calculated_at|format_date('short') }}
+                                    </small>
+                                  {% endif %}
+                                {% else %}
+                                  <span class="badge bg-warning text-dark">{{ 'Pending'|t }}</span>
+                                {% endif %}
+                              </td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="alert alert-info" role="alert">
+                  <i class="fas fa-info-circle me-2"></i>{{ 'No metrics recorded for this dimension.'|t }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {# Z-Score Legend #}
+    <div class="card border-primary mt-5">
+      <div class="card-header bg-primary text-white">
+        <h3 class="h5 mb-0">
+          <i class="fas fa-chart-line me-2"></i>{{ 'Understanding Z-Scores'|t }}
+        </h3>
+      </div>
+      <div class="card-body">
+        <p class="mb-3">{{ 'Z-scores show how your responses compare to the population average:'|t }}</p>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <span class="badge bg-success fs-6 mb-2">&gt; +1.0</span>
+              <div><strong>{{ 'Above Average'|t }}</strong></div>
+              <small class="text-muted">{{ 'Higher than most people'|t }}</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <span class="badge bg-secondary fs-6 mb-2">-1.0 to +1.0</span>
+              <div><strong>{{ 'Average Range'|t }}</strong></div>
+              <small class="text-muted">{{ 'Within normal range'|t }}</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <span class="badge bg-danger fs-6 mb-2">&lt; -1.0</span>
+              <div><strong>{{ 'Below Average'|t }}</strong></div>
+              <small class="text-muted">{{ 'Lower than most people'|t }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info mt-3 mb-0" role="alert">
+          <i class="fas fa-lightbulb me-2"></i>
+          <small>{{ 'Z-scores are automatically calculated based on population research data and cannot be edited directly.'|t }}</small>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+.dimension-toggle[aria-expanded="true"] .toggle-icon::before {
+  content: "\f078"; /* fa-chevron-down */
+}
+.dimension-toggle .toggle-icon::before {
+  content: "\f054"; /* fa-chevron-right */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+</style>

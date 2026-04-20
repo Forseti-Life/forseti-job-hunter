@@ -1,0 +1,16 @@
+uuid: a6dd56bb-5a24-49f4-9ac5-594cac4ad0d2
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.institution
+id: institution-institution-member
+label: 'Institution Member'
+weight: 0
+admin: false
+scope: individual
+global_role: null
+group_type: institution
+permissions:
+  - 'leave group'
+  - 'view group'

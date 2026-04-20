@@ -1,0 +1,44 @@
+{#
+/**
+ * @file
+ * Template for Forseti Footer Block.
+ *
+ * Available variables:
+ * - menu_items: Array of menu items from main menu.
+ * - current_year: Current year for copyright.
+ */
+#}
+{{ attach_library('forseti/footer') }}
+
+<div class="footer-content">
+  <div class="footer-section footer-brand">
+    <h3>Forseti Community</h3>
+    <p>A tolerant, scientific, technology-embracing community</p>
+    <p class="footer-tagline">Building AI-powered services for our members</p>
+  </div>
+  
+  <div class="footer-section footer-links">
+    <h4>Quick Links</h4>
+    {% if menu_items %}
+      <ul class="footer-menu">
+        {% for item in menu_items %}
+          <li>
+            <a href="{{ item.url }}">{{ item.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  
+  <div class="footer-section footer-info">
+    <h4>Connect</h4>
+    <p><a href="/talk-with-forseti_content" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">💬 Talk with Forseti</a></p>
+    <p><a href="/contact" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">✉️ Contact Us</a></p>
+    <p>🤖 AI-Powered Member Services</p>
+  </div>
+</div>
+
+<div class="footer-bottom">
+  <p>&copy; {{ current_year }} Forseti Community. All rights reserved.</p>
+  <p class="footer-tech">Privately funded. Invitation-based membership.</p>
+</div>

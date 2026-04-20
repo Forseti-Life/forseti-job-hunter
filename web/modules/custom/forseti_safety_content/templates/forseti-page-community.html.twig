@@ -1,0 +1,51 @@
+{#
+/**
+ * @file
+ * Template for Community page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - subtitle: Page subtitle
+ * - why_join_title: Why join section title
+ * - benefits: Array of benefit items
+ * - how_to_title: How to get involved title
+ * - steps: Array of step cards
+ */
+#}
+<div class="container py-3">
+  <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+  <p class="text-center mb-4 text-muted-light">{{ subtitle }}</p>
+  
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h2 class="mb-3 text-cyan">{{ why_join_title }}</h2>
+      
+      {% for benefit in benefits %}
+        <div class="card card-forseti mb-3 p-3">
+          <h4>{{ benefit.icon|raw }} {{ benefit.title }}</h4>
+          <p>{{ benefit.description }}</p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ how_to_title }}</h2>
+      
+      <div class="row">
+        {% for step in steps %}
+          <div class="col-md-6 mb-3">
+            <div class="card card-forseti h-100">
+              <div class="card-body">
+                <h5 class="card-title">{{ step.title }}</h5>
+                <p class="card-text">{{ step.description }}</p>
+                {% if step.button_url %}
+                  <a href="{{ step.button_url }}" class="btn btn-{{ step.button_style }}">{{ step.button_text }}</a>
+                {% elseif step.button_disabled %}
+                  <button class="btn btn-{{ step.button_style }}" disabled>{{ step.button_text }}</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

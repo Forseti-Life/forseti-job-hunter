@@ -1,0 +1,14 @@
+name: Forseti Safety Content
+description: 'Safety-focused community content for Forseti - AI-powered community safety platform for Philadelphia'
+type: module
+version: 1.0
+core_version_requirement: ^10.3 || ^11
+package: Forseti
+
+dependencies:
+  - drupal:node
+  - drupal:field
+  - drupal:text
+  - drupal:image
+  - drupal:link
+  - drupal:menu_ui

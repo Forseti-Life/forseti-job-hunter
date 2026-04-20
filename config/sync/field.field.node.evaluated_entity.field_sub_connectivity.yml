@@ -1,0 +1,25 @@
+uuid: f8e8242b-f22c-42ef-be1e-8131a71e7133
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_connectivity
+    - node.type.evaluated_entity
+id: node.evaluated_entity.field_sub_connectivity
+field_name: field_sub_connectivity
+entity_type: node
+bundle: evaluated_entity
+label: Connectivity
+description: 'Sub-dimension power level (0-9) for Connectivity'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,118 @@
+copilot_agent_tracker.release_notes:
+  title: 'Release Notes'
+  description: 'Coordinated release tracking (pending + shipped).'
+  route_name: copilot_agent_tracker.release_notes
+  parent: system.admin_reports
+  weight: 51
+
+copilot_agent_tracker.architecture:
+  title: 'Agentic Architecture'
+  description: 'How agents, process, and systems fit together.'
+  route_name: copilot_agent_tracker.architecture
+  parent: system.admin_reports
+  weight: 52
+
+copilot_agent_tracker.langgraph_dashboard:
+  title: 'LangGraph Control Plane'
+  description: 'Control-plane home for LangGraph system health, controls, and lifecycle navigation.'
+  route_name: copilot_agent_tracker.langgraph_dashboard
+  parent: system.admin_reports
+  weight: 53
+
+copilot_agent_tracker.langgraph_session:
+  title: 'Session Health'
+  description: 'Runtime cadence and tick health for the LangGraph execution engine.'
+  route_name: copilot_agent_tracker.langgraph_session
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 1
+
+copilot_agent_tracker.langgraph_parity:
+  title: 'Parity Health'
+  description: 'Engine correctness checks and parity diagnostics.'
+  route_name: copilot_agent_tracker.langgraph_parity
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 2
+
+copilot_agent_tracker.langgraph_feature_progress:
+  title: 'Feature Flow'
+  description: 'Execution-plane feature flow, ownership, and work-item progress.'
+  route_name: copilot_agent_tracker.langgraph_feature_progress
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 3
+
+copilot_agent_tracker.langgraph_release_status:
+  title: 'Release Control'
+  description: 'Release-control posture and coordinated push readiness under LangGraph.'
+  route_name: copilot_agent_tracker.langgraph_release_status
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 4
+
+copilot_agent_tracker.langgraph_release_notes:
+  title: 'Release Evidence'
+  description: 'Approval-grade release notes, testing evidence, and signoff context.'
+  route_name: copilot_agent_tracker.langgraph_release_notes
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 5
+
+copilot_agent_tracker.langgraph_release_troubleshooting:
+  title: 'Release Triage'
+  description: 'Seat-level blocker triage and release-flow bottleneck diagnosis.'
+  route_name: copilot_agent_tracker.langgraph_release_troubleshooting
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 6
+
+copilot_agent_tracker.llm_management:
+  title: 'LLM Management'
+  description: 'Select a locally available model and run a simple prompt test.'
+  route_name: copilot_agent_tracker.llm_management
+  parent: copilot_agent_tracker.langgraph_dashboard
+  weight: 5
+
+copilot_agent_tracker.langgraph_console_home:
+  title: 'LangGraph Console (Stub)'
+  description: 'Clean-slate navigation and page frames for a first-time LangGraph management console.'
+  route_name: copilot_agent_tracker.langgraph_console_home
+  parent: system.admin_reports
+  weight: 60
+
+copilot_agent_tracker.langgraph_console_build:
+  title: 'Build'
+  description: 'Stub build-plane page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_build
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 1
+
+copilot_agent_tracker.langgraph_console_test:
+  title: 'Test'
+  description: 'Stub validation-plane page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_test
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 2
+
+copilot_agent_tracker.langgraph_console_run:
+  title: 'Run'
+  description: 'Stub runtime-plane page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_run
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 3
+
+copilot_agent_tracker.langgraph_console_observe:
+  title: 'Observe'
+  description: 'Stub observability-plane page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_observe
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 4
+
+copilot_agent_tracker.langgraph_console_release:
+  title: 'Release'
+  description: 'Stub release-plane page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_release
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 5
+
+copilot_agent_tracker.langgraph_console_admin:
+  title: 'Admin'
+  description: 'Stub governance/admin page and subsections.'
+  route_name: copilot_agent_tracker.langgraph_console_admin
+  parent: copilot_agent_tracker.langgraph_console_home
+  weight: 6

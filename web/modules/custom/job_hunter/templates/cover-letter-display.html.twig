@@ -1,0 +1,113 @@
+{#
+  cover-letter-display.html.twig
+  Cover letter display page at /jobhunter/coverletter/{job_id}.
+  Mirrors the job-tailoring-combined pattern.
+#}
+
+<div class="cover-letter-display">
+  <div class="cover-letter-header">
+    <h2>{{ 'Cover Letter'|t }}</h2>
+    {% if job %}
+      <p class="job-title-context">{{ 'For:'|t }} <strong>{{ job.job_title }}</strong></p>
+    {% endif %}
+  </div>
+
+  {% if tailoring_status is null %}
+    {# No record yet — show generate button #}
+    <div class="cover-letter-empty">
+      <p>{{ 'No cover letter has been generated for this job yet.'|t }}</p>
+      <form method="post" action="{{ generate_url }}">
+        <button type="submit" class="btn btn-primary">
+          {{ 'Generate Cover Letter'|t }}
+        </button>
+      </form>
+    </div>
+
+  {% elseif tailoring_status in ['pending', 'queued', 'processing'] %}
+    {# In progress #}
+    <div class="cover-letter-pending">
+      <div class="status-indicator">
+        <div class="spinner"></div>
+        <p>{{ 'Cover letter generation is in progress — check back shortly.'|t }}</p>
+      </div>
+      <form method="post" action="{{ generate_url }}">
+        <button type="submit" class="btn btn-secondary btn-sm">
+          {{ 'Re-queue'|t }}
+        </button>
+      </form>
+    </div>
+
+  {% elseif tailoring_status == 'failed' %}
+    {# Failed state #}
+    <div class="cover-letter-failed">
+      <p class="error-message">{{ 'Cover letter generation failed. You can retry below.'|t }}</p>
+      <form method="post" action="{{ generate_url }}">
+        <button type="submit" class="btn btn-warning">
+          {{ 'Retry Generation'|t }}
+        </button>
+      </form>
+    </div>
+
+  {% elseif tailoring_status == 'completed' %}
+    {# Completed — render content #}
+    <div class="cover-letter-content">
+      <div class="cover-letter-actions-top">
+        <button type="button" class="btn btn-secondary btn-sm js-copy-cover-letter">
+          {{ 'Copy to Clipboard'|t }}
+        </button>
+        {% if pdf_path %}
+          <a href="{{ pdf_path }}" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
+            {{ 'Download PDF'|t }}
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="cover-letter-text js-cover-letter-text">
+        {% if cover_letter_html %}
+          {{ cover_letter_html|raw }}
+        {% else %}
+          <p>{{ 'Cover letter content is not available.'|t }}</p>
+        {% endif %}
+      </div>
+
+      <div class="cover-letter-save-section">
+        <form method="post" action="{{ save_url }}">
+          <button type="submit" class="btn btn-success">
+            {{ 'Save to Application'|t }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+  {% else %}
+    <p>{{ 'Unknown cover letter status.'|t }}</p>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  var btn = document.querySelector('.js-copy-cover-letter');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.querySelector('.js-cover-letter-text');
+      if (!el) return;
+      var text = el.innerText || el.textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = Drupal.t('Copied!');
+          setTimeout(function () { btn.textContent = Drupal.t('Copy to Clipboard'); }, 2000);
+        });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = Drupal.t('Copied!');
+        setTimeout(function () { btn.textContent = Drupal.t('Copy to Clipboard'); }, 2000);
+      }
+    });
+  }
+})();
+</script>

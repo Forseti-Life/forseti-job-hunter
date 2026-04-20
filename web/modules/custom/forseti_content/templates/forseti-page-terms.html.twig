@@ -1,0 +1,47 @@
+{#
+/**
+ * @file
+ * Template for Terms of Service page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - effective_date: Effective date
+ * - acceptance: Acceptance section
+ * - sections: Array of terms sections
+ * - contact: Contact info
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <div class="alert alert-info-cyan">
+        <strong>{{ 'Effective Date:'|t }}</strong> {{ effective_date }}
+      </div>
+      
+      <div class="alert alert-warning">
+        <h4 class="text-cyan">{{ acceptance.title }}</h4>
+        <p class="mb-0">{{ acceptance.content }}</p>
+      </div>
+      
+      {% for section in sections %}
+        <h2 class="mt-4 mb-3 text-cyan">{{ section.title }}</h2>
+        {% if section.content %}
+          <p>{{ section.content }}</p>
+        {% endif %}
+        {% if section.items %}
+          <ul>
+            {% for item in section.items %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endfor %}
+      
+      <div class="alert alert-info mt-5">
+        <p class="mb-0">{{ contact|raw }}</p>
+      </div>
+    </div>
+  </div>
+</div>

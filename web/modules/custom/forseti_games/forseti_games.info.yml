@@ -1,0 +1,8 @@
+name: 'Forseti Games'
+type: module
+description: 'Module for building and hosting games on Forseti.Life'
+core_version_requirement: ^9 || ^10 || ^11
+package: 'Forseti'
+dependencies:
+  - drupal:node
+  - drupal:user

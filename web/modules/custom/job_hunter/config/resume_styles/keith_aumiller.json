@@ -1,0 +1,490 @@
+{
+  "schema_version": "1.0",
+  "schema_name": "keith_aumiller_resume",
+  "source_pdf": "KeithAumillerA.pdf",
+  "created_date": "2026-02-03",
+  "description": "Style schema for Keith Aumiller resume format - maps RESUME_JSON_SCHEMA sections to PDF formatting",
+
+  "page": {
+    "size": "custom",
+    "width_pt": 684,
+    "height_pt": 792,
+    "width_inches": 9.5,
+    "height_inches": 11,
+    "margins_pt": {
+      "top": 36,
+      "bottom": 36,
+      "left": 54,
+      "right": 54
+    }
+  },
+
+  "fonts": {
+    "primary": {
+      "family": "Tahoma",
+      "weight": "normal",
+      "fallback": ["Arial", "Helvetica", "sans-serif"]
+    },
+    "primary_bold": {
+      "family": "Tahoma",
+      "weight": "bold",
+      "fallback": ["Arial Bold", "Helvetica Bold", "sans-serif"]
+    },
+    "primary_italic": {
+      "family": "Tahoma",
+      "style": "italic",
+      "fallback": ["Arial Italic", "Helvetica Oblique", "sans-serif"]
+    }
+  },
+
+  "styles": {
+    "name": {
+      "json_path": "contact_info.full_name",
+      "font": "primary_bold",
+      "size_pt": 18,
+      "color": "#1a5490",
+      "margin_bottom_pt": 2,
+      "text_align": "center"
+    },
+    "credentials": {
+      "json_path": "contact_info.credentials",
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#1a5490",
+      "display": "inline",
+      "separator": ", "
+    },
+    "headline": {
+      "json_path": "contact_info.headline",
+      "font": "primary_bold",
+      "size_pt": 11,
+      "color": "#333333",
+      "margin_bottom_pt": 4,
+      "text_align": "center"
+    },
+    "contact_line": {
+      "json_path": ["contact_info.location", "contact_info.phone", "contact_info.email"],
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "separator": " | ",
+      "text_align": "center"
+    },
+    "contact_link": {
+      "json_path": "contact_info.websites[].url",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#0066cc",
+      "text_decoration": "underline",
+      "text_align": "center"
+    },
+    "section_header": {
+      "font": "primary_bold",
+      "size_pt": 12,
+      "color": "#1a5490",
+      "text_transform": "uppercase",
+      "letter_spacing_pt": 0.5,
+      "margin_top_pt": 14,
+      "margin_bottom_pt": 4,
+      "border_bottom": {
+        "width_pt": 0.5,
+        "color": "#1a5490"
+      }
+    },
+    "body_text": {
+      "json_path": ["executive_profile.summary", "leadership_philosophy.statement"],
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "line_height": 1.3,
+      "text_align": "left"
+    },
+    "bullet_item": {
+      "json_path": "executive_profile.key_metrics[]",
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "bullet": "-",
+      "indent_pt": 12,
+      "margin_bottom_pt": 2
+    },
+    "differentiator_title": {
+      "json_path": "strategic_differentiators[].title",
+      "font": "primary_bold",
+      "size_pt": 11,
+      "color": "#000000"
+    },
+    "differentiator_description": {
+      "json_path": "strategic_differentiators[].description",
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "display": "inline"
+    },
+    "job_title": {
+      "json_path": "professional_experience[].title",
+      "font": "primary_bold",
+      "size_pt": 11,
+      "color": "#000000"
+    },
+    "company_name": {
+      "json_path": "professional_experience[].company",
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "prefix": " – "
+    },
+    "date_range": {
+      "json_path": ["professional_experience[].start_date", "professional_experience[].end_date"],
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#666666",
+      "align": "right",
+      "separator": " – "
+    },
+    "location": {
+      "json_path": "professional_experience[].location",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#666666"
+    },
+    "company_context": {
+      "json_path": "professional_experience[].company_context",
+      "font": "primary_italic",
+      "size_pt": 10,
+      "color": "#555555",
+      "margin_bottom_pt": 4
+    },
+    "category_header": {
+      "json_path": "professional_experience[].responsibility_categories[].category",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000",
+      "margin_top_pt": 6
+    },
+    "achievement_bullet": {
+      "json_path": "professional_experience[].responsibility_categories[].achievements[].text",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "bullet": "-",
+      "indent_pt": 12,
+      "margin_bottom_pt": 2
+    },
+    "engagement_client": {
+      "json_path": "consulting_practice.notable_engagements[].client",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "engagement_role": {
+      "json_path": "consulting_practice.notable_engagements[].role",
+      "font": "primary_italic",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "early_career_company": {
+      "json_path": "early_career.positions[].company",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000",
+      "display": "inline"
+    },
+    "early_career_duration": {
+      "json_path": "early_career.positions[].duration",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "format": "(${value})"
+    },
+    "early_career_focus": {
+      "json_path": "early_career.positions[].focus",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "institution_name": {
+      "json_path": "education[].institution",
+      "font": "primary_bold",
+      "size_pt": 11,
+      "color": "#000000"
+    },
+    "degree_name": {
+      "json_path": ["education[].degree", "education[].field"],
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "separator": " in "
+    },
+    "education_date": {
+      "json_path": ["education[].start_date", "education[].end_date"],
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#666666",
+      "separator": " – "
+    },
+    "skill_category": {
+      "json_path": "technical_expertise.categories[].name",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "skill_list": {
+      "json_path": "technical_expertise.categories[].skills[]",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "display": "inline",
+      "separator": ", "
+    },
+    "skill_subcategory": {
+      "json_path": "technical_expertise.categories[].subcategories[].industry",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000",
+      "display": "inline"
+    },
+    "project_name": {
+      "json_path": "demonstration_projects[].name",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "project_url": {
+      "json_path": "demonstration_projects[].url",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#0066cc",
+      "text_decoration": "underline"
+    },
+    "project_description": {
+      "json_path": "demonstration_projects[].description",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000"
+    },
+    "project_technologies": {
+      "json_path": "demonstration_projects[].technologies[]",
+      "font": "primary",
+      "size_pt": 9,
+      "color": "#000000",
+      "display": "inline",
+      "separator": ", ",
+      "prefix": "Technologies: "
+    },
+    "linkedin_followers": {
+      "json_path": "contact_info.linkedin.followers",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "prefix": "LinkedIn: ",
+      "suffix": " followers",
+      "link_path": "contact_info.linkedin.url"
+    },
+    "linkedin_groups": {
+      "json_path": "contact_info.linkedin.groups_administered[]",
+      "font": "primary",
+      "size_pt": 9,
+      "color": "#666666",
+      "display": "inline",
+      "separator": ", ",
+      "prefix": "Admin: ",
+      "link_path": "contact_info.linkedin.group_url"
+    },
+    "organizational_philosophy": {
+      "json_path": "organizational_philosophy[]",
+      "font": "primary",
+      "size_pt": 11,
+      "color": "#000000",
+      "line_height": 1.3,
+      "text_align": "left",
+      "margin_bottom_pt": 6
+    },
+    "education_location": {
+      "json_path": "education[].location",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#666666"
+    },
+    "education_abbreviation": {
+      "json_path": "education[].abbreviation",
+      "font": "primary_bold",
+      "size_pt": 10,
+      "color": "#000000",
+      "display": "inline",
+      "prefix": "(",
+      "suffix": ")"
+    },
+    "leadership_influences": {
+      "json_path": "leadership_philosophy[1]",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "bullet": "-",
+      "indent_pt": 12,
+      "margin_bottom_pt": 2,
+      "prefix": "Influences: "
+    },
+    "leadership_keywords": {
+      "json_path": "leadership_philosophy[2]",
+      "font": "primary",
+      "size_pt": 9,
+      "color": "#666666",
+      "display": "inline",
+      "separator": ", ",
+      "prefix": "Focus Areas: "
+    },
+    "early_career_summary": {
+      "json_path": "early_career",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "margin_bottom_pt": 6
+    },
+    "regulatory_frameworks": {
+      "json_path": "technical_expertise.categories[].frameworks[]",
+      "font": "primary",
+      "size_pt": 10,
+      "color": "#000000",
+      "display": "inline",
+      "separator": ", "
+    }
+  },
+
+  "section_order": [
+    "contact_info",
+    "executive_profile",
+    "organizational_philosophy",
+    "strategic_differentiators",
+    "professional_experience",
+    "consulting_practice",
+    "early_career",
+    "education",
+    "technical_expertise",
+    "leadership_philosophy",
+    "demonstration_projects"
+  ],
+
+  "section_labels": {
+    "executive_profile": "EXECUTIVE PROFILE",
+    "organizational_philosophy": "ORGANIZATIONAL PHILOSOPHY",
+    "strategic_differentiators": "STRATEGIC DIFFERENTIATORS",
+    "professional_experience": "PROFESSIONAL EXPERIENCE",
+    "consulting_practice": "CONSULTING PRACTICE",
+    "early_career": "EARLY CAREER",
+    "education": "EDUCATION",
+    "technical_expertise": "TECHNICAL EXPERTISE",
+    "leadership_philosophy": "LEADERSHIP PHILOSOPHY",
+    "demonstration_projects": "DEMONSTRATION PROJECTS"
+  },
+
+  "section_templates": {
+    "contact_info": {
+      "layout": "header",
+      "elements": [
+        {"type": "inline", "items": ["name", "credentials"]},
+        {"type": "line", "style": "headline"},
+        {"type": "inline", "items": ["contact_line"], "separator": " | "},
+        {"type": "inline", "items": ["linkedin_followers", "linkedin_groups"], "separator": " | "},
+        {"type": "line", "style": "contact_link", "loop": "websites"}
+      ]
+    },
+    "executive_profile": {
+      "layout": "section",
+      "elements": [
+        {"type": "paragraph", "style": "body_text", "path": "summary"},
+        {"type": "bullet_list", "style": "bullet_item", "path": "key_metrics"}
+      ]
+    },
+    "strategic_differentiators": {
+      "layout": "section",
+      "elements": [
+        {
+          "type": "loop",
+          "path": "strategic_differentiators",
+          "template": {
+            "type": "inline",
+            "items": ["differentiator_title", "differentiator_description"]
+          }
+        }
+      ]
+    },
+    "professional_experience": {
+      "layout": "section",
+      "elements": [
+        {
+          "type": "loop",
+          "path": "professional_experience",
+          "template": {
+            "type": "entry",
+            "lines": [
+              {"type": "two_column", "left": ["job_title", "company_name"], "right": ["date_range"]},
+              {"type": "line", "style": "location"},
+              {"type": "line", "style": "company_context"},
+              {
+                "type": "nested_loop",
+                "path": "responsibility_categories",
+                "template": {
+                  "lines": [
+                    {"type": "line", "style": "category_header"},
+                    {"type": "bullet_list", "style": "achievement_bullet", "path": "achievements"}
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "education": {
+      "layout": "section",
+      "elements": [
+        {
+          "type": "loop",
+          "path": "education",
+          "template": {
+            "type": "entry",
+            "lines": [
+              {"type": "two_column", "left": ["institution_name", "education_location"], "right": ["education_date"]},
+              {"type": "inline", "items": ["degree_name", "education_abbreviation"], "separator": " "}
+            ]
+          }
+        }
+      ]
+    },
+    "organizational_philosophy": {
+      "layout": "section",
+      "elements": [
+        {"type": "paragraph", "style": "organizational_philosophy", "path": "organizational_philosophy"}
+      ]
+    },
+    "leadership_philosophy": {
+      "layout": "section",
+      "elements": [
+        {"type": "paragraph", "style": "body_text", "path": "leadership_philosophy[0]"},
+        {"type": "inline", "style": "leadership_influences", "path": "leadership_philosophy[1]"},
+        {"type": "inline", "style": "leadership_keywords", "path": "leadership_philosophy[2]"}
+      ]
+    },
+    "early_career": {
+      "layout": "section",
+      "elements": [
+        {"type": "paragraph", "style": "early_career_summary", "path": "early_career"}
+      ]
+    },
+    "technical_expertise": {
+      "layout": "section",
+      "elements": [
+        {
+          "type": "loop",
+          "path": "categories",
+          "template": {
+            "type": "inline",
+            "items": ["skill_category", "skill_list"],
+            "separator": ": "
+          }
+        }
+      ]
+    }
+  }
+}

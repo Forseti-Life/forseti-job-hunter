@@ -1,0 +1,368 @@
+/**
+ * @file
+ * Styles for Job Hunter Testing pages.
+ */
+
+/* Sub-Navigation */
+.tester-sub-nav {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0;
+  margin: -20px -20px 30px -20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tester-nav-container {
+  display: flex;
+  gap: 5px;
+  padding: 15px 20px;
+}
+
+.tester-nav-link {
+  padding: 12px 24px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.tester-nav-link:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.tester-nav-link.tester-nav-active {
+  background: white;
+  color: #667eea;
+  font-weight: 600;
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Environment Selector Card */
+.env-selector-card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.env-selector-card label {
+  font-weight: 600;
+  margin-right: 15px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.env-selector-card select {
+  padding: 8px 12px;
+  margin-right: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.env-selector-card select:hover {
+  border-color: #667eea;
+}
+
+.env-selector-card button {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.env-selector-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Page Header */
+.page-header {
+  background: white;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 4px solid #667eea;
+}
+
+.page-header h2 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 8px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.page-header strong {
+  color: #374151;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin: 25px 0;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 5px 0;
+  color: #667eea;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-success .stat-value { color: #10b981; }
+.stat-redirect .stat-value { color: #f59e0b; }
+.stat-error .stat-value { color: #ef4444; }
+.stat-forbidden .stat-value { color: #f97316; }
+.stat-notfound .stat-value { color: #dc2626; }
+.stat-skipped .stat-value { color: #9ca3af; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* Results Table */
+.results-table {
+  width: 100%;
+  margin-top: 25px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.results-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.results-table thead th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.results-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s;
+}
+
+.results-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.results-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.results-table tbody td {
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.results-table a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.results-table a:hover {
+  text-decoration: underline;
+}
+
+.results-table code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #1f2937;
+}
+
+/* Validation Dashboard */
+.validation-table {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.validation-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.validation-table thead th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.validation-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s;
+}
+
+.validation-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.validation-table tbody td {
+  padding: 12px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.validation-table code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #1f2937;
+}
+
+.db-health-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 25px;
+  display: none;
+}
+
+.db-health-card h3 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Test buttons in validation table */
+.jh-test-btn {
+  padding: 4px 12px;
+  background: #f3f4f6;
+  color: #667eea;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.jh-test-btn:hover {
+  background: #e5e7eb;
+  border-color: #667eea;
+}

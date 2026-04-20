@@ -1,0 +1,39 @@
+d3:
+  version: 7.x
+  js:
+    https://cdn.jsdelivr.net/npm/d3@7:
+      type: external
+      minified: true
+      attributes:
+        integrity: 'sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i'
+        crossorigin: anonymous
+
+charts:
+  version: 1.0.x
+  css:
+    component:
+      css/users-metrics-charts.css: {}
+  js:
+    js/users-metrics-charts.js: {}
+  dependencies:
+    - users_metrics/d3
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+time_range:
+  version: 1.0.x
+  css:
+    component:
+      css/users-metrics-filters.css: {}
+  js:
+    js/users-metrics-time-range.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+summary_cards:
+  version: 1.0.x
+  css:
+    component:
+      css/users-metrics-summary-cards.css: {}

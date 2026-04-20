@@ -1,0 +1,35 @@
+<div class="games-home-container">
+  <div class="games-header">
+    <h1>Forseti Games</h1>
+    <p class="games-subtitle">Play fun games, challenge yourself, and compete with others!</p>
+  </div>
+
+  <div class="games-grid">
+    {% for game in games %}
+      <div class="game-card">
+        <div class="game-card-image">
+          <img src="{{ game.image }}" alt="{{ game.title }}" onerror="this.src='/modules/custom/forseti_games/images/placeholder.png'">
+          <div class="game-difficulty {{ game.difficulty|lower }}">{{ game.difficulty }}</div>
+        </div>
+        <div class="game-card-content">
+          <h2 class="game-title">{{ game.title }}</h2>
+          <p class="game-description">{{ game.description }}</p>
+          <div class="game-meta">
+            <span class="game-plays">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 10.5a4.5 4.5 0 110-9 4.5 4.5 0 010 9z"/>
+                <path d="M6.5 6.5l4 2-4 2v-4z"/>
+              </svg>
+              {{ game.plays }} plays
+            </span>
+          </div>
+          <a href="{{ game.url }}" class="game-play-button">Play Now</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="games-footer">
+    <p>More games coming soon!</p>
+  </div>
+</div>

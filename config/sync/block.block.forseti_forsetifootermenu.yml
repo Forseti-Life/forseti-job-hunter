@@ -1,0 +1,20 @@
+uuid: 317d17c8-3a99-4892-9955-81ad7e57af24
+langcode: en
+status: true
+dependencies:
+  module:
+    - forseti_content
+  theme:
+    - forseti
+id: forseti_forsetifootermenu
+theme: forseti
+region: footer
+weight: -2
+provider: null
+plugin: forseti_footer_menu
+settings:
+  id: forseti_footer_menu
+  label: 'Forseti Footer Menu'
+  label_display: visible
+  provider: forseti_content
+visibility: {  }

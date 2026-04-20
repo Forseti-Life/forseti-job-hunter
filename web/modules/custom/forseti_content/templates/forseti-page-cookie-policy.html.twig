@@ -1,0 +1,63 @@
+{#
+/**
+ * @file
+ * Template for Cookie Policy page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - what_are_cookies: Definition section
+ * - cookies_we_use: Array of cookie types
+ * - managing_cookies: Managing cookies section
+ * - third_party: Third party cookie info
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead">{{ intro }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ what_are_cookies.title }}</h2>
+      <p>{{ what_are_cookies.content }}</p>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ 'Cookies We Use'|t }}</h2>
+      
+      {% for cookie in cookies_we_use %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ cookie.icon }} {{ cookie.type }}</h4>
+          <p><strong>{{ 'Purpose:'|t }}</strong> {{ cookie.purpose }}</p>
+          <p><strong>{{ 'Examples:'|t }}</strong></p>
+          <ul>
+            {% for example in cookie.examples %}
+              <li>{{ example }}</li>
+            {% endfor %}
+          </ul>
+          <p class="mb-0">
+            <strong>{{ 'Can be disabled:'|t }}</strong> 
+            {% if cookie.can_disable %}
+              <span class="text-success">✅ {{ 'Yes'|t }}</span>
+            {% else %}
+              <span class="text-danger">❌ {{ 'No (Required for site functionality)'|t }}</span>
+            {% endif %}
+          </p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ managing_cookies.title }}</h2>
+      <p>{{ managing_cookies.content }}</p>
+      <p>
+        <strong>{{ 'Browser Cookie Settings:'|t }}</strong><br>
+        {% for link in managing_cookies.browser_links %}
+          {{ link|raw }}{{ loop.last ? '' : ' • ' }}
+        {% endfor %}
+      </p>
+      
+      <div class="alert alert-info mt-4">
+        <h4>{{ third_party.title }}</h4>
+        <p class="mb-0">{{ third_party.content }}</p>
+      </div>
+    </div>
+  </div>
+</div>

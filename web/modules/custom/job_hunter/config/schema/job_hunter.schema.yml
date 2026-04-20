@@ -1,0 +1,39 @@
+# Schema for configuration files of the Job Hunter module.
+
+job_hunter.settings:
+  type: config_object
+  label: 'Job Hunter settings'
+  mapping:
+    status:
+      type: boolean
+      label: 'Configuration active status'
+    dependencies:
+      type: config_dependencies
+      label: 'Dependencies'
+    id:
+      type: string
+      label: 'Configuration ID'
+    original_resume_node_id:
+      type: integer
+      label: 'Original Resume Node ID'
+    enable_automatic_tailoring:
+      type: boolean
+      label: 'Enable automatic resume tailoring'
+    ai_service_region:
+      type: string
+      label: 'AI Service Region'
+    ai_model_id:
+      type: string
+      label: 'AI Model ID'
+    max_tokens:
+      type: integer
+      label: 'Maximum tokens for AI responses'
+    aws_region:
+      type: string
+      label: 'AWS Region'
+    aws_model_id:
+      type: string
+      label: 'AWS Bedrock Model ID'
+    aws_max_tokens:
+      type: integer
+      label: 'Maximum tokens for AI responses'

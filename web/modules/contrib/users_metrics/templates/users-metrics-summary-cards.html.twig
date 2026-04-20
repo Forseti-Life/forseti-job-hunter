@@ -1,0 +1,37 @@
+{#
+/**
+ * @file
+ * Template for Users Metrics summary cards.
+ *
+ * Available variables:
+ * - total: Total count for the period.
+ * - daily_avg: Daily average.
+ * - peak_date: Date with highest activity.
+ * - peak_value: Value on peak date.
+ * - period_days: Number of days in the period.
+ * - metric_label: Label for the metric (registrations/logins).
+ */
+#}
+<div class="users-metrics-summary-cards" role="region" aria-label="{{ 'Summary statistics'|t }}">
+  <div class="users-metrics-card users-metrics-card--total" role="group" aria-labelledby="card-total-label">
+    <span class="users-metrics-card__value" aria-describedby="card-total-label">{{ total|number_format }}</span>
+    <span class="users-metrics-card__label" id="card-total-label">{{ 'Total'|t }} {{ metric_label }}</span>
+  </div>
+
+  <div class="users-metrics-card users-metrics-card--average" role="group" aria-labelledby="card-avg-label">
+    <span class="users-metrics-card__value" aria-describedby="card-avg-label">{{ daily_avg }}</span>
+    <span class="users-metrics-card__label" id="card-avg-label">{{ 'Daily average'|t }}</span>
+  </div>
+
+  {% if peak_date %}
+  <div class="users-metrics-card users-metrics-card--peak" role="group" aria-labelledby="card-peak-label">
+    <span class="users-metrics-card__value" aria-describedby="card-peak-label">{{ peak_value|number_format }}</span>
+    <span class="users-metrics-card__label" id="card-peak-label">{{ 'Peak'|t }}: {{ peak_date }}</span>
+  </div>
+  {% endif %}
+
+  <div class="users-metrics-card users-metrics-card--days" role="group" aria-labelledby="card-days-label">
+    <span class="users-metrics-card__value" aria-describedby="card-days-label">{{ period_days }}</span>
+    <span class="users-metrics-card__label" id="card-days-label">{{ 'Days'|t }}</span>
+  </div>
+</div>

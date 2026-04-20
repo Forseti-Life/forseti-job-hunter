@@ -1,0 +1,10 @@
+name: National Firefighter Registry
+type: module
+description: National Firefighter Registry (NFR) - CDC cancer surveillance and health tracking system for firefighters
+core_version_requirement: ^9 || ^10 || ^11
+package: NFR
+dependencies:
+  - drupal:system
+  - drupal:user
+  - drupal:field
+  - drupal:node

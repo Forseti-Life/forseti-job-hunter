@@ -1,0 +1,8 @@
+name: 'Job Hunter Tester'
+type: module
+description: 'Testing module for Job Hunter routes and pages'
+core_version_requirement: ^10 || ^11
+package: 'Custom'
+dependencies:
+  - drupal:system
+  - job_hunter:job_hunter

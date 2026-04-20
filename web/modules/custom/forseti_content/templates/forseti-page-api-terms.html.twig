@@ -1,0 +1,98 @@
+{#
+/**
+ * @file
+ * Template for API Terms of Use page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - access: API access section with tiers
+ * - acceptable_use: Acceptable use section (allowed and prohibited)
+ * - rate_limits: Rate limits section
+ * - authentication: Authentication section
+ * - data_attribution: Data attribution section
+ * - liability: Liability section
+ * - termination: Termination section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead">{{ intro }}</p>
+      
+      <div class="alert alert-info-cyan">
+        <p class="mb-0">{{ access.content|raw }}</p>
+      </div>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ 'API Access Tiers'|t }}</h2>
+      
+      {% for tier in access.tiers %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ tier.tier }}</h4>
+          <p>{{ tier.description }}</p>
+          <p><strong>{{ 'Limits:'|t }}</strong> {{ tier.limits }}</p>
+          <p class="mb-0"><strong>{{ 'Cost:'|t }}</strong> {{ tier.cost }}</p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ acceptable_use.title }}</h2>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ acceptable_use.allowed.title }}</h5>
+            <ul>
+              {% for item in acceptable_use.allowed.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ acceptable_use.prohibited.title }}</h5>
+            <ul>
+              {% for item in acceptable_use.prohibited.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ rate_limits.title }}</h2>
+      <p>{{ rate_limits.content }}</p>
+      <ul>
+        {% for item in rate_limits.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ authentication.title }}</h2>
+      <p>{{ authentication.content }}</p>
+      <ul>
+        {% for item in authentication.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="alert alert-warning mt-4">
+        <h4>{{ data_attribution.title }}</h4>
+        <p>{{ data_attribution.content }}</p>
+        <ul class="mb-0">
+          {% for item in data_attribution.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ liability.title }}</h2>
+      <p>{{ liability.content }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ termination.title }}</h2>
+      <p>{{ termination.content }}</p>
+    </div>
+  </div>
+</div>

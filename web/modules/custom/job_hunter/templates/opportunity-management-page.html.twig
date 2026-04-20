@@ -1,0 +1,197 @@
+{#
+/**
+ * @file
+ * Template for the Opportunity Management page.
+ *
+ * Available variables:
+ * - stats: Array containing counts for saved_jobs, search_histories, cached_results
+ * - saved_jobs: Array of saved job opportunities
+ * - search_history: Array of search history records
+ * - companies: Array of company information keyed by company name
+ * - filters: Current filter values
+ */
+#}
+{{ attach_library('job_hunter/opportunity-management') }}
+
+<div class="opportunity-management-page">
+  
+  {# Stats Dashboard #}
+  <div class="stats-dashboard">
+    <h2>{{ 'Data Overview'|t }}</h2>
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-value">{{ stats.saved_jobs }}</div>
+        <div class="stat-label">{{ 'Saved Jobs'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔍</div>
+        <div class="stat-value">{{ stats.search_histories }}</div>
+        <div class="stat-label">{{ 'Search Histories'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💾</div>
+        <div class="stat-value">{{ stats.cached_results }}</div>
+        <div class="stat-label">{{ 'Cached Results'|t }}</div>
+      </div>
+    </div>
+  </div>
+
+  {# Tab Navigation #}
+  <div class="management-tabs" role="tablist" aria-label="{{ 'Management Options'|t }}">
+    <button class="tab-button active" data-tab="saved-jobs" role="tab" aria-selected="true" aria-controls="saved-jobs-tab">{{ 'Saved Jobs'|t }}</button>
+    <button class="tab-button" data-tab="search-history" role="tab" aria-selected="false" aria-controls="search-history-tab">{{ 'Search History'|t }}</button>
+    <button class="tab-button" data-tab="cached-results" role="tab" aria-selected="false" aria-controls="cached-results-tab">{{ 'Cached Results'|t }}</button>
+  </div>
+
+  {# Messages Area #}
+  <div id="management-messages" class="management-messages" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  {# Saved Jobs Tab #}
+  <div id="saved-jobs-tab" class="tab-content active" role="tabpanel" aria-labelledby="saved-jobs-button">
+    <div class="tab-header">
+      <h3>{{ 'Saved Job Opportunities'|t }}</h3>
+      <div class="bulk-actions">
+        <button id="select-all-jobs" class="btn-secondary" aria-label="{{ 'Select all jobs'|t }}">{{ 'Select All'|t }}</button>
+        <button id="bulk-delete-jobs" class="btn-danger" disabled aria-label="{{ 'Delete selected jobs'|t }}">{{ 'Delete Selected'|t }}</button>
+      </div>
+    </div>
+
+    {% if saved_jobs is not empty %}
+      <div class="jobs-table-wrapper">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all-jobs-checkbox"></th>
+              <th>{{ 'Title'|t }}</th>
+              <th>{{ 'Company'|t }}</th>
+              <th>{{ 'Location'|t }}</th>
+              <th>{{ 'Status'|t }}</th>
+              <th>{{ 'Source'|t }}</th>
+              <th>{{ 'Posted'|t }}</th>
+              <th>{{ 'Actions'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in saved_jobs %}
+              <tr data-job-id="{{ job.id }}" class="job-row">
+                <td><input type="checkbox" class="job-checkbox" value="{{ job.id }}"></td>
+                <td>
+                  <a href="{{ path('job_hunter.job_view', {'job_id': job.id}) }}" target="_blank">
+                    {{ job.title }}
+                  </a>
+                </td>
+                <td>{{ job.company }}</td>
+                <td>{{ job.location }}</td>
+                <td>
+                  <span class="status-badge status-{{ job.status|lower|replace({' ': '-'}) }}">
+                    {{ job.status }}
+                  </span>
+                </td>
+                <td>{{ job.via|default('Unknown') }}</td>
+                <td>{{ job.posted_at|date('M d, Y') }}</td>
+                <td class="actions-cell">
+                  <button class="btn-small btn-danger delete-job" data-job-id="{{ job.id }}" aria-label="{{ 'Delete %title'|t({'%title': job.title}) }}" title="{{ 'Delete Job'|t }}">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>{{ 'No saved jobs found.'|t }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Search History Tab #}
+  <div id="search-history-tab" class="tab-content" role="tabpanel" aria-labelledby="search-history-button">
+    <div class="tab-header">
+      <h3>{{ 'Search History'|t }}</h3>
+      <div class="bulk-actions">
+        <button id="select-all-searches" class="btn-secondary" aria-label="{{ 'Select all search histories'|t }}">{{ 'Select All'|t }}</button>
+        <button id="bulk-delete-searches" class="btn-danger" disabled aria-label="{{ 'Delete selected search histories'|t }}">{{ 'Delete Selected'|t }}</button>
+      </div>
+    </div>
+
+    {% if search_history is not empty %}
+      <div class="search-history-table-wrapper">
+        <table class="search-history-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all-searches-checkbox"></th>
+              <th>{{ 'Date'|t }}</th>
+              <th>{{ 'Query'|t }}</th>
+              <th>{{ 'Location'|t }}</th>
+              <th>{{ 'Sources'|t }}</th>
+              <th>{{ 'Results'|t }}</th>
+              <th>{{ 'User'|t }}</th>
+              <th>{{ 'Actions'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for search in search_history %}
+              <tr data-search-id="{{ search.id }}" class="search-row">
+                <td><input type="checkbox" class="search-checkbox" value="{{ search.id }}"></td>
+                <td>{{ search.search_date|date('M d, Y H:i') }}</td>
+                <td><strong>{{ search.query }}</strong></td>
+                <td>{{ search.location|default('N/A') }}</td>
+                <td>
+                  <span class="sources-list">{{ search.sources|join(', ') }}</span>
+                </td>
+                <td class="text-center">{{ search.results_count }}</td>
+                <td>{{ search.username }}</td>
+                <td class="actions-cell">
+                  <button class="btn-small btn-danger delete-search" data-search-id="{{ search.id }}" aria-label="{{ 'Delete search for %query'|t({'%query': search.query}) }}" title="{{ 'Delete Search & Results'|t }}">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>{{ 'No search history found.'|t }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Cached Results Tab #}
+  <div id="cached-results-tab" class="tab-content" role="tabpanel" aria-labelledby="cached-results-button">
+    <div class="tab-header">
+      <h3>{{ 'Cached Search Results'|t }}</h3>
+      <p class="tab-description">
+        {{ 'These are raw search results from external APIs that have not yet been imported into the system. They will be processed during the next cron run.'|t }}
+      </p>
+    </div>
+
+    <div class="cached-results-info">
+      <p>{{ 'Total cached results: <strong>%count</strong>'|t({'%count': stats.cached_results})|raw }}</p>
+      <p class="help-text">{{ 'Note: Cached results are automatically cleaned up during cron import. Manual deletion is typically not necessary.'|t }}</p>
+    </div>
+  </div>
+
+</div>
+
+{# Confirmation Modal #}
+<div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">{{ 'Confirm Deletion'|t }}</h3>
+      <button class="modal-close" aria-label="{{ 'Close dialog'|t }}">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="modal-message"></p>
+      <p class="warning-text">⚠️ {{ 'This action cannot be undone.'|t }}</p>
+    </div>
+    <div class="modal-footer">
+      <button id="modal-cancel" class="btn-secondary">{{ 'Cancel'|t }}</button>
+      <button id="modal-confirm" class="btn-danger">{{ 'Delete'|t }}</button>
+    </div>
+  </div>
+</div>

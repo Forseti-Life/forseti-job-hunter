@@ -1,0 +1,63 @@
+{#
+/**
+ * @file
+ * Template for How It Works page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - simple_answer: Simple answer alert content
+ * - subtitle: Technology subtitle
+ * - steps: Array of technology steps
+ * - privacy_security: Privacy and security section
+ * - cta_buttons: Call-to-action buttons
+ */
+#}
+<div class="container py-3">
+  <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+  
+  <div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+      <div class="alert alert-info-cyan">
+        <strong>{{ 'Simple Answer:'|t }}</strong> {{ simple_answer }}
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h2 class="mb-3 text-cyan">{{ subtitle }}</h2>
+      
+      {% for step in steps %}
+        <div class="mb-5">
+          <h3 class="text-cyan">{{ step.number }}. {{ step.title }} {{ step.icon|raw }}</h3>
+          <p>{{ step.description }}</p>
+          {% if step.list %}
+            <div class="ps-4">
+              <ul>
+                {% for item in step.list %}
+                  <li>{{ item|raw }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ privacy_security.title }}</h2>
+      <div class="alert alert-info-cyan">
+        <h4>{{ privacy_security.subtitle }}</h4>
+        <ul class="mb-0">
+          {% for item in privacy_security.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <div class="text-center mt-4">
+        {% for button in cta_buttons %}
+          <a href="{{ button.url }}" class="btn btn-{{ button.style }}{% if not loop.first %} ms-2{% endif %}">{{ button.text }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

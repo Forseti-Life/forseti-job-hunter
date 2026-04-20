@@ -1,0 +1,82 @@
+{#
+/**
+ * @file
+ * Template for Data Usage Policy page.
+ *
+ * Available variables:
+ * - title: Page title
+ * - intro: Introduction text
+ * - data_sources: Array of data source items
+ * - how_we_use: How we use data section
+ * - data_retention: Data retention section
+ * - data_sharing: Data sharing section
+ * - your_control: User control section
+ */
+#}
+<div class="container py-3">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="text-center mb-3 text-cyan">{{ title }}</h1>
+      
+      <p class="lead">{{ intro }}</p>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ 'Data Sources'|t }}</h2>
+      
+      {% for source in data_sources %}
+        <div class="card card-forseti p-3 mb-3">
+          <h4>{{ source.icon }} {{ source.title }}</h4>
+          <p><strong>{{ 'Source:'|t }}</strong> {{ source.description }}</p>
+          <p class="mb-0"><strong>{{ 'Usage:'|t }}</strong> {{ source.usage }}</p>
+        </div>
+      {% endfor %}
+      
+      <h2 class="mt-5 mb-3 text-cyan">{{ how_we_use.title }}</h2>
+      <ul>
+        {% for item in how_we_use.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ data_retention.title }}</h2>
+      <ul>
+        {% for item in data_retention.items %}
+          <li>{{ item|raw }}</li>
+        {% endfor %}
+      </ul>
+      
+      <h2 class="mt-4 mb-3 text-cyan">{{ data_sharing.title }}</h2>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ data_sharing.never_shared.title }}</h5>
+            <ul>
+              {% for item in data_sharing.never_shared.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card card-forseti p-3 h-100">
+            <h5>{{ data_sharing.may_share.title }}</h5>
+            <ul>
+              {% for item in data_sharing.may_share.items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="alert alert-info mt-5">
+        <h4>{{ your_control.title }}</h4>
+        <ul class="mb-0">
+          {% for item in your_control.items %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

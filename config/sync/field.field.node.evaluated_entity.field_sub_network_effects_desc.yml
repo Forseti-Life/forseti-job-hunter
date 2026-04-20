@@ -1,0 +1,22 @@
+uuid: 3c2857cc-2a7c-4dce-9f35-f5d68f61e867
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sub_network_effects_desc
+    - node.type.evaluated_entity
+  module:
+    - text
+id: node.evaluated_entity.field_sub_network_effects_desc
+field_name: field_sub_network_effects_desc
+entity_type: node
+bundle: evaluated_entity
+label: 'Network Effects Description'
+description: 'AI-provided description for Network Effects sub-dimension'
+required: false
+translatable: true
+default_value: null
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

@@ -1,0 +1,190 @@
+services:
+  job_hunter.job_application_repository:
+    class: Drupal\job_hunter\Repository\JobApplicationRepository
+    arguments: ['@database']
+
+  job_hunter.user_profile_repository:
+    class: Drupal\job_hunter\Repository\UserProfileRepository
+    arguments: ['@database']
+
+  logger.channel.job_hunter:
+    parent: logger.channel_base
+    arguments: ['job_hunter']
+
+  job_hunter.job_seeker_service:
+    class: Drupal\job_hunter\Service\JobSeekerService
+    arguments: ['@database', '@current_user']
+  
+  job_hunter.user_profile_service:
+    class: Drupal\job_hunter\Service\UserProfileService
+    arguments: []
+
+  job_hunter.user_job_profile_service:
+    class: Drupal\job_hunter\Service\UserJobProfileService
+    arguments: ['@entity_type.manager', '@entity_field.manager']
+  
+  job_hunter.job_discovery_service:
+    class: Drupal\job_hunter\Service\JobDiscoveryService
+    arguments: ['@database', '@config.factory', '@current_user', '@logger.factory']
+  
+  job_hunter.abbvie_job_scraping_service:
+    class: Drupal\job_hunter\Service\AbbVieJobScrapingService
+    arguments: ['@http_client', '@logger.factory', '@config.factory']
+
+  job_hunter.resume_pdf_service:
+    class: Drupal\job_hunter\Service\ResumePdfService
+    arguments: ['@file_system', '@logger.factory']
+  
+  job_hunter.google_jobs_service:
+    class: Drupal\job_hunter\Service\GoogleJobsService
+    arguments: ['@database', '@logger.factory', '@file_url_generator']
+  
+  job_hunter.cloud_talent_solution:
+    class: Drupal\job_hunter\Service\CloudTalentSolutionService
+    arguments: ['@http_client', '@database', '@logger.factory', '@config.factory']
+  
+  job_hunter.adzuna_api:
+    class: Drupal\job_hunter\Service\AdzunaApiService
+    arguments: ['@http_client', '@logger.factory', '@config.factory']
+  
+  job_hunter.usajobs_api:
+    class: Drupal\job_hunter\Service\UsaJobsApiService
+    arguments: ['@http_client', '@logger.factory', '@config.factory']
+  
+  job_hunter.serpapi:
+    class: Drupal\job_hunter\Service\SerpApiService
+    arguments: ['@http_client', '@logger.factory', '@config.factory']
+  
+  job_hunter.search_aggregator:
+    class: Drupal\job_hunter\Service\SearchAggregatorService
+    arguments: ['@database', '@config.factory', '@current_user', '@logger.factory', '@job_hunter.cloud_talent_solution', '@job_hunter.adzuna_api', '@job_hunter.usajobs_api', '@job_hunter.serpapi']
+  
+  job_hunter.opportunity_management_service:
+    class: Drupal\job_hunter\Service\OpportunityManagementService
+    arguments: ['@database', '@logger.factory']
+
+  job_hunter.profile_completeness_service:
+    class: Drupal\job_hunter\Service\ProfileCompletenessService
+    arguments: ['@database']
+
+  job_hunter.commands:
+    class: Drupal\job_hunter\Commands\JobApplicationAutomationCommands
+    arguments: ['@entity_type.manager', '@logger.factory']
+    tags:
+      - { name: drush.command }
+
+  job_hunter.resume_parse_command:
+    class: Drupal\job_hunter\Commands\ResumeParseDrushCommand
+    arguments: ['@entity_type.manager', '@database', '@config.factory', '@ai_conversation.ai_api_service']
+    tags:
+      - { name: drush.command }
+
+  job_hunter.job_parsing_commands:
+    class: Drupal\job_hunter\Commands\JobParsingCommands
+    arguments: ['@database', '@queue']
+    tags:
+      - { name: drush.command }
+
+  job_hunter.application_location_verification_commands:
+    class: Drupal\job_hunter\Commands\ApplicationLocationVerificationCommands
+    arguments:
+      - '@job_hunter.application_location_verification_service'
+    tags:
+      - { name: drush.command }
+
+  job_hunter.cio_auto_apply_commands:
+    class: Drupal\job_hunter\Commands\CioAutoApplyCommands
+    arguments:
+      - '@database'
+      - '@job_hunter.application_submission_service'
+      - '@logger.factory'
+    tags:
+      - { name: drush.command }
+
+  job_hunter.error_queue_service:
+    class: Drupal\job_hunter\Service\ErrorQueueService
+    arguments: ['@entity_type.manager', '@logger.factory']
+  
+  job_hunter.application_submission_service:
+    class: Drupal\job_hunter\Service\ApplicationSubmissionService
+    arguments: 
+      - '@database'
+      - '@logger.factory'
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@messenger'
+      - '@job_hunter.job_seeker_service'
+      - '@job_hunter.user_profile_service'
+      - '@job_hunter.credential_management_service'
+      - '@file_system'
+  
+  job_hunter.credential_management_service:
+    class: Drupal\job_hunter\Service\CredentialManagementService
+    arguments:
+      - '@database'
+      - '@logger.factory'
+      - '@config.factory'
+
+  job_hunter.apply_url_resolver:
+    class: Drupal\job_hunter\Service\ApplyUrlResolverService
+    arguments:
+      - '@logger.factory'
+
+  job_hunter.application_location_verification_service:
+    class: Drupal\job_hunter\Service\ApplicationLocationVerificationService
+    arguments:
+      - '@database'
+      - '@job_hunter.apply_url_resolver'
+      - '@http_client'
+      - '@job_hunter.genai_fallback_service'
+
+  job_hunter.genai_fallback_service:
+    class: Drupal\job_hunter\Service\GenAiFallbackService
+    arguments:
+      - '@service_container'
+
+  job_hunter.auth_path_identification_service:
+    class: Drupal\job_hunter\Service\AuthPathIdentificationService
+    arguments:
+      - '@database'
+
+  job_hunter.account_verification_service:
+    class: Drupal\job_hunter\Service\AccountVerificationService
+    arguments:
+      - '@database'
+
+  job_hunter.resume_upload_service:
+    class: Drupal\job_hunter\Service\ResumeUploadService
+    arguments:
+      - '@database'
+      - '@file_system'
+
+  job_hunter.workday_wizard_service:
+    class: Drupal\job_hunter\Service\WorkdayWizardService
+    arguments:
+      - '@database'
+      - '@file_system'
+      - '@job_hunter.workday_profile_data_mapper'
+      - '@job_hunter.workday_playwright_runner'
+
+  job_hunter.workday_playwright_runner:
+    class: Drupal\job_hunter\Service\WorkdayPlaywrightRunner
+    arguments:
+      - '@logger.channel.job_hunter'
+
+  job_hunter.workday_profile_data_mapper:
+    class: Drupal\job_hunter\Service\WorkdayProfileDataMapper
+    arguments:
+      - '@database'
+
+  job_hunter.application_form_mapper:
+    class: Drupal\job_hunter\Service\ApplicationFormMapper
+
+  job_hunter.browser_automation_service:
+    class: Drupal\job_hunter\Service\BrowserAutomationService
+    arguments:
+      - '@database'
+      - '@logger.factory'
+      - '@job_hunter.apply_url_resolver'
+      - '@job_hunter.application_form_mapper'
+      - '@job_hunter.job_seeker_service'

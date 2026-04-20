@@ -1,0 +1,144 @@
+dashboard:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-dashboard.css: {}
+  js:
+    js/nfr-dashboard.js: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+reports-landing:
+  version: 1.0
+  css:
+    theme:
+      css/reports-landing.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+correlation-analysis:
+  version: 1.0
+  css:
+    theme:
+      css/correlation-analysis.css: {}
+  js:
+    js/correlation-analysis.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - forseti/style
+
+cluster-analysis:
+  version: 1.0
+  css:
+    theme:
+      css/cluster-analysis.css: {}
+  js:
+    js/cluster-analysis.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - forseti/style
+
+documentation:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-documentation.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+public:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-public.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+home:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-home.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+enrollment:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-enrollment.css: {}
+  js:
+    js/nfr-questionnaire.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - forseti/style
+
+participant-dashboard:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-participant-dashboard.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+admin:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-admin.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+validation:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-validation.css: {}
+  js:
+    js/nfr-validation.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.ajax
+
+fill_rates:
+  version: 1.0
+  js:
+    js/nfr-fill-rates.js: {}
+  dependencies:
+    - core/drupal
+
+navigation:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-navigation.css: {}
+  dependencies:
+    - core/drupal
+    - forseti/style
+
+public-data:
+  version: 1.0
+  css:
+    theme:
+      css/nfr-public-data.css: {}
+  js:
+    https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js: { type: external, minified: true }
+    js/nfr-public-data.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - forseti/style

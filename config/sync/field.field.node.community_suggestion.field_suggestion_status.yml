@@ -1,0 +1,23 @@
+uuid: 5c3e5241-a245-4f4d-b131-f11bdfddae33
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_suggestion_status
+    - node.type.community_suggestion
+  module:
+    - options
+id: node.community_suggestion.field_suggestion_status
+field_name: field_suggestion_status
+entity_type: node
+bundle: community_suggestion
+label: Status
+description: 'Status of the suggestion'
+required: false
+translatable: true
+default_value:
+  -
+    value: new
+default_value_callback: ''
+settings: {  }
+field_type: list_string

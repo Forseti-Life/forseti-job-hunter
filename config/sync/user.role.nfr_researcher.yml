@@ -1,0 +1,9 @@
+uuid: b07a1862-11d6-4ce2-93f8-6dcdb7c16de0
+langcode: en
+status: true
+dependencies: {  }
+id: nfr_researcher
+label: 'NFR Researcher'
+weight: 5
+is_admin: false
+permissions: {  }

@@ -1,0 +1,245 @@
+/* Documentation Home Page Styles */
+
+.documentation-home {
+  /* Width controlled by .job-hunter-content */
+  padding: 2rem;
+}
+
+/* Documentation Content Page Styles */
+.documentation-content {
+  /* Width controlled by .job-hunter-content */
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.documentation-content .breadcrumb {
+  background: #f7fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+}
+
+.documentation-content h1 {
+  color: #2d3748;
+  font-size: 2.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.documentation-content h2 {
+  color: #2d3748;
+  font-size: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.documentation-content h3 {
+  color: #4a5568;
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.documentation-content p {
+  color: #4a5568;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.documentation-content ul {
+  margin-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.documentation-content li {
+  color: #4a5568;
+  line-height: 1.8;
+  margin-bottom: 0.5rem;
+}
+
+.documentation-content code {
+  background: #f7fafc;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #e53e3e;
+}
+
+.documentation-content pre {
+  background: #2d3748;
+  color: #f7fafc;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.documentation-content pre code {
+  background: none;
+  padding: 0;
+  color: #f7fafc;
+}
+
+.documentation-content a {
+  color: #667eea;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.documentation-content a:hover {
+  border-bottom-color: #667eea;
+}
+
+.documentation-content strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.documentation-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.documentation-hero h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.documentation-hero .subtitle {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.95;
+}
+
+.documentation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.doc-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.doc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.doc-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.doc-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.5rem;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.doc-description {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0 0 1.25rem 0;
+  min-height: 3.2em;
+}
+
+.doc-link {
+  display: inline-block;
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.doc-link:hover {
+  background: #667eea;
+  color: white;
+  text-decoration: none;
+}
+
+.documentation-footer {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 3rem;
+}
+
+.documentation-footer h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+.documentation-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.documentation-footer li {
+  margin: 0;
+}
+
+.documentation-footer a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.documentation-footer a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .documentation-home {
+    padding: 1rem;
+  }
+  
+  .documentation-hero h1 {
+    font-size: 2rem;
+  }
+  
+  .documentation-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .documentation-footer ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

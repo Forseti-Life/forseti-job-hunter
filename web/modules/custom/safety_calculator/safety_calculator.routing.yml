@@ -1,0 +1,86 @@
+safety_calculator.landing:
+  path: '/safety-calculator'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\LandingPageController::page'
+    _title: 'Safety Calculator'
+  requirements:
+    _permission: 'access content'
+
+safety_calculator.questionnaire:
+  path: '/safety-calculator/assessment'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\PopulationBenchmarksController::page'
+    _title: 'Personal Safety Assessment'
+  requirements:
+    _permission: 'access content'
+
+safety_calculator.questionnaire_step:
+  path: '/safety-calculator/assessment/{step}'
+  defaults:
+    _form: '\Drupal\safety_calculator\Form\QuestionnaireStepForm'
+    _title: 'Safety Assessment'
+  requirements:
+    _permission: 'access content'
+    step: 'safe|energized|connected|free|capable|useful|whole'
+
+safety_calculator.review:
+  path: '/safety-calculator/assessment/review'
+  defaults:
+    _form: '\Drupal\safety_calculator\Form\AssessmentReviewForm'
+    _title: 'Review Assessment'
+  requirements:
+    _permission: 'access content'
+
+safety_calculator.settings:
+  path: '/admin/config/forseti/safety-calculator'
+  defaults:
+    _form: '\Drupal\safety_calculator\Form\SafetyCalculatorSettingsForm'
+    _title: 'Safety Calculator Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+safety_calculator.population_benchmarks:
+  path: '/safety-calculator/population-benchmarks'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\PopulationBenchmarksController::page'
+    _title: 'Personal Safety Assessment'
+  requirements:
+    _permission: 'access content'
+
+safety_calculator.calculate:
+  path: '/api/safety/calculate'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\SafetyCalculatorController::calculate'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'access content'
+  methods: [GET, POST]
+  options:
+    _format: 'json'
+
+safety_calculator.individual_metrics_profile:
+  path: '/user/{user}/individual-metrics'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\IndividualMetricsProfileController::view'
+    _title: 'Individual Metrics'
+  requirements:
+    _custom_access: '\Drupal\safety_calculator\Controller\IndividualMetricsProfileController::access'
+    user: \d+
+
+safety_calculator.individual_metrics_edit:
+  path: '/user/{user}/individual-metrics/edit/{dimension}'
+  defaults:
+    _form: '\Drupal\safety_calculator\Form\IndividualMetricsEditForm'
+    _title: 'Edit Metrics'
+  requirements:
+    _custom_access: '\Drupal\safety_calculator\Controller\IndividualMetricsProfileController::access'
+    user: \d+
+    dimension: 'SAFE|ENERGIZED|CONNECTED|FREE|CAPABLE|USEFUL|WHOLE|DEMOGRAPHIC'
+
+safety_calculator.data_sources:
+  path: '/safety-calculator/data-sources'
+  defaults:
+    _controller: '\Drupal\safety_calculator\Controller\DataSourcesController::page'
+    _title: 'Data Sources & Research References'
+  requirements:
+    _permission: 'access content'

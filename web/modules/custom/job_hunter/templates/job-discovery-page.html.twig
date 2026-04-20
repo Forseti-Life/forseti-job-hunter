@@ -1,0 +1,226 @@
+{#
+/**
+ * @file
+ * Template for the Job Discovery and Search page.
+ *
+ * Available variables:
+ * - default_keywords: Pre-populated search keywords from user profile
+ * - default_location: Pre-populated location from user profile
+ * - default_remote_pref: User's remote work preference
+ * - default_salary_min: Minimum salary expectation
+ * - default_salary_max: Maximum salary expectation
+ * - default_employment_type: Preferred employment type
+ * - default_relocation: Willingness to relocate
+ * - default_sources: Default enabled search sources
+ * - has_google_cloud: Boolean, Google Cloud credentials configured
+ * - has_adzuna: Boolean, Adzuna credentials configured
+ * - has_usajobs: Boolean, USAJobs credentials configured
+ * - has_serpapi: Boolean, SerpAPI credentials configured
+ */
+#}
+
+<div class="job-discovery-page">
+  <h1>🔍 {{ 'Job Discovery & Search'|t }}</h1>
+  <p>{{ 'Search for jobs across multiple sources. Jobs you save will automatically add their companies to your target list.'|t }}</p>
+
+  {# Job Source Status Section #}
+  <div class="integrations-section">
+    <h2>📡 {{ 'Job Source Status'|t }}</h2>
+    <div class="integration-status-grid">
+      <div class="status-card status-card-active">
+        <div class="status-card-icon">💼</div>
+        <div class="status-card-content">
+          <h4>{{ 'Forseti Jobs'|t }}</h4>
+          <span class="status-badge status-success">{{ 'Active'|t }}</span>
+          <p>{{ 'Your saved jobs and manual entries'|t }}</p>
+        </div>
+      </div>
+      
+      <div class="status-card status-card-{{ has_serpapi ? 'active' : 'pending' }}">
+        <div class="status-card-icon">🔍</div>
+        <div class="status-card-content">
+          <h4>{{ 'Google Cloud Jobs (Via SerpAPI)'|t }}</h4>
+          <span class="status-badge {{ has_serpapi ? 'status-success' : 'status-warning' }}">
+            {{ has_serpapi ? 'Configured'|t : 'Not Configured'|t }}
+          </span>
+          <p>{{ has_serpapi ? 'AI-powered job search across the web'|t : 'Configure SerpAPI credentials to enable'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Search Form #}
+  <div class="job-search-form">
+    <form id="unified-job-search" method="GET" action="/jobhunter/job-discovery/search">
+      <input type="hidden" name="sources_submitted" value="1">
+      <div class="search-form-container">
+        
+        {# Primary Search Row #}
+        <div class="search-primary-row">
+          <div class="search-field search-field-primary">
+            <label for="search-query">
+              <span class="field-icon">💼</span>
+              <span class="field-label">{{ 'Job Title or Keywords'|t }}</span>
+            </label>
+            <input 
+              type="text" 
+              id="search-query" 
+              name="q" 
+              value="{{ default_keywords }}"
+              placeholder="{{ 'e.g., Software Engineer, Product Manager, Data Scientist'|t }}"
+              class="search-input"
+            >
+          </div>
+          
+          <div class="search-field">
+            <label for="search-location">
+              <span class="field-icon">📍</span>
+              <span class="field-label">{{ 'Location'|t }}</span>
+            </label>
+            <input 
+              type="text" 
+              id="search-location" 
+              name="location" 
+              value="{{ default_location }}"
+              placeholder="{{ 'e.g., San Francisco, CA or Remote'|t }}"
+              class="search-input"
+            >
+          </div>
+        </div>
+        {# Filters Row #}
+        <div class="search-filters-row">
+          <div class="search-field search-field-select">
+            <label for="employment-type">
+              <span class="field-icon">📋</span>
+              <span class="field-label">{{ 'Employment Type'|t }}</span>
+            </label>
+            <select id="employment-type" name="employment_type" class="search-select">
+              <option value="">{{ 'Any'|t }}</option>
+              <option value="FULL_TIME" {{ default_employment_type == 'FULL_TIME' ? 'selected' : '' }}>{{ 'Full-time'|t }}</option>
+              <option value="PART_TIME" {{ default_employment_type == 'PART_TIME' ? 'selected' : '' }}>{{ 'Part-time'|t }}</option>
+              <option value="CONTRACT" {{ default_employment_type == 'CONTRACT' ? 'selected' : '' }}>{{ 'Contract'|t }}</option>
+              <option value="TEMPORARY" {{ default_employment_type == 'TEMPORARY' ? 'selected' : '' }}>{{ 'Temporary'|t }}</option>
+              <option value="INTERN" {{ default_employment_type == 'INTERN' ? 'selected' : '' }}>{{ 'Internship'|t }}</option>
+            </select>
+          </div>
+          
+          <div class="search-field search-field-checkboxes">
+            <label class="field-label-block">
+              <span class="field-icon">🔍</span>
+              <span class="field-label">{{ 'Search In'|t }}</span>
+            </label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="sources[]" value="forseti" {{ 'forseti' in default_sources ? 'checked' : '' }}>
+                <span>{{ 'Forseti Jobs'|t }}</span>
+              </label>
+              <label class="checkbox-label{{ has_serpapi ? '' : ' disabled' }}">
+                <input type="checkbox" name="sources[]" value="serpapi" {{ 'serpapi' in default_sources ? 'checked' : '' }} {{ has_serpapi ? '' : 'disabled' }}>
+                <span>{{ has_serpapi ? 'Google Jobs (Via SerpAPI)'|t : 'Google Jobs (Configure SerpAPI)'|t }}</span>
+              </label>
+              <label class="checkbox-label{{ has_adzuna ? '' : ' disabled' }}">
+                <input type="checkbox" name="sources[]" value="adzuna" {{ 'adzuna' in default_sources ? 'checked' : '' }} {{ has_adzuna ? '' : 'disabled' }}>
+                <span>{{ has_adzuna ? 'Adzuna (Indeed/Monster/etc.)'|t : 'Adzuna (Configure API)'|t }}</span>
+              </label>
+              <label class="checkbox-label{{ has_usajobs ? '' : ' disabled' }}">
+                <input type="checkbox" name="sources[]" value="usajobs" {{ 'usajobs' in default_sources ? 'checked' : '' }} {{ has_usajobs ? '' : 'disabled' }}>
+                <span>{{ has_usajobs ? 'USAJobs (Government)'|t : 'USAJobs (Configure API)'|t }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        {# Actions Row #}
+        <div class="search-actions-row">
+          <button type="submit" class="btn-search">
+            <span class="btn-icon">🔍</span>
+            <span class="btn-text">{{ 'Search Jobs'|t }}</span>
+          </button>
+          <a href="/jobhunter/jobs/paste" class="btn-add-job">
+            <span class="btn-icon">➕</span>
+            <span class="btn-text">{{ 'Add Job Posting'|t }}</span>
+          </a>
+          <button type="button" class="btn-advanced" onclick="toggleAdvancedFilters()">
+            <span class="btn-text">{{ 'Advanced Filters'|t }}</span>
+            <span class="btn-icon">▼</span>
+          </button>
+          <div class="search-stats">
+            <span class="stat-item">
+              <strong>{{ saved_jobs_count }}</strong> {{ 'jobs saved'|t }}
+            </span>
+            <span class="stat-separator">•</span>
+            <span class="stat-item">
+              <strong>{{ target_companies_count }}</strong> {{ 'companies tracked'|t }}
+            </span>
+          </div>
+        </div>
+        
+        {# Advanced Filters (Initially Hidden) #}
+        <div id="advanced-filters" class="advanced-filters" style="display: none;">
+          <div class="advanced-filters-grid">
+            <div class="filter-field">
+              <label for="company-filter">{{ 'Company'|t }}</label>
+              <input type="text" id="company-filter" name="company" placeholder="{{ 'Filter by company name'|t }}" class="filter-input">
+            </div>
+            
+            <div class="filter-field">
+              <label for="salary-min">{{ 'Min Salary'|t }}</label>
+              <input type="number" id="salary-min" name="salary_min" value="{{ default_salary_min }}" placeholder="{{ 'e.g., 100000'|t }}" class="filter-input" step="1000">
+            </div>
+            
+            <div class="filter-field">
+              <label for="salary-max">{{ 'Max Salary'|t }}</label>
+              <input type="number" id="salary-max" name="salary_max" value="{{ default_salary_max }}" placeholder="{{ 'e.g., 150000'|t }}" class="filter-input" step="1000">
+            </div>
+            
+            <div class="filter-field">
+              <label for="remote-preference">{{ 'Remote Preference'|t }}</label>
+              <select id="remote-preference" name="remote_preference" class="filter-select">
+                <option value="">{{ 'Any'|t }}</option>
+                <option value="remote"{{ default_remote_pref == 'remote' ? ' selected' : '' }}>{{ 'Remote'|t }}</option>
+                <option value="hybrid"{{ default_remote_pref == 'hybrid' ? ' selected' : '' }}>{{ 'Hybrid'|t }}</option>
+                <option value="onsite"{{ default_remote_pref == 'onsite' ? ' selected' : '' }}>{{ 'On-site'|t }}</option>
+              </select>
+            </div>
+            
+            <div class="filter-field">
+              <label for="date-posted">{{ 'Posted Within'|t }}</label>
+              <select id="date-posted" name="date_posted" class="filter-select">
+                <option value="">{{ 'Any time'|t }}</option>
+                <option value="past_24_hours">{{ 'Last 24 hours'|t }}</option>
+                <option value="past_week">{{ 'Last 7 days'|t }}</option>
+                <option value="past_month">{{ 'Last 30 days'|t }}</option>
+              </select>
+            </div>
+            
+            <div class="filter-field">
+              <label for="relocation-willing">{{ 'Willing to Relocate'|t }}</label>
+              <select id="relocation-willing" name="relocation_willing" class="filter-select">
+                <option value="">{{ 'Any'|t }}</option>
+                <option value="yes"{{ default_relocation == 'yes' ? ' selected' : '' }}>{{ 'Yes'|t }}</option>
+                <option value="no"{{ default_relocation == 'no' ? ' selected' : '' }}>{{ 'No'|t }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<script>
+  function toggleAdvancedFilters() {
+    const filters = document.getElementById("advanced-filters");
+    const btn = event.currentTarget;
+    const icon = btn.querySelector(".btn-icon");
+    
+    if (filters.style.display === "none") {
+      filters.style.display = "block";
+      icon.textContent = "▲";
+    } else {
+      filters.style.display = "none";
+      icon.textContent = "▼";
+    }
+  }
+</script>

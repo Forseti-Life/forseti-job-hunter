@@ -1,0 +1,11 @@
+services:
+  forseti_content.pipeline_status_resolver:
+    class: Drupal\forseti_content\Service\ForsetiPipelineStatusResolver
+
+  forseti_content.agent_power:
+    class: Drupal\forseti_content\Service\AgentPowerService
+    arguments: ['@string_translation']
+    
+  forseti_content.safety_dimensions:
+    class: Drupal\forseti_content\Service\SafetyDimensionsService
+    arguments: ['@string_translation']

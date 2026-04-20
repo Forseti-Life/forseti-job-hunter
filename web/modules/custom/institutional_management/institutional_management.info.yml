@@ -1,0 +1,10 @@
+name: 'Institutional Management'
+description: 'Provides institutional management features including group setup, templates, and pages for organizational accounts'
+package: 'Forseti'
+type: 'module'
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - drupal:user
+  - group:group
+  - amisafe:amisafe
+configure: institutional_management.settings

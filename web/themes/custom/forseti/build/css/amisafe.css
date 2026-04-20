@@ -1,0 +1,676 @@
+/**
+ * AmISafe Module Styles - Centralized in Theme
+ * All amisafe-related styling consolidated here
+ */
+
+/* Crime Map Layout */
+.crime-map-layout {
+  display: flex;
+  height: calc(100vh - 80px);
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.crime-map-container {
+  flex: 1;
+  position: relative;
+  background: #1a202c;
+}
+
+#crime-map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(6, 182, 212, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #06b6d4;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  margin-top: 20px;
+  color: #06b6d4;
+  font-size: 1.2rem;
+}
+
+/* Floating Controls */
+.floating-controls {
+  position: absolute;
+  background: rgba(26, 32, 44, 0.95);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 15px;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.floating-controls.top-left {
+  top: 10px;
+  left: 10px;
+}
+
+.control-group {
+  margin-bottom: 10px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+.preset-btn {
+  background: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.preset-btn:hover {
+  background: #4a5568;
+  color: #06b6d4;
+}
+
+.preset-btn.active {
+  background: #06b6d4;
+  color: #1a202c;
+  border-color: #06b6d4;
+}
+
+/* Filter Dropdown */
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 5px;
+  background: rgba(26, 32, 44, 0.98);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 15px;
+  min-width: 250px;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #4a5568;
+  color: #06b6d4;
+}
+
+.btn-close-filter {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+
+.btn-close-filter:hover {
+  color: #06b6d4;
+}
+
+.dropdown-body {
+  margin-bottom: 10px;
+}
+
+.dropdown-footer {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #4a5568;
+}
+
+/* Map Controls */
+.map-controls {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.resolution-indicator {
+  background: rgba(26, 32, 44, 0.95);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.resolution-indicator button {
+  background: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.resolution-indicator button:hover {
+  background: #4a5568;
+  color: #06b6d4;
+}
+
+.resolution-indicator .separator {
+  color: #4a5568;
+  margin: 0 5px;
+}
+
+.zoom-label, .resolution-label {
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+
+.resolution-value, #zoom-level {
+  color: #06b6d4;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+.scale-label {
+  color: #718096;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Hexagon Detail Panel */
+.hexagon-detail-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 45vh;
+  background: #16213e;
+  border-top: 2px solid #00d4ff;
+  border-left: 1px solid rgba(0, 212, 255, 0.3);
+  border-right: 1px solid rgba(0, 212, 255, 0.3);
+  overflow-y: auto;
+  z-index: 9999;
+  padding: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  border-radius: 8px 8px 0 0;
+}
+
+.hexagon-detail-panel h4,
+.hexagon-detail-panel h5 {
+  color: #00d4ff;
+  margin-bottom: 1rem;
+}
+
+.hexagon-detail-panel p,
+.hexagon-detail-panel li,
+.hexagon-detail-panel td {
+  color: #e8e8e8;
+}
+
+.hexagon-detail-panel .stat-label {
+  color: #b8b8b8;
+  font-weight: 500;
+}
+
+.hexagon-detail-panel .stat-value {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.close-panel-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-panel-btn:hover {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: #00d4ff;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* Panel Detail Content */
+.hexagon-detail-inner {
+  padding-right: 40px;
+}
+
+.detail-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.detail-header h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.h3-index-badge {
+  font-family: monospace;
+  color: #b8b8b8;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section h5 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: rgba(0, 212, 255, 0.05);
+  border-radius: 4px;
+  border-left: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+.geo-info div,
+.temporal-info div,
+.crime-breakdown,
+.district-breakdown {
+  padding: 0.4rem 0;
+  color: #e8e8e8;
+  line-height: 1.6;
+}
+
+.crime-breakdown,
+.district-breakdown {
+  padding-left: 1rem;
+}
+
+.z-score-explanation {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(0, 212, 255, 0.05);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #b8b8b8;
+  font-style: italic;
+}
+
+.detail-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.data-quality {
+  color: #b8b8b8;
+  font-size: 0.85rem;
+}
+
+/* Risk level colors */
+.stat-value.critical,
+.stat-value.risk-critical {
+  color: #ff4444 !important;
+}
+
+.stat-value.high,
+.stat-value.risk-high {
+  color: #ff9800 !important;
+}
+
+.stat-value.moderate,
+.stat-value.risk-moderate {
+  color: #fdd835 !important;
+}
+
+.stat-value.low,
+.stat-value.risk-low {
+  color: #4caf50 !important;
+}
+
+/* Hotspot status colors */
+.stat-value.hotspot-true {
+  color: #ff4444 !important;
+  font-weight: bold;
+}
+
+.stat-value.hotspot-false {
+  color: #4caf50 !important;
+}
+
+/* Modal Overrides for Crime Map */
+.modal-content.bg-dark {
+  background-color: #1a202c !important;
+  color: #e2e8f0;
+}
+
+.modal-header.border-secondary {
+  border-bottom-color: #4a5568 !important;
+}
+
+/* Mobile Download Page */
+.amisafe-mobile-download {
+  padding: 2rem 0;
+}
+
+.download-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.app-icon {
+  margin-bottom: 1.5rem;
+}
+
+.app-logo {
+  width: 80px;
+  height: 80px;
+}
+
+.download-header h1 {
+  color: #06b6d4;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tagline {
+  color: #a0aec0;
+  font-size: 1.2rem;
+}
+
+.download-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.platform-card {
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.platform-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(6, 182, 212, 0.2);
+}
+
+.platform-icon {
+  margin-bottom: 1.5rem;
+}
+
+.platform-logo {
+  width: 60px;
+  height: 60px;
+}
+
+.platform-card h2 {
+  color: #06b6d4;
+  margin-bottom: 0.5rem;
+}
+
+.download-button {
+  display: inline-block;
+  background: #06b6d4;
+  color: #1a202c;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.download-button:hover {
+  background: #0891b2;
+  color: #1a202c;
+}
+
+.install-instructions {
+  margin-top: 1.5rem;
+  text-align: left;
+  background: #1a202c;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.install-instructions h3 {
+  color: #06b6d4;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.install-instructions ol {
+  color: #a0aec0;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.install-instructions li {
+  margin-bottom: 0.5rem;
+}
+
+.unavailable {
+  color: #718096;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Feature Cards */
+.features-section {
+  margin-top: 4rem;
+  padding: 3rem 1rem;
+  background: #2d3748;
+  border-radius: 12px;
+}
+
+.features-section h2 {
+  text-align: center;
+  color: #06b6d4;
+  margin-bottom: 2rem;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-item {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.feature-item h3 {
+  color: #06b6d4;
+  margin: 1rem 0 0.5rem;
+}
+
+.feature-item p {
+  color: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .crime-map-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+  
+  .crime-map-container {
+    min-height: 500px;
+    height: 70vh;
+  }
+  
+  .floating-controls {
+    position: relative;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .control-group {
+    margin-bottom: 8px;
+  }
+  
+  .btn-group {
+    width: 100%;
+  }
+  
+  .btn-group .preset-btn {
+    flex: 1;
+  }
+  
+  .map-controls {
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+  }
+  
+  .resolution-indicator {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .resolution-indicator .separator {
+    display: none;
+  }
+  
+  .resolution-indicator button {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .hexagon-detail-panel {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+  
+  #crime-type-dropdown {
+    width: 100%;
+    left: 0 !important;
+  }
+  
+  /* Make header responsive */
+  .d-flex.justify-content-between.align-items-center.flex-wrap {
+    gap: 1rem;
+  }
+  
+  .d-flex.justify-content-between.align-items-center.flex-wrap > div {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+  
+  h1.text-cyan {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .crime-map-container {
+    min-height: 400px;
+    height: 60vh;
+  }
+  
+  .floating-controls {
+    padding: 10px;
+  }
+  
+  h1.text-cyan {
+    font-size: 1.5rem;
+  }
+  
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .resolution-indicator {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+  }
+  
+  .resolution-indicator span:not(.h3-resolution-value):not(#zoom-level) {
+    display: none;
+  }
+  
+  .resolution-indicator button {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
+}
+

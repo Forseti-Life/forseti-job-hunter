@@ -1,0 +1,20 @@
+_core:
+  default_config_hash: I9H2VE-8oXeJsmeILgRxgWNIv-XmoVpnU-2JVwEk6PU
+langcode: en
+status: true
+dependencies: {  }
+id: job_hunter.settings
+original_resume_node_id: null
+enable_automatic_tailoring: true
+ai_service_region: us-west-2
+ai_model_id: 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+max_tokens: 4000
+max_tokens_resume_tailoring: '16000'
+google_cloud_credentials: ''
+tenant_name: ''
+adzuna_app_id: ''
+adzuna_app_key: ''
+usajobs_api_key: ''
+usajobs_email: ''
+serpapi_api_key: 509fa1a406e93fc73c7c503eec754db174e0f418e5857da75bd4aff25a01d897
+log_level: notice

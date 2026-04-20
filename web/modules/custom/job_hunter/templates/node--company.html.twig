@@ -1,0 +1,114 @@
+{#
+/**
+ * @file
+ * Template for Company content type display.
+ *
+ * Available variables:
+ * - node: The node entity with limited access to object properties and methods.
+ * - content: A list of field content.
+ */
+#}
+{{ attach_library('job_hunter/company_profile') }}
+
+<div class="professional-company-profile">
+  <div class="container">
+    {# Company Header Section #}
+    <div class="company-header-section">
+      <div class="row align-items-center">
+        {% if content.field_company_logo %}
+          <div class="col-md-2">
+            <div class="company-logo-wrapper">
+              {{ content.field_company_logo }}
+            </div>
+          </div>
+        {% endif %}
+        <div class="{{ content.field_company_logo ? 'col-md-10' : 'col-md-12' }}">
+          <h1 class="company-main-title">{{ node.getTitle() }}</h1>
+          <div class="company-meta-info">
+            {% if content.field_industry %}
+              <span class="company-meta-item">
+                <i class="fas fa-industry"></i>
+                {{ content.field_industry }}
+              </span>
+            {% endif %}
+            {% if content.field_location %}
+              <span class="company-meta-item">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ content.field_location }}
+              </span>
+            {% endif %}
+            {% if content.field_size %}
+              <span class="company-meta-item">
+                <i class="fas fa-users"></i>
+                {{ content.field_size }}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Company Description Section #}
+    {% if content.field_description %}
+      <div class="professional-section">
+        <h2 class="section-heading">
+          <i class="fas fa-building"></i>
+          About {{ node.getTitle() }}
+        </h2>
+        <div class="section-content">
+          {{ content.field_description }}
+        </div>
+      </div>
+    {% endif %}
+
+    {# Company Links and Actions #}
+    <div class="company-actions-section">
+      <div class="row g-3">
+        {% if content.field_website %}
+          <div class="col-md-4">
+            <div class="action-card">
+              <div class="action-icon">
+                <i class="fas fa-globe"></i>
+              </div>
+              <div class="action-content">
+                <h4>Visit Website</h4>
+                {{ content.field_website }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if content.field_careers_url %}
+          <div class="col-md-4">
+            <div class="action-card">
+              <div class="action-icon">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <div class="action-content">
+                <h4>View Careers</h4>
+                {{ content.field_careers_url }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if content.field_active %}
+          {% set is_active = node.field_active.value %}
+          <div class="col-md-4">
+            <div class="action-card status-card">
+              <div class="action-icon">
+                <i class="fas {{ is_active ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+              </div>
+              <div class="action-content">
+                <h4>Scraping Status</h4>
+                <span class="status-badge {{ is_active ? 'status-active' : 'status-inactive' }}">
+                  {{ is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

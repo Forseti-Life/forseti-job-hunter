@@ -1,0 +1,799 @@
+{#
+/**
+ * @file
+ * Template for tailoring resume for a specific job opportunity.
+ *
+ * Available variables:
+ * - user: The user entity
+ * - profile: The job seeker profile object from jobhunter_job_seeker table
+ * - profile_json: Parsed consolidated_profile_json
+ * - job: The job requirement object from jobhunter_job_requirements table
+ * - job_id: The job requirement ID
+ * - job_extracted: Parsed extracted_json
+ * - job_skills: Parsed skills_required_json
+ * - job_keywords: Parsed keywords_json
+ * - tailored_resume: Parsed tailored_resume_json (if exists)
+ * - tailoring_status: pending/queued/processing/completed/failed
+ */
+#}
+
+{# Status Configuration #}
+{% set status_config = {
+  'pending': {
+    'label': 'Review Job Requirements',
+    'description': 'Review the job requirements below, then click the button to generate an AI-tailored resume for this position.',
+    'icon': '📝',
+    'color': 'status-pending',
+    'step': 1
+  },
+  'queued': {
+    'label': 'In Queue',
+    'description': 'Your tailoring request is queued. It will be processed shortly by our AI system.',
+    'icon': '⏳',
+    'color': 'status-queued',
+    'step': 2
+  },
+  'processing': {
+    'label': 'Tailoring in Progress',
+    'description': 'AI is analyzing your profile and generating a tailored resume. This usually takes 30-60 seconds.',
+    'icon': '🤖',
+    'color': 'status-processing',
+    'step': 3
+  },
+  'completed': {
+    'label': 'Tailored & Ready',
+    'description': 'Your resume has been tailored for this position. Review the result below and generate a PDF.',
+    'icon': '✅',
+    'color': 'status-completed',
+    'step': 4
+  },
+  'failed': {
+    'label': 'Tailoring Failed',
+    'description': 'An error occurred during tailoring. Click "Retry Tailoring" to try again.',
+    'icon': '❌',
+    'color': 'status-failed',
+    'step': 0
+  }
+} %}
+
+{% set current_status = status_config[tailoring_status] ?? status_config['pending'] %}
+
+<div class="tailor-resume">
+  
+  {# ================================================== #}
+  {# STATUS HEADER & CONTROLS (Always at top) #}
+  {# ================================================== #}
+  <div class="tailor-resume-status-header status-header--{{ current_status.color }}">
+    <div class="status-header-content">
+      {# Job Title — support both flat schema (job_title/company_name) and nested schema (position.title/company.name) #}
+      {% set _jt = job_extracted.job_title ?? job_extracted.position.title ?? '' %}
+      {% set _co = job_extracted.company_name ?? job_extracted.company.name ?? '' %}
+      <div class="status-job-info">
+        {% if _jt or _co %}
+          {% if _jt %}<h2>{{ _jt }}</h2>{% endif %}
+          {% if _co %}<span class="company-name">{{ _co }}</span>{% endif %}
+        {% else %}
+          <h2>{{ 'Tailor Resume'|t }}</h2>
+        {% endif %}
+      </div>
+      
+      {# Status Indicator #}
+      <div class="status-indicator" id="status-indicator" data-status="{{ tailoring_status }}">
+        <span class="status-icon">{{ current_status.icon }}</span>
+        <div class="status-details">
+          <span class="status-label" id="status-label">{{ current_status.label|t }}</span>
+          <span class="status-description" id="status-description">{{ current_status.description|t }}</span>
+        </div>
+        {% if tailoring_status == 'completed' and tailored_resume.tailoring_metadata.match_score %}
+          <div class="match-score-badge">
+            <span class="score-value">{{ tailored_resume.tailoring_metadata.match_score }}%</span>
+            <span class="score-label">Match</span>
+          </div>
+        {% endif %}
+      </div>
+      
+      {# Progress Steps #}
+      <div class="status-progress">
+        <div class="progress-step {% if current_status.step >= 1 %}step-active{% endif %} {% if current_status.step > 1 %}step-complete{% endif %}">
+          <span class="step-dot">1</span>
+          <span class="step-label">Ready</span>
+        </div>
+        <div class="progress-line {% if current_status.step >= 2 %}line-active{% endif %}"></div>
+        <div class="progress-step {% if current_status.step >= 2 %}step-active{% endif %} {% if current_status.step > 2 %}step-complete{% endif %}">
+          <span class="step-dot">2</span>
+          <span class="step-label">Queued</span>
+        </div>
+        <div class="progress-line {% if current_status.step >= 3 %}line-active{% endif %}"></div>
+        <div class="progress-step {% if current_status.step >= 3 %}step-active{% endif %} {% if current_status.step > 3 %}step-complete{% endif %}">
+          <span class="step-dot">3</span>
+          <span class="step-label">Processing</span>
+        </div>
+        <div class="progress-line {% if current_status.step >= 4 %}line-active{% endif %}"></div>
+        <div class="progress-step {% if current_status.step >= 4 %}step-active{% endif %}">
+          <span class="step-dot">4</span>
+          <span class="step-label">Complete</span>
+        </div>
+      </div>
+    </div>
+    
+    {# Job Reference Section #}
+    <div class="job-reference-box">
+      {% if job.job_url %}
+        <div class="reference-item">
+          <strong>Job URL:</strong> 
+          <a href="{{ job.job_url }}" target="_blank" rel="noopener">{{ job.job_url }} ↗</a>
+        </div>
+      {% endif %}
+      <div class="reference-item">
+        <strong>Parsed Job Details:</strong> 
+        <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">jobhunter/jobs/{{ job_id }}</a>
+      </div>
+    </div>
+    
+    {# Action Controls - All in one place #}
+    <div class="status-controls">
+      {# Primary Action based on status #}
+      {% if tailoring_status == 'pending' or tailoring_status == 'failed' %}
+        <button type="button" class="btn btn-primary btn-lg" id="generate-tailored-resume" data-job-id="{{ job_id }}" data-user-id="{{ user.id }}">
+          <span class="btn-icon">✨</span>
+          {% if tailoring_status == 'failed' %}
+            {{ 'Retry Tailoring'|t }}
+          {% else %}
+            {{ 'Generate Tailored Resume'|t }}
+          {% endif %}
+        </button>
+      {% elseif tailoring_status == 'queued' or tailoring_status == 'processing' %}
+        <button type="button" class="btn btn-secondary btn-lg" disabled>
+          <span class="btn-spinner"></span>
+          {{ 'Processing...'|t }}
+        </button>
+      {% elseif tailoring_status == 'completed' %}
+        <div class="btn-group">
+          <button type="button" id="generate-pdf-btn" class="btn btn-success btn-lg">
+            <span class="btn-icon">📄</span> {{ 'Generate PDF'|t }}
+          </button>
+          {% if pdf_path %}
+            <a href="{{ path('job_hunter.download_tailored_resume_pdf', {'job_id': job_id}) }}" class="btn btn-primary btn-lg" id="download-pdf-btn">
+              <span class="btn-icon">⬇️</span> {{ 'Download PDF'|t }}
+            </a>
+          {% endif %}
+          <button type="button" class="btn btn-outline btn-lg" id="regenerate-resume-btn" data-job-id="{{ job_id }}" data-user-id="{{ user.id }}">
+            <span class="btn-icon">🔄</span> {{ 'Regenerate'|t }}
+          </button>
+        </div>
+      {% endif %}
+      
+      {# Secondary Navigation #}
+      <div class="secondary-actions">
+        <a href="{{ path('job_hunter.my_jobs') }}" class="btn btn-link">← {{ 'Back to Jobs'|t }}</a>
+        <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}" class="btn btn-link">{{ 'View Job Details'|t }}</a>
+      </div>
+    </div>
+    
+    {# Status feedback message - shows contextual help based on current status #}
+    <div id="tailoring-status" class="status-message {% if tailoring_status == 'pending' or tailoring_status == 'failed' %}{% else %}hidden{% endif %}">
+      <span id="tailoring-status-text">
+        {% if tailoring_status == 'pending' %}
+          💡 {{ 'Click "Generate Tailored Resume" above to start the AI tailoring process.'|t }}
+        {% elseif tailoring_status == 'failed' %}
+          ⚠️ {{ 'The previous tailoring attempt failed. Click "Retry Tailoring" to try again.'|t }}
+        {% endif %}
+      </span>
+    </div>
+    
+    <div id="pdf-generation-status" class="status-message pdf-status hidden"></div>
+  </div>
+  
+  {# PDF History (if exists, shown below status header) #}
+  {% if pdf_history|length > 0 %}
+  <div class="pdf-history-section">
+    <details class="pdf-history-details">
+      <summary class="pdf-history-summary">
+        <span class="pdf-history-title">📁 {{ 'Generated PDFs'|t }} ({{ pdf_history|length }})</span>
+      </summary>
+      <div class="pdf-history-list">
+        {% for pdf in pdf_history %}
+        <div class="pdf-item {% if loop.first %}pdf-item--latest{% endif %}" data-pdf-id="{{ pdf.id }}">
+          {% if loop.first %}<span class="pdf-badge">Latest</span>{% endif %}
+          <span class="pdf-filename">{{ pdf.filename }}</span>
+          <span class="pdf-size">{{ (pdf.filesize / 1024)|number_format(1) }} KB</span>
+          <span class="pdf-date">{{ pdf.created|date('M j, Y g:i a') }}</span>
+          <a href="{{ path('job_hunter.download_pdf_by_id', {'pdf_id': pdf.id}) }}" class="pdf-download-link">{{ 'Download'|t }}</a>
+          <button type="button" class="pdf-delete-btn" data-pdf-id="{{ pdf.id }}" title="{{ 'Delete this PDF'|t }}">🗑️</button>
+        </div>
+        {% endfor %}
+      </div>
+    </details>
+  </div>
+  {% endif %}
+
+  {# Job Requirements - Full Width Collapsible Panel #}
+  <div class="job-requirements-panel full-width">
+    <details class="job-requirements-details" open>
+      <summary class="job-requirements-summary">
+        <h3>{{ 'Job Requirements'|t }}</h3>
+        <span class="job-summary-info">
+          {% set _sum_title = job_extracted.job_title ?? job_extracted.position.title ?? '' %}
+          {% set _sum_co = job_extracted.company_name ?? job_extracted.company.name ?? '' %}
+          {% if _sum_title %}{{ _sum_title }}{% endif %}
+          {% if _sum_co %} • {{ _sum_co }}{% endif %}
+          {% if job_extracted.salary_range %} • {{ job_extracted.salary_range }}
+          {% elseif job_extracted.compensation.salary_min and job_extracted.compensation.salary_max %}
+            • ${{ (job_extracted.compensation.salary_min / 1000)|number_format(0) }}k - ${{ (job_extracted.compensation.salary_max / 1000)|number_format(0) }}k
+          {% endif %}
+        </span>
+      </summary>
+      <div class="job-requirements-content">
+        <div class="job-requirements-grid">
+          
+          {# Position & Company Column #}
+          <div class="job-req-column">
+            {% set _pos_title = job_extracted.job_title ?? job_extracted.position.title ?? '' %}
+            {% set _pos_type = job_extracted.employment_type ?? job_extracted.position.employment_type ?? '' %}
+            {% set _pos_exp = job_extracted.experience_years ?? job_extracted.position.level ?? '' %}
+            {% set _pos_remote = job_extracted.remote_option ?? '' %}
+            {% if _pos_title or _pos_type or _pos_exp %}
+              <div class="job-req-section">
+                <h4>{{ 'Position'|t }}</h4>
+                {% if _pos_title %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Title:'|t }}</span>
+                  <span class="value">{{ _pos_title }}</span>
+                </div>
+                {% endif %}
+                {% if _pos_exp %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Experience:'|t }}</span>
+                  <span class="value">{{ _pos_exp }}</span>
+                </div>
+                {% endif %}
+                {% if _pos_type %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Type:'|t }}</span>
+                  <span class="value">{{ _pos_type }}</span>
+                </div>
+                {% endif %}
+                {% if _pos_remote %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Remote:'|t }}</span>
+                  <span class="value">{{ _pos_remote }}</span>
+                </div>
+                {% endif %}
+                {% if job_extracted.role_type.is_player_coach %}
+                  <div class="job-req-item">
+                    <span class="label">{{ 'Role:'|t }}</span>
+                    <span class="value highlight">Player-Coach ({{ job_extracted.role_type.hands_on_percentage|default(25) }}% hands-on)</span>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+            
+            {% set _co_name = job_extracted.company_name ?? job_extracted.company.name ?? '' %}
+            {% set _co_industry = job_extracted.industry ?? job_extracted.company.industry ?? '' %}
+            {% if _co_name or _co_industry %}
+              <div class="job-req-section">
+                <h4>{{ 'Company'|t }}</h4>
+                {% if _co_name %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Name:'|t }}</span>
+                  <span class="value">{{ _co_name }}</span>
+                </div>
+                {% endif %}
+                {% if _co_industry %}
+                <div class="job-req-item">
+                  <span class="label">{{ 'Industry:'|t }}</span>
+                  <span class="value">{{ _co_industry }}</span>
+                </div>
+                {% endif %}
+              </div>
+            {% endif %}
+            
+            {% set _salary = job_extracted.salary_range ?? '' %}
+            {% if _salary or (job_extracted.compensation.salary_min and job_extracted.compensation.salary_max) %}
+              <div class="job-req-section">
+                <h4>{{ 'Compensation'|t }}</h4>
+                <div class="compensation-range">
+                  {% if _salary %}{{ _salary }}
+                  {% else %}${{ job_extracted.compensation.salary_min|number_format }} - ${{ job_extracted.compensation.salary_max|number_format }}
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          {# Skills Column #}
+          <div class="job-req-column">
+            {% if job_skills.must_have %}
+              <div class="job-req-section">
+                <h4>{{ 'Must-Have Skills'|t }}</h4>
+                <div class="skills-compact">
+                  {% for skill in job_skills.must_have %}
+                    <span class="skill-tag skill-required">{{ skill.skill }}{% if skill.years %} <small>({{ skill.years }}yr)</small>{% endif %}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+            
+            {% if job_skills.nice_to_have %}
+              <div class="job-req-section">
+                <h4>{{ 'Nice to Have'|t }}</h4>
+                <div class="skills-compact">
+                  {% for skill in job_skills.nice_to_have %}
+                    <span class="skill-tag skill-optional">{{ skill.skill }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          {# Keywords Column #}
+          <div class="job-req-column">
+            {% if job_keywords.key_phrases %}
+              <div class="job-req-section">
+                <h4>{{ 'Key Phrases'|t }}</h4>
+                <div class="keyword-compact">
+                  {% for phrase in job_keywords.key_phrases %}
+                    <span class="keyword-tag">{{ phrase }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+            
+            {% if job_skills.tech_stack %}
+              <div class="job-req-section">
+                <h4>{{ 'Tech Stack'|t }}</h4>
+                <div class="tech-stack-compact">
+                  {# tech_stack is an object with languages, frameworks, databases, cloud, tools arrays #}
+                  {% if job_skills.tech_stack.languages %}
+                    {% for tech in job_skills.tech_stack.languages %}
+                      <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                  {% endif %}
+                  {% if job_skills.tech_stack.frameworks %}
+                    {% for tech in job_skills.tech_stack.frameworks %}
+                      <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                  {% endif %}
+                  {% if job_skills.tech_stack.databases %}
+                    {% for tech in job_skills.tech_stack.databases %}
+                      <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                  {% endif %}
+                  {% if job_skills.tech_stack.cloud %}
+                    {% for tech in job_skills.tech_stack.cloud %}
+                      <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                  {% endif %}
+                  {% if job_skills.tech_stack.tools %}
+                    {% for tech in job_skills.tech_stack.tools %}
+                      <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </details>
+  </div>
+
+  {# Skills Gap Analysis Section #}
+  {% if skills_gap.must_have|length > 0 or skills_gap.nice_to_have|length > 0 %}
+  <div class="skills-gap-section">
+    <div class="card">
+      <div class="card-header">
+        <h3>⚠️ {{ 'Skills Gap Analysis'|t }}</h3>
+        <p class="card-subtitle">{{ 'The following skills from the job posting are not in your profile. Add them to improve your tailored resume.'|t }}</p>
+      </div>
+      <div class="card-body">
+        
+        {% if skills_gap.must_have|length > 0 %}
+          <div class="skills-gap-group">
+            <h4 class="skills-gap-header skills-gap-header--required">🔴 {{ 'Must Have Skills (Missing)'|t }}</h4>
+            <div class="skills-gap-list">
+              {% for skill in skills_gap.must_have %}
+                <div class="skill-gap-item" data-skill="{{ skill.skill }}" data-category="{{ skill.category }}">
+                  <span class="skill-gap-name">{{ skill.skill }}</span>
+                  <span class="skill-gap-category">({{ skill.category }})</span>
+                  <button type="button" class="button button--small add-skill-btn" data-skill="{{ skill.skill }}" data-category="{{ skill.category }}">
+                    {{ '+ Add to Profile'|t }}
+                  </button>
+                  <span class="skill-added-indicator hidden">✅ {{ 'Added!'|t }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if skills_gap.nice_to_have|length > 0 %}
+          <div class="skills-gap-group">
+            <h4 class="skills-gap-header skills-gap-header--optional">🟡 {{ 'Nice to Have Skills (Missing)'|t }}</h4>
+            <div class="skills-gap-list">
+              {% for skill in skills_gap.nice_to_have %}
+                <div class="skill-gap-item" data-skill="{{ skill.skill }}" data-category="{{ skill.category }}">
+                  <span class="skill-gap-name">{{ skill.skill }}</span>
+                  <span class="skill-gap-category">({{ skill.category }})</span>
+                  <button type="button" class="button button--small add-skill-btn" data-skill="{{ skill.skill }}" data-category="{{ skill.category }}">
+                    {{ '+ Add to Profile'|t }}
+                  </button>
+                  <span class="skill-added-indicator hidden">✅ {{ 'Added!'|t }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="skills-gap-actions">
+          <button type="button" class="button button--primary" id="add-all-must-have-skills">
+            {{ 'Add All Must-Have Skills'|t }}
+          </button>
+          <button type="button" class="button button--secondary" id="add-all-skills">
+            {{ 'Add All Missing Skills'|t }}
+          </button>
+          <button type="button" class="button button--outline" id="refresh-skills-gap" data-job-id="{{ job_id }}">
+            🔄 {{ 'Refresh Skills Gap'|t }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="skills-match-section">
+    <div class="card">
+      <div class="card-body">
+        <div class="alert alert-success">
+          ✅ <strong>{{ 'Great match!'|t }}</strong> {{ 'Your profile already contains all the required skills for this position.'|t }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Tailored Resume Preview Section (only shows when completed) #}
+  {% if tailoring_status == 'completed' and tailored_resume %}
+  <div class="tailored-resume-section">
+    <div class="card">
+      <div class="card-header">
+        <h3>📄 {{ 'Tailored Resume Preview'|t }}</h3>
+        {% if tailored_resume.tailoring_metadata.match_score %}
+          <span class="header-badge">{{ tailored_resume.tailoring_metadata.match_score }}% Match</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        
+        {# Tailoring Metadata #}
+        {% if tailored_resume.tailoring_metadata %}
+          <div class="tailoring-metadata">
+            {% if tailored_resume.tailoring_metadata.guidance %}
+              <div class="guidance-section">
+                <h4>{{ 'AI Tailoring Guidance'|t }}</h4>
+                <ul class="guidance-list">
+                  {% for item in tailored_resume.tailoring_metadata.guidance %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            {% if tailored_resume.tailoring_metadata.emphasized_skills %}
+              <div class="emphasized-skills">
+                <strong>{{ 'Emphasized Skills:'|t }}</strong>
+                <div class="skill-tags">
+                  {% for skill in tailored_resume.tailoring_metadata.emphasized_skills %}
+                    <span class="tag tag--primary">{{ skill }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {# Formatted Tailored Resume Preview - Keith Aumiller Style #}
+        <div class="tailored-resume-preview resume-document">
+            
+            {# Contact Header - Centered with credentials inline #}
+            {% if tailored_resume.contact_info %}
+              <div class="resume-section resume-header-section">
+                <div class="name-credentials-line">
+                  <span class="resume-name">{{ tailored_resume.contact_info.full_name }}</span>
+                  {% if tailored_resume.contact_info.credentials %}
+                    <span class="resume-credentials">, {{ tailored_resume.contact_info.credentials|join(', ') }}</span>
+                  {% endif %}
+                </div>
+                {% if tailored_resume.contact_info.headline %}
+                  <div class="resume-headline">{{ tailored_resume.contact_info.headline }}</div>
+                {% endif %}
+                <div class="contact-line">
+                  {% if tailored_resume.contact_info.location %}
+                    {{ tailored_resume.contact_info.location.city }}, {{ tailored_resume.contact_info.location.state }}
+                  {% endif %}
+                  {% if tailored_resume.contact_info.phone %} | {{ tailored_resume.contact_info.phone }}{% endif %}
+                  {% if tailored_resume.contact_info.email %} | {{ tailored_resume.contact_info.email }}{% endif %}
+                </div>
+                {% if tailored_resume.contact_info.websites %}
+                  <div class="links-line">
+                    {% for site in tailored_resume.contact_info.websites %}
+                      <a href="{{ site.url }}" target="_blank" class="contact-link">{{ site.url }}</a>{% if not loop.last %} | {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {% if tailored_resume.contact_info.linkedin %}
+                  <div class="linkedin-line">
+                    {% if tailored_resume.contact_info.linkedin.url %}
+                      <a href="{{ tailored_resume.contact_info.linkedin.url }}" target="_blank" class="contact-link">LinkedIn</a>: {{ tailored_resume.contact_info.linkedin.followers }} followers
+                    {% else %}
+                      LinkedIn: {{ tailored_resume.contact_info.linkedin.followers }} followers
+                    {% endif %}
+                    {% if tailored_resume.contact_info.linkedin.groups_administered %}
+                      | Facebook Group Admin: 
+                      {% if tailored_resume.contact_info.linkedin.group_url %}
+                        <a href="{{ tailored_resume.contact_info.linkedin.group_url }}" target="_blank" class="contact-link">{{ tailored_resume.contact_info.linkedin.groups_administered|join(', ') }}</a>
+                      {% else %}
+                        {{ tailored_resume.contact_info.linkedin.groups_administered|join(', ') }}
+                      {% endif %}
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {# Executive Profile #}
+            {% if tailored_resume.executive_profile %}
+              <div class="resume-section">
+                <h3 class="section-header">Executive Profile</h3>
+                {% if tailored_resume.executive_profile.summary is defined %}
+                  <p class="body-text">{{ tailored_resume.executive_profile.summary }}</p>
+                {% elseif tailored_resume.executive_profile is iterable %}
+                  <p class="body-text">{{ tailored_resume.executive_profile|join(' ') }}</p>
+                {% else %}
+                  <p class="body-text">{{ tailored_resume.executive_profile }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {# Strategic Differentiators #}
+            {% if tailored_resume.strategic_differentiators %}
+              <div class="resume-section">
+                <h3 class="section-header">Strategic Differentiators</h3>
+                <ul class="differentiators-list">
+                  {% for diff in tailored_resume.strategic_differentiators %}
+                    <li class="differentiator-item-inline">
+                      {% if diff is mapping %}
+                        {# Schema-correct object format: {title, description} #}
+                        <strong class="diff-title">{{ diff.title }}:</strong>
+                        <span class="diff-description">{{ diff.description }}</span>
+                      {% else %}
+                        {# AI deviation: plain string "Title: description text" #}
+                        {% set _parts = diff|split(': ', 2) %}
+                        {% if _parts|length == 2 %}
+                          <strong class="diff-title">{{ _parts[0] }}:</strong>
+                          <span class="diff-description">{{ _parts[1] }}</span>
+                        {% else %}
+                          <span class="diff-description">{{ diff }}</span>
+                        {% endif %}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {# Professional Experience #}
+            {% if tailored_resume.professional_experience %}
+              <div class="resume-section">
+                <h3 class="section-header">Professional Experience</h3>
+                {% for exp in tailored_resume.professional_experience %}
+                  {# Support both flat schema (title at exp level) and nested positions[] (AI deviation) #}
+                  {% if exp.title %}
+                    {# Schema-correct flat format #}
+                    <div class="experience-entry">
+                      <div class="exp-header-line">
+                        <div class="exp-title-company">
+                          <span class="exp-title">{{ exp.title }}</span>
+                          <span class="exp-company"> – {{ exp.company }}</span>
+                        </div>
+                        <div class="exp-date-location">
+                          <span class="exp-dates">{{ exp.start_date }} – {{ exp.end_date|default('Present') }}</span>
+                          {% if exp.location %}<span class="exp-location">{{ exp.location }}</span>{% endif %}
+                        </div>
+                      </div>
+                      {% if exp.company_context %}
+                        <div class="exp-context">{{ exp.company_context }}</div>
+                      {% endif %}
+                      {% if exp.responsibility_categories %}
+                        {% for cat in exp.responsibility_categories %}
+                          <div class="responsibility-cat">
+                            <h5 class="cat-header">{{ cat.category }}</h5>
+                            <ul class="achievement-list">
+                              {% for ach in cat.achievements %}
+                                <li class="achievement-bullet">{{ ach.text }}</li>
+                              {% endfor %}
+                            </ul>
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    </div>
+                  {% elseif exp.positions %}
+                    {# AI deviation: nested positions[] wrapper under company name #}
+                    {% for pos in exp.positions %}
+                      <div class="experience-entry">
+                        <div class="exp-header-line">
+                          <div class="exp-title-company">
+                            <span class="exp-title">{{ pos.title }}</span>
+                            <span class="exp-company"> – {{ exp.company }}</span>
+                          </div>
+                          <div class="exp-date-location">
+                            <span class="exp-dates">{{ pos.start_date }} – {{ pos.end_date|default('Present') }}</span>
+                            {% if pos.location %}<span class="exp-location">{{ pos.location }}</span>{% endif %}
+                          </div>
+                        </div>
+                        {% if pos.responsibility_categories %}
+                          {% for cat in pos.responsibility_categories %}
+                            <div class="responsibility-cat">
+                              <h5 class="cat-header">{{ cat.category }}</h5>
+                              <ul class="achievement-list">
+                                {% for ach in cat.achievements %}
+                                  <li class="achievement-bullet">{{ ach.text }}</li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endfor %}
+                        {% elseif pos.achievements %}
+                          {# Flat achievements list (no categories) #}
+                          <ul class="achievement-list">
+                            {% for ach in pos.achievements %}
+                              <li class="achievement-bullet">{{ ach is mapping ? ach.text : ach }}</li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {# Education #}
+            {% if tailored_resume.education %}
+              <div class="resume-section">
+                <h3 class="section-header">Education</h3>
+                {% for edu in tailored_resume.education %}
+                  <div class="education-entry">
+                    <span class="edu-institution">{{ edu.institution }}</span>
+                    <span class="edu-degree">{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}</span>
+                    <span class="edu-date">{{ edu.end_date }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {# Technical Expertise #}
+            {% if tailored_resume.technical_expertise.categories %}
+              <div class="resume-section">
+                <h3 class="section-header">Technical Expertise</h3>
+                <div class="tech-expertise-list">
+                  {% for cat in tailored_resume.technical_expertise.categories %}
+                    <div class="tech-cat-entry">
+                      <span class="tech-cat-name">{{ cat.name }}:</span>
+                      {% if cat.skills %}
+                        <span class="tech-cat-skills">{{ cat.skills|join(', ') }}</span>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# Demo Projects #}
+            {% if tailored_resume.demonstration_projects %}
+              <div class="resume-section">
+                <h3 class="section-header">Demonstration Projects</h3>
+                {% for proj in tailored_resume.demonstration_projects %}
+                  <div class="project-entry">
+                    <span class="project-name">{{ proj.name }}</span>
+                    {% if proj.url %}
+                      – <a href="{{ proj.url }}" target="_blank" class="project-url">{{ proj.url }}</a>
+                    {% endif %}
+                    <p class="project-desc">{{ proj.description }}</p>
+                    {% if proj.technologies %}
+                      <div class="project-tech">Technologies: {{ proj.technologies|join(', ') }}</div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+          </div>
+          {# End resume-document #}
+          
+        </div>
+        {# End card-body #}
+      </div>
+      {# End card #}
+    </div>
+    {# End tailored-resume-section #}
+  {% endif %}
+
+  {# Tailoring feedback widget — only when result is available #}
+  {% if tailoring_status == 'completed' and tailored_resume_id %}
+  <div class="tailoring-feedback-section card mt-3" id="tailoring-feedback-widget" data-resume-id="{{ tailored_resume_id }}" data-save-url="{{ feedback_save_url }}" data-token="{{ feedback_csrf_token }}" data-rated="{{ feedback_rating }}">
+    <div class="card-header"><h4>{{ 'Rate this tailored resume'|t }}</h4></div>
+    <div class="card-body">
+      <p class="text-muted small">{{ 'Was this AI tailoring helpful?'|t }}</p>
+      <div class="feedback-buttons d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-feedback{% if feedback_rating == 'up' %} btn-feedback--selected{% endif %}" data-value="up" aria-label="{{ 'Thumbs up'|t }}">👍</button>
+        <button type="button" class="btn btn-feedback{% if feedback_rating == 'down' %} btn-feedback--selected{% endif %}" data-value="down" aria-label="{{ 'Thumbs down'|t }}">👎</button>
+      </div>
+      <div class="mb-2">
+        <textarea id="tailoring-feedback-note" class="form-control" maxlength="500" rows="3" placeholder="{{ 'Optional: share your thoughts (max 500 chars)'|t }}">{{ feedback_note }}</textarea>
+        <div class="char-counter text-muted small text-end"><span id="feedback-note-count">{{ feedback_note|length }}</span>/500</div>
+      </div>
+      <button type="button" id="tailoring-feedback-save" class="btn btn-primary btn-sm">{{ 'Save Rating'|t }}</button>
+      <span id="tailoring-feedback-msg" class="ms-2 small feedback-flash" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <style>
+    .btn-feedback { font-size: 1.4rem; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 4px 14px; cursor: pointer; }
+    .btn-feedback--selected { border-color: #0d6efd; background: #e7f1ff; }
+    .feedback-flash { color: #198754; font-weight: 600; }
+    .tailoring-feedback-section { max-width: 600px; }
+  </style>
+
+  <script>
+  (function() {
+    var widget = document.getElementById('tailoring-feedback-widget');
+    if (!widget) return;
+    var saveBtn = document.getElementById('tailoring-feedback-save');
+    var noteEl  = document.getElementById('tailoring-feedback-note');
+    var countEl = document.getElementById('feedback-note-count');
+    var msgEl   = document.getElementById('tailoring-feedback-msg');
+    var resumeId  = widget.dataset.resumeId;
+    var saveUrl   = widget.dataset.saveUrl;
+    var token     = widget.dataset.token;
+    var selectedRating = widget.dataset.rated || '';
+
+    noteEl.addEventListener('input', function() {
+      countEl.textContent = noteEl.value.length;
+    });
+
+    widget.querySelectorAll('.btn-feedback').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        selectedRating = btn.dataset.value;
+        widget.querySelectorAll('.btn-feedback').forEach(function(b) { b.classList.remove('btn-feedback--selected'); });
+        btn.classList.add('btn-feedback--selected');
+      });
+    });
+
+    saveBtn.addEventListener('click', function() {
+      if (!selectedRating) { msgEl.textContent = 'Please select 👍 or 👎 first.'; msgEl.style.color='#dc3545'; return; }
+      saveBtn.disabled = true;
+      fetch(saveUrl + '?token=' + encodeURIComponent(token), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ tailored_resume_id: parseInt(resumeId, 10), rating: selectedRating, note: noteEl.value })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        saveBtn.disabled = false;
+        if (data.success) {
+          msgEl.textContent = '✓ Saved!';
+          msgEl.style.color = '#198754';
+          widget.dataset.rated = selectedRating;
+        } else {
+          msgEl.textContent = data.error || 'Save failed.';
+          msgEl.style.color = '#dc3545';
+        }
+      })
+      .catch(function() { saveBtn.disabled = false; msgEl.textContent = 'Network error — please try again.'; msgEl.style.color='#dc3545'; });
+    });
+  })();
+  </script>
+  {% endif %}
+
+  {# Results container for AJAX updates #}
+  <div id="tailoring-results" class="hidden"></div>
+
+</div>
+{# End tailor-resume #}

@@ -1,0 +1,184 @@
+{#
+/**
+ * @file
+ * Dedicated Step 3 page: Identify authentication path.
+ *
+ * Variables:
+ *   job_id             - int
+ *   job_title          - string
+ *   company_name       - string
+ *   apply_url          - string  (resolved apply URL from Step 2)
+ *   auth_identification - array  (result from AuthPathIdentificationService)
+ *   return_url         - string
+ */
+#}
+
+{# Build a display-friendly label for each auth_type value. #}
+{% set auth_type_labels = {
+  'direct':            'Direct (no login required)',
+  'email_password':    'Email + password login',
+  'email_only':        'Email-only / magic link',
+  'sso_google':        'SSO — Google',
+  'sso_linkedin':      'SSO — LinkedIn',
+  'sso_microsoft':     'SSO — Microsoft / Azure AD',
+  'sso_apple':         'SSO — Apple Sign-In',
+  'company_sso':       'Company SSO / external IdP',
+  'registration_first':'Registration required first',
+  'captcha_blocked':   'Blocked by CAPTCHA / bot-detection',
+  'unknown':           'Unknown (could not classify)'
+} %}
+
+{% set auth_type = auth_identification.auth_type|default('unknown') %}
+{% set did_pass  = auth_identification.ok|default(false) %}
+
+<div class="application-submission-page">
+  <h1>{{ 'Step 3: Identify Authentication Path'|t }}</h1>
+  <p>{{ 'Navigate to the resolved apply page, click the Apply control, and classify the authentication mechanism that appears.'|t }}</p>
+
+  {# ── Execution control ───────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Step 3 Execution'|t }}</h3>
+    {% if step3_cache_exists %}
+      <p><strong>{{ 'Cached Result'|t }}:</strong> {{ 'Available'|t }}</p>
+      <p><strong>{{ 'Last Run'|t }}:</strong> {{ step3_last_run_at ? step3_last_run_at : 'Unknown'|t }}</p>
+      <p>{{ 'This page is showing cached Step 3 results. Click Re-run to execute the stealth browser again and replace cached data.'|t }}</p>
+    {% else %}
+      <p><strong>{{ 'Cached Result'|t }}:</strong> {{ 'Not available yet'|t }}</p>
+      <p>{{ 'Step 3 checks do not run automatically on page load. Click the button below to launch the stealth browser and classify the auth path.'|t }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ path('job_hunter.application_submission_step3_post', {'job_id': job_id}) }}">
+      <input type="hidden" name="run_step3" value="1" />
+      <input type="hidden" name="csrf_token" value="{{ run_step3_csrf_token }}" />
+      <button type="submit" class="button button--primary">
+        {% if step3_cache_exists %}
+          {{ 'Re-run Step 3 Checks'|t }}
+        {% else %}
+          {{ 'Run Step 3 Checks'|t }}
+        {% endif %}
+      </button>
+    </form>
+  </div>
+
+  {# ── Requisition context ─────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Requisition Context'|t }}</h3>
+    <p><strong>{{ 'Job'|t }}:</strong> <a href="{{ path('job_hunter.job_view', {'job_id': job_id}) }}">{{ job_title }}</a></p>
+    <p><strong>{{ 'Company'|t }}:</strong> {{ company_name }}</p>
+    <p>
+      <strong>{{ 'Apply URL (from Step 2)'|t }}:</strong>
+      {% if apply_url %}
+        <a href="{{ apply_url }}" target="_blank" rel="noopener">{{ apply_url }}</a>
+      {% else %}
+        <em>{{ 'Not available — complete Step 2 first.'|t }}</em>
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Gate checks ─────────────────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Step 3 Gate Checks'|t }}</h3>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if apply_url %}checked{% endif %} />
+        {{ 'Resolved apply URL available (Step 2 passed)'|t }}
+      </label>
+    </p>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if did_pass %}checked{% endif %} />
+        {{ 'Authentication path successfully classified'|t }}
+      </label>
+    </p>
+    <p>
+      <label>
+        <input type="checkbox" disabled {% if auth_type != 'unknown' and auth_type != 'captcha_blocked' %}checked{% endif %} />
+        {{ 'Auth type is actionable (not unknown / captcha-blocked)'|t }}
+      </label>
+    </p>
+  </div>
+
+  {# ── Classification result ───────────────────────────────────────────────── #}
+  <div class="job-info-box">
+    <h3>{{ 'Classification Result'|t }}</h3>
+
+    {% if auth_identification.error %}
+      <p><strong>{{ 'Error'|t }}:</strong> {{ auth_identification.error }}</p>
+    {% endif %}
+
+    <p>
+      <strong>{{ 'Authentication Type'|t }}:</strong>
+      {{ auth_type_labels[auth_type]|default(auth_type) }}
+    </p>
+
+    {% if auth_identification.sso_providers|default([])|length > 0 %}
+      <p>
+        <strong>{{ 'SSO Providers Detected'|t }}:</strong>
+        {{ auth_identification.sso_providers|join(', ') }}
+      </p>
+    {% endif %}
+
+    {% if auth_identification.auth_url|default('') %}
+      <p>
+        <strong>{{ 'Effective URL After Click'|t }}:</strong>
+        <a href="{{ auth_identification.auth_url }}" target="_blank" rel="noopener">{{ auth_identification.auth_url }}</a>
+      </p>
+    {% endif %}
+
+    {% if auth_identification.page_title|default('') %}
+      <p><strong>{{ 'Page Title'|t }}:</strong> {{ auth_identification.page_title }}</p>
+    {% endif %}
+
+    {% if auth_identification.evidence|default('') %}
+      <p><strong>{{ 'Evidence'|t }}:</strong> {{ auth_identification.evidence }}</p>
+    {% endif %}
+
+    <p>
+      <strong>{{ 'Step 3 Outcome'|t }}:</strong>
+      {% if did_pass %}
+        <span class="badge badge--success">{{ 'PASS'|t }}</span>
+      {% else %}
+        <span class="badge badge--warning">{{ 'FAIL'|t }}</span>
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Detected form fields ─────────────────────────────────────────────────── #}
+  {% if auth_identification.form_fields|default([])|length > 0 %}
+  <div class="job-info-box">
+    <h3>{{ 'Detected Form Fields'|t }}</h3>
+    <p class="help-text">{{ 'These fields were found on the page after clicking Apply. Useful for mapping the submission form in later steps.'|t }}</p>
+    <table class="queue-status-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{{ 'Field name / id'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for idx, field in auth_identification.form_fields %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><code>{{ field }}</code></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {# ── HTML excerpt (collapsed) ─────────────────────────────────────────────── #}
+  {% if auth_identification.html_excerpt|default('') %}
+  <div class="job-info-box">
+    <details>
+      <summary><strong>{{ 'Raw HTML excerpt (first 4 KB)'|t }}</strong></summary>
+      <pre style="white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto">{{ auth_identification.html_excerpt|escape }}</pre>
+    </details>
+  </div>
+  {% endif %}
+
+  {# ── Back link ────────────────────────────────────────────────────────────── #}
+  <div class="page-actions">
+    <a href="{{ return_url }}" class="button button--secondary">{{ 'Back to Requisition Flow'|t }}</a>
+  </div>
+</div>

@@ -1,0 +1,189 @@
+{#
+/**
+ * Interactive Safety Map Page Template
+ * 
+ * DESIGN REFERENCE:
+ * - docs/product/design/02-wireframes.md (Lines 855-922)
+ * - docs/product/design/01-sitemap-navigation.md (Lines 355-392)
+ * 
+ * IMPLEMENTATION DETAILS:
+ * - Full-page interactive map with Leaflet
+ * - Sidebar with search and filters
+ * - H3 hexagon overlay with risk colors
+ * - Crime detail panel
+ * - Responsive: sidebar collapses on mobile
+ * 
+ * PERFORMANCE:
+ * - Lazy load map tiles
+ * - Limit hexagons to viewport
+ * - Use marker clustering
+ * - See docs/product/design/06-performance-strategy.md (Lines 525-585)
+ * 
+ * ACCESSIBILITY:
+ * - Alternative data view for screen readers
+ * - Keyboard navigation for map controls
+ * - See docs/product/design/05-accessibility-checklist.md (Lines 411-440)
+ */
+#}
+
+{# TODO: Implement safety map page template #}
+{# Reference: docs/product/design/02-wireframes.md (Lines 855-922) #}
+
+{# PSEUDOCODE:
+
+<div class="safety-map-page">
+  {# Sidebar (30% width, collapsible on mobile) #}
+  <aside class="map-sidebar" role="complementary">
+    {# Search Location #}
+    <div class="sidebar-search">
+      <label for="location-search" class="visually-hidden">Search location</label>
+      <input 
+        type="search" 
+        id="location-search" 
+        placeholder="Enter address..." 
+        aria-label="Search for a location"
+      />
+      <button type="button" aria-label="Search">
+        <span class="icon-search"></span>
+      </button>
+    </div>
+    
+    {# Risk Summary Card #}
+    <div class="risk-summary-card">
+      <h2>Risk Summary</h2>
+      <div class="risk-indicator">
+        <span class="risk-icon" style="color: {{ risk_color }}">
+          {{ risk_icon }}
+        </span>
+        <div class="risk-info">
+          <p class="risk-level">{{ risk_level }}</p>
+          <p class="risk-score">Z-Score: {{ z_score }}</p>
+        </div>
+      </div>
+    </div>
+    
+    {# Filters #}
+    <div class="filter-panel">
+      <h3>Filters</h3>
+      
+      <div class="filter-group">
+        <label for="time-range">Time Range</label>
+        <select id="time-range" aria-label="Filter by time range">
+          <option value="24h">Last 24 Hours</option>
+          <option value="7d" selected>Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+          <option value="3m">Last 3 Months</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="crime-type">Crime Type</label>
+        <select id="crime-type" aria-label="Filter by crime type">
+          <option value="all" selected>All Types</option>
+          <option value="violent">Violent Crimes</option>
+          <option value="property">Property Crimes</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    
+    {# Crime Statistics #}
+    <div class="crime-stats">
+      <h3>Crime Statistics</h3>
+      <dl>
+        <dt>Total Crimes:</dt>
+        <dd>{{ total_crimes }}</dd>
+        
+        <dt>This Week:</dt>
+        <dd>{{ weekly_crimes }}</dd>
+        
+        <dt>Trend:</dt>
+        <dd class="trend-{{ trend }}">{{ trend_text }}</dd>
+      </dl>
+    </div>
+    
+    {# Recent Crimes List #}
+    <div class="recent-crimes">
+      <h3>Recent Crimes</h3>
+      <ul>
+        {% for crime in recent_crimes %}
+          <li>
+            <span class="crime-type">{{ crime.type }}</span>
+            <span class="crime-time">{{ crime.time_ago }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
+  
+  {# Map Container (70% width) #}
+  <main class="map-container" role="main">
+    <div id="crime-map" aria-label="Interactive crime map">
+      {# Leaflet map will be initialized here via JavaScript #}
+      {# See docs/product/design/06-performance-strategy.md (Lines 525-585) #}
+    </div>
+    
+    {# Map Controls #}
+    <div class="map-controls">
+      <button 
+        class="control-button" 
+        aria-label="Zoom in"
+      >
+        <span class="icon-plus"></span>
+      </button>
+      <button 
+        class="control-button" 
+        aria-label="Zoom out"
+      >
+        <span class="icon-minus"></span>
+      </button>
+      <button 
+        class="control-button" 
+        aria-label="Center on current location"
+      >
+        <span class="icon-location"></span>
+      </button>
+    </div>
+    
+    {# Legend #}
+    <div class="map-legend">
+      <h4>Risk Levels</h4>
+      <ul>
+        <li>
+          <span class="legend-color" style="background: #22c55e;"></span>
+          <span>Low Risk</span>
+        </li>
+        <li>
+          <span class="legend-color" style="background: #eab308;"></span>
+          <span>Medium Risk</span>
+        </li>
+        <li>
+          <span class="legend-color" style="background: #f97316;"></span>
+          <span>Elevated Risk</span>
+        </li>
+        <li>
+          <span class="legend-color" style="background: #ef4444;"></span>
+          <span>High Risk</span>
+        </li>
+      </ul>
+    </div>
+  </main>
+  
+  {# Alternative Data View (for screen readers and non-JS) #}
+  <noscript>
+    <div class="alternative-view">
+      <h2>Crime Data</h2>
+      <p>Interactive map requires JavaScript. View data in table format:</p>
+      <a href="/safety-map/data">View Crime Data Table</a>
+    </div>
+  </noscript>
+</div>
+
+{# Responsive Breakpoints:
+  - Mobile (< 768px): Sidebar collapses, map full-width
+  - Tablet (768px - 1023px): Sidebar 30%, map 70%
+  - Desktop (1024px+): Sidebar 25%, map 75%
+  See docs/product/design/04-mobile-first-approach.md (Lines 63-140)
+#}
+
+#}

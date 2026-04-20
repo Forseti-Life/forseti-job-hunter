@@ -1,0 +1,20 @@
+forseti.admin:
+  title: 'Forseti'
+  parent: system.admin
+  description: 'Forseti website management and administration'
+  route_name: system.admin_structure
+  weight: -5
+
+amisafe.config:
+  title: 'AmISafe Configuration'
+  parent: forseti.admin
+  description: 'Configure AmISafe settings and parameters'
+  route_name: amisafe.config
+  weight: 0
+
+amisafe.log_management:
+  title: 'User Console Logs'
+  parent: forseti.admin
+  description: 'Review and manage console logs from mobile devices'
+  route_name: amisafe.log_management
+  weight: 10

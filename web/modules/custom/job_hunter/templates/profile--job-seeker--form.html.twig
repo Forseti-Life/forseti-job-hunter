@@ -1,0 +1,182 @@
+{#
+/**
+ * @file
+ * Template for Job Seeker Profile form display.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the containing element.
+ * - content: A list of field groups and fields.
+ * - profile: The profile entity.
+ */
+#}
+
+<div class="job-seeker-profile-form">
+  <div class="container">
+    <div class="professional-header">
+      <h1 class="professional-title">
+        <i class="fas fa-user-tie"></i>
+        Job Seeker Profile
+      </h1>
+      <p class="professional-subtitle">Complete your professional profile to improve job matching and application automation</p>
+    </div>
+
+    <div class="professional-form-container">
+      {# Personal Information Section #}
+      <div class="professional-section personal-section">
+        <div class="professional-section-header">
+          <h2 class="professional-section-title">
+            <i class="fas fa-user"></i>
+            Personal Information
+          </h2>
+          <p class="professional-section-description">Basic information about you and your contact preferences</p>
+        </div>
+        <div class="professional-section-content">
+        <div class="row">
+          <div class="col-md-6">
+            {{ content.field_professional_summary }}
+          </div>
+          <div class="col-md-6">
+            {{ content.field_skills_summary }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+      {# Resume Section #}
+      <div class="professional-section resume-section">
+        <div class="professional-section-header">
+          <h2 class="professional-section-title">
+            <i class="fas fa-file-alt"></i>
+            Resume & Documents
+          </h2>
+          <p class="professional-section-description">Upload your resume and professional documents</p>
+        </div>
+        <div class="professional-section-content">
+        <div class="row">
+          <div class="col-md-6">
+            {{ content.field_resume_file }}
+          </div>
+          <div class="col-md-6">
+            {{ content.field_primary_resume_text }}
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-12">
+            {{ content.field_cover_letter_template }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+        {# Experience & Education Section #}
+        <div class="professional-section experience-section">
+          <div class="professional-section-header">
+            <h2 class="professional-section-title">
+              <i class="fas fa-graduation-cap"></i>
+              Experience & Education
+            </h2>
+            <p class="professional-section-description">Your professional background and qualifications</p>
+          </div>
+          <div class="professional-section-content">
+        <div class="row">
+          <div class="col-md-4">
+            {{ content.field_experience_years }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_education_level }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_work_authorization }}
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-12">
+            {{ content.field_certifications }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+          {# Job Preferences Section #}
+          <div class="professional-section preferences-section">
+            <div class="professional-section-header">
+              <h2 class="professional-section-title">
+                <i class="fas fa-briefcase"></i>
+                Job Preferences
+              </h2>
+              <p class="professional-section-description">What type of opportunities are you looking for?</p>
+            </div>
+            <div class="professional-section-content">
+        <div class="row">
+          <div class="col-md-6">
+            {{ content.field_target_job_titles }}
+          </div>
+          <div class="col-md-6">
+            {{ content.field_keywords_interested }}
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-4">
+            {{ content.field_salary_expectation_min }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_salary_expectation_max }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_available_start_date }}
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-4">
+            {{ content.field_remote_preference }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_relocation_willing }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_references_available }}
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-12">
+            {{ content.field_target_companies }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+            {# Online Presence Section #}
+            <div class="professional-section online-section">
+              <div class="professional-section-header">
+                <h2 class="professional-section-title">
+                  <i class="fas fa-globe"></i>
+                  Online Presence
+                </h2>
+                <p class="professional-section-description">Your professional links and portfolios</p>
+              </div>
+              <div class="professional-section-content">
+        <div class="row">
+          <div class="col-md-4">
+            {{ content.field_linkedin_url }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_github_url }}
+          </div>
+          <div class="col-md-4">
+            {{ content.field_portfolio_url }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+              {# Form Actions #}
+              <div class="professional-form-actions">
+                {{ content|without('field_professional_summary', 'field_skills_summary', 'field_resume_file', 'field_primary_resume_text', 'field_cover_letter_template', 'field_experience_years', 'field_education_level', 'field_work_authorization', 'field_certifications', 'field_target_job_titles', 'field_keywords_interested', 'field_salary_expectation_min', 'field_salary_expectation_max', 'field_available_start_date', 'field_remote_preference', 'field_relocation_willing', 'field_references_available', 'field_target_companies', 'field_linkedin_url', 'field_github_url', 'field_portfolio_url') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

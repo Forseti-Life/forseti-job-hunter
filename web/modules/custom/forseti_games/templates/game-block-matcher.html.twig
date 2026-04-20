@@ -1,0 +1,106 @@
+<div class="block-matcher-container">
+  <meta name="user-authenticated" content="{{ user_data.is_authenticated ? '1' : '0' }}">
+  <meta name="user-name" content="{{ user_data.name }}">
+  <div class="game-header">
+    <a href="/games" class="back-button">← Back to Games</a>
+    <h1>Block Matcher <span style="font-size: 0.5em; color: #888;">v2.2.0</span></h1>
+  </div>
+
+  <div class="game-info-bar">
+    <div class="level-display">
+      <span class="label">Level:</span>
+      <span id="level" class="value">1</span>
+    </div>
+    <div class="score-display">
+      <span class="label">Score:</span>
+      <span id="score" class="value">0</span>
+    </div>
+    <div class="moves-display">
+      <span class="label">Moves:</span>
+      <span id="moves" class="value">0</span>
+    </div>
+    <div class="timer-display">
+      <span class="label">Time:</span>
+      <span id="timer" class="value">0:00</span>
+    </div>
+  </div>
+
+  <div class="combo-stats-bar">
+    <span id="combo-stats" class="combo-text"></span>
+  </div>
+
+  <div id="game-board" class="game-board-3d" data-grid-size="9" data-block-types="{{ game_data.block_types }}" data-min-match="{{ game_data.min_match }}">
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <div class="game-controls">
+    <button id="new-game-btn" class="btn btn-primary">New Game</button>
+    <div class="orientation-controls">
+      <button id="rotate-left-btn" class="btn btn-icon" title="Rotate Left">↺</button>
+      <button id="rotate-right-btn" class="btn btn-icon" title="Rotate Right">↻</button>
+      <button id="flip-horizontal-btn" class="btn btn-icon" title="Flip Horizontal">⇆</button>
+      <button id="flip-vertical-btn" class="btn btn-icon" title="Flip Vertical">⇅</button>
+      <button id="reset-orientation-btn" class="btn btn-icon" title="Reset View">⊙</button>
+    </div>
+  </div>
+
+  <div id="game-over-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Game Over!</h2>
+      <p>Final Score: <span id="final-score">0</span></p>
+      <p>Total Moves: <span id="final-moves">0</span></p>
+      <p>Time: <span id="final-time">0:00</span></p>
+      <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+      <a href="/games" class="btn btn-secondary">Back to Games</a>
+    </div>
+  </div>
+
+  <div id="high-score-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🎉 New High Score! 🎉</h2>
+      <p>Congratulations! Your score made it to the top 10!</p>
+      <p>Score: <span id="hs-score">0</span></p>
+      <p>Level: <span id="hs-level">1</span></p>
+      <p>Time: <span id="hs-time">0:00</span></p>
+      <div class="high-score-input">
+        <label for="player-name-input">Enter your name or message (20 characters max):</label>
+        <input type="text" id="player-name-input" maxlength="20" placeholder="Your Name" />
+      </div>
+      <button id="submit-score-btn" class="btn btn-primary">Submit Score</button>
+      <button id="skip-score-btn" class="btn btn-secondary">Skip</button>
+    </div>
+  </div>
+
+  <div class="game-sidebar">
+    <div class="high-scores-section">
+      <h3>🏆 High Scores - Block Matcher</h3>
+      <div id="high-scores-list">
+        {% if high_scores %}
+          <ol class="high-scores">
+            {% for score in high_scores %}
+              <li class="high-score-item">
+                <span class="rank">{{ loop.index }}.</span>
+                <span class="player">{{ score.player_name }}</span>
+                <span class="score">{{ score.score }}</span>
+                <span class="details">L{{ score.level }} • {{ (score.time / 60)|number_format(0) }}:{{ (score.time % 60)|number_format(0, '0', '', '0') }}</span>
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p>No scores yet. Be the first!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="game-instructions">
+    <h3>How to Play</h3>
+    <ul>
+      <li>Click on a block to select it</li>
+      <li>Click on an adjacent block to swap positions</li>
+      <li>Match 3 or more blocks of the same color to clear them</li>
+      <li><strong>Click the center block to advance to the next level</strong></li>
+      <li>Score points and complete the level!</li>
+    </ul>
+  </div>
+</div>

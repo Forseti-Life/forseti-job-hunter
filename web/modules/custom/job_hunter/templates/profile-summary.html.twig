@@ -1,0 +1,101 @@
+{#
+  @file
+  Template for displaying user profile summary.
+
+  Variables:
+  - summary: Array of profile field information
+  - user: Drupal user entity
+#}
+
+{{ attach_library('job_hunter/user-profile-styling') }}
+
+<div class="profile-summary-container">
+  <h2>{{ 'Your Information'|t }}</h2>
+
+  <table class="profile-fields-table">
+    <thead>
+      <tr>
+        <th>{{ 'Field'|t }}</th>
+        <th>{{ 'Status'|t }}</th>
+        <th>{{ 'Value'|t }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field_name, field_info in summary %}
+        <tr class="field-row {% if field_info.complete %}field-complete{% else %}field-incomplete{% endif %}">
+          <td class="field-label">
+            {% if field_info.complete %}
+              <span class="status-icon">✓</span>
+            {% else %}
+              <span class="status-icon">○</span>
+            {% endif %}
+            <span class="label-text">{{ field_info.label }}</span>
+          </td>
+          <td class="field-status">
+            {% if field_info.complete %}
+              <span class="badge badge-success">{{ 'Complete'|t }}</span>
+            {% else %}
+              <span class="badge badge-incomplete">{{ 'Missing'|t }}</span>
+            {% endif %}
+          </td>
+          <td class="field-value">
+            {% if field_info.complete %}
+              {% if field_name == 'field_resume_file' %}
+                {# Display file information #}
+                {% if field_info.value %}
+                  {% set file_item = field_info.value[0] %}
+                  {% if file_item.target_id %}
+                    <span class="file-name">📄 {{ file_item.description or 'Resume uploaded' }}</span>
+                  {% endif %}
+                {% endif %}
+              {% elseif field_name == 'field_available_start_date' %}
+                {# Display date #}
+                {% if field_info.value %}
+                  {% set date_value = field_info.value[0].value %}
+                  <span class="date-value">{{ date_value|date('M d, Y') }}</span>
+                {% endif %}
+              {% elseif field_name == 'field_remote_preference' %}
+                {# Display preference #}
+                {% if field_info.value %}
+                  {% set pref_value = field_info.value[0].value %}
+                  <span class="preference-value">{{ pref_value }}</span>
+                {% endif %}
+              {% elseif field_name == 'field_work_authorization' %}
+                {# Display authorization #}
+                {% if field_info.value %}
+                  {% set auth_value = field_info.value[0].value %}
+                  <span class="authorization-value">{{ auth_value }}</span>
+                {% endif %}
+              {% elseif field_name == 'field_salary_expectation_min' %}
+                {# Display salary range #}
+                {% if field_info.value %}
+                  {% set min_value = field_info.value[0].value %}
+                  <span class="salary-value">💰 ${{ min_value|number_format(0) }}</span>
+                  {% if summary.field_salary_expectation_max and summary.field_salary_expectation_max.value %}
+                    {% set max_value = summary.field_salary_expectation_max.value[0].value %}
+                    - ${{ max_value|number_format(0) }}
+                  {% endif %}
+                {% endif %}
+              {% elseif field_name == 'field_target_companies' %}
+                {# Display target companies #}
+                {% if field_info.value %}
+                  <span class="companies-value">{{ field_info.value|length }} {{ 'company'|t([], {'count': field_info.value|length}) }}</span>
+                {% endif %}
+              {% else %}
+                <span class="value-checkmark">✓</span>
+              {% endif %}
+            {% else %}
+              <span class="value-empty">—</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="profile-summary-footer">
+    <p class="help-text">
+      {{ 'Update any of these fields by clicking the "Edit Profile" button above to keep your information current and improve job matching.'|t }}
+    </p>
+  </div>
+</div>

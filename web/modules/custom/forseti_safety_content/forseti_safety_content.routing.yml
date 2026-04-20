@@ -1,0 +1,549 @@
+forseti.root:
+  path: '/'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiHomeController::content'
+    _title: 'Forseti - AI-Powered Community Safety'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.home:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiHomeController::content'
+    _title: 'Forseti - AI-Powered Community Safety'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.safety_map:
+  path: '/safety-map'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiHomeController::safetyMap'
+    _title: 'Philadelphia Safety Map - Real-Time Crime Monitoring'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.talk_with_forseti:
+  path: '/talk-with-forseti'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::talkWithForseti'
+    _title: 'Talk with Forseti'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    no_cache: TRUE
+
+forseti.about:
+  path: '/about'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::about'
+    _title: 'About Forseti'
+  requirements:
+    _permission: 'access content'
+
+forseti.how_it_works:
+  path: '/how-it-works'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::howItWorks'
+    _title: 'How It Works'
+  requirements:
+    _permission: 'access content'
+
+forseti.community:
+  path: '/community'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::community'
+    _title: 'Join Our Community'
+  requirements:
+    _permission: 'access content'
+
+forseti.mobile_app:
+  path: '/mobile-app'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::mobileApp'
+    _title: 'AmISafe Mobile App'
+  requirements:
+    _permission: 'access content'
+
+forseti.mobile_app_beta:
+  path: '/mobile-app/beta-testing'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::mobileAppBeta'
+    _title: 'Beta Testing'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+forseti.privacy:
+  path: '/privacy'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::privacy'
+    _title: 'Privacy & Security'
+  requirements:
+    _permission: 'access content'
+
+forseti.legal:
+  path: '/legal'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::legal'
+    _title: 'Legal'
+  requirements:
+    _permission: 'access content'
+
+forseti.terms:
+  path: '/terms-of-service'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::termsOfService'
+    _title: 'Terms of Service'
+  requirements:
+    _permission: 'access content'
+
+forseti.disclaimer:
+  path: '/disclaimer'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::disclaimer'
+    _title: 'Disclaimer'
+  requirements:
+    _permission: 'access content'
+
+forseti.cookie_policy:
+  path: '/cookie-policy'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::cookiePolicy'
+    _title: 'Cookie Policy'
+  requirements:
+    _permission: 'access content'
+
+forseti.accessibility:
+  path: '/accessibility'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::accessibility'
+    _title: 'Accessibility Statement'
+  requirements:
+    _permission: 'access content'
+
+forseti.data_usage:
+  path: '/data-usage-policy'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::dataUsage'
+    _title: 'Data Usage Policy'
+  requirements:
+    _permission: 'access content'
+
+forseti.ai_terms:
+  path: '/ai-terms'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::aiTerms'
+    _title: 'AI Terms of Use'
+  requirements:
+    _permission: 'access content'
+
+forseti.mobile_app_terms:
+  path: '/mobile-app-terms'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::mobileAppTerms'
+    _title: 'Mobile App Terms'
+  requirements:
+    _permission: 'access content'
+
+forseti.api_terms:
+  path: '/api-terms'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::apiTerms'
+    _title: 'API Terms of Use'
+  requirements:
+    _permission: 'access content'
+
+forseti.community_guidelines:
+  path: '/community-guidelines'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::communityGuidelines'
+    _title: 'Community Guidelines'
+  requirements:
+    _permission: 'access content'
+
+forseti.copyright:
+  path: '/copyright'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\ForsetiPagesController::copyright'
+    _title: 'Copyright & DMCA'
+  requirements:
+    _permission: 'access content'
+
+forseti.safety_factors:
+  path: '/safety-factors'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\SafetyController::safetyFactors'
+    _title: 'Safety Factors'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.agent_hierarchy:
+  path: '/agent-power-framework'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::agentHierarchy'
+    _title: 'Agent Power Framework'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.evaluations_list:
+  path: '/agent-power-framework/evaluations'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::evaluationsList'
+    _title: 'Evaluated Entities'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.agent_evaluate:
+  path: '/agent-power-framework/evaluate'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::evaluate'
+    _title: 'Evaluate an Agent'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.example_entities:
+  path: '/agent-power-framework/example-entities'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::exampleEntities'
+    _title: 'Example Entities - Admin Batch Processing'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    no_cache: TRUE
+
+forseti.batch_process_entity:
+  path: '/api/batch-evaluate-entity'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\BatchEvaluationController::processEntity'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    no_cache: TRUE
+
+forseti.calculate_category_average:
+  path: '/api/calculate-category-average'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\BatchEvaluationController::calculateCategoryAverage'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    no_cache: TRUE
+
+forseti.us_government_power:
+  path: '/agent-power-framework/us-government'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::usGovernmentPower'
+    _title: 'US Government Power Analysis'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+forseti.dimension_scope:
+  path: '/agent-power-framework/scope'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionScope'
+    _title: 'Scope & Breadth'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_restriction:
+  path: '/agent-power-framework/restriction'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionRestriction'
+    _title: 'Content Restriction'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_classification:
+  path: '/agent-power-framework/restriction/classification'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionClassification'
+    _title: 'Classification Access (Sub-dimension)'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_temporal:
+  path: '/agent-power-framework/temporal'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionTemporal'
+    _title: 'Temporal Reach'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_sources:
+  path: '/agent-power-framework/sources'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionSources'
+    _title: 'Source Diversity'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_granularity:
+  path: '/agent-power-framework/granularity'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionGranularity'
+    _title: 'Data Granularity'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_authority:
+  path: '/agent-power-framework/authority-level'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionAuthority'
+    _title: 'Authority Level'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_synthesis:
+  path: '/agent-power-framework/information-synthesis'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionSynthesis'
+    _title: 'Information Synthesis'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_creativity:
+  path: '/agent-power-framework/creativity-generation'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionCreativity'
+    _title: 'Creativity & Novel Generation'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_strategic_planning:
+  path: '/agent-power-framework/strategic-planning'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionStrategicPlanning'
+    _title: 'Strategic Planning Depth'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_decision_quality:
+  path: '/agent-power-framework/decision-quality'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionDecisionQuality'
+    _title: 'Decision Quality'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_adaptive_learning:
+  path: '/agent-power-framework/adaptive-learning'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionAdaptiveLearning'
+    _title: 'Adaptive Learning Rate'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_memory_architecture:
+  path: '/agent-power-framework/memory-architecture'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionMemoryArchitecture'
+    _title: 'Memory Architecture'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_verification:
+  path: '/agent-power-framework/verification'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionVerification'
+    _title: 'Data Verification'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_computational_resources:
+  path: '/agent-power-framework/computational-resources'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionComputationalResources'
+    _title: 'Computational Resources'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_financial_capital:
+  path: '/agent-power-framework/financial-capital'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionFinancialCapital'
+    _title: 'Financial Capital'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_infrastructure_access:
+  path: '/agent-power-framework/infrastructure-access'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionInfrastructureAccess'
+    _title: 'Infrastructure Access'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_human_capital:
+  path: '/agent-power-framework/human-capital'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionHumanCapital'
+    _title: 'Human Capital'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_energy_resources:
+  path: '/agent-power-framework/energy-resources'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionEnergyResources'
+    _title: 'Energy Resources'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_time_allocation:
+  path: '/agent-power-framework/time-allocation'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionTimeAllocation'
+    _title: 'Time Allocation'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_trust_network_depth:
+  path: '/agent-power-framework/trust-network-depth'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionTrustNetworkDepth'
+    _title: 'Trust Network Depth'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_dependency_relationships:
+  path: '/agent-power-framework/dependency-relationships'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionDependencyRelationships'
+    _title: 'Dependency Relationships'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_gatekeeping_power:
+  path: '/agent-power-framework/gatekeeping-power'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionGatekeepingPower'
+    _title: 'Gatekeeping Power'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_influence_reach:
+  path: '/agent-power-framework/influence-reach'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionInfluenceReach'
+    _title: 'Influence Reach'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_reputation_capital:
+  path: '/agent-power-framework/reputation-capital'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionReputationCapital'
+    _title: 'Reputation Capital'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_mobilization_capability:
+  path: '/agent-power-framework/mobilization-capability'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionMobilizationCapability'
+    _title: 'Mobilization Capability'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_legal_authorization:
+  path: '/agent-power-framework/legal-authorization'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionLegalAuthorization'
+    _title: 'Legal Authorization'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_decision_making_scope:
+  path: '/agent-power-framework/decision-making-scope'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionDecisionMakingScope'
+    _title: 'Decision-Making Scope'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_budget_authority:
+  path: '/agent-power-framework/budget-authority'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionBudgetAuthority'
+    _title: 'Budget Authority'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_jurisdictional_reach:
+  path: '/agent-power-framework/jurisdictional-reach'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionJurisdictionalReach'
+    _title: 'Jurisdictional Reach'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_enforcement_power:
+  path: '/agent-power-framework/enforcement-power'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionEnforcementPower'
+    _title: 'Enforcement Power'
+  requirements:
+    _permission: 'access content'
+
+forseti.dimension_moral_authority:
+  path: '/agent-power-framework/moral-authority'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::dimensionMoralAuthority'
+    _title: 'Moral Authority'
+  requirements:
+    _permission: 'access content'
+
+forseti_safety_content.information_access:
+  path: '/agent-power-framework/information-access'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::informationAccess'
+    _title: 'Information Access'
+  requirements:
+    _permission: 'access content'
+
+forseti_safety_content.resource_control:
+  path: '/agent-power-framework/resource-control'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::resourceControl'
+    _title: 'Resource Control'
+  requirements:
+    _permission: 'access content'
+
+forseti_safety_content.network_position:
+  path: '/agent-power-framework/network-position'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::networkPosition'
+    _title: 'Network Position'
+  requirements:
+    _permission: 'access content'
+
+forseti_safety_content.authority_category:
+  path: '/agent-power-framework/authority'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::authorityCategory'
+    _title: 'Authority & Permission'
+  requirements:
+    _permission: 'access content'
+
+forseti_safety_content.synthesis_category:
+  path: '/agent-power-framework/synthesis'
+  defaults:
+    _controller: '\Drupal\forseti_safety_content\Controller\AgentPowerFrameworkController::synthesisCategory'
+    _title: 'Synthesis & Application'
+  requirements:
+    _permission: 'access content'

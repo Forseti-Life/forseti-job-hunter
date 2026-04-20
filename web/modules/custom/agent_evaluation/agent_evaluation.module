@@ -1,0 +1,344 @@
+<?php
+
+/**
+ * @file
+ * Agent Evaluation module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for node entities.
+ */
+function agent_evaluation_node_update(EntityInterface $entity) {
+  // Only process ai_conversation nodes
+  if ($entity->bundle() !== 'ai_conversation') {
+    return;
+  }
+
+  // Get services
+  $field_parser = \Drupal::service('agent_evaluation.field_parser');
+  $calculator = \Drupal::service('agent_evaluation.calculator');
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  // Get the latest message
+  if (!$entity->hasField('field_messages') || $entity->get('field_messages')->isEmpty()) {
+    return;
+  }
+
+  $messages = $entity->get('field_messages')->getValue();
+  $latest_message = end($messages);
+  
+  if (empty($latest_message['value'])) {
+    return;
+  }
+
+  $message_data = json_decode($latest_message['value'], TRUE);
+  
+  // Only process assistant (AI) messages
+  if (!$message_data || $message_data['role'] !== 'assistant') {
+    return;
+  }
+
+  // Try to extract field values from the message
+  $field_values = $field_parser->extractFieldValues($message_data['content']);
+  
+  if (!$field_values) {
+    return;
+  }
+
+  // Find the associated evaluated_entity node
+  $node_storage = $entity_type_manager->getStorage('node');
+  $query = $node_storage->getQuery()
+    ->condition('type', 'evaluated_entity')
+    ->condition('field_source_conversation', $entity->id())
+    ->accessCheck(FALSE)
+    ->range(0, 1);
+  
+  $nids = $query->execute();
+  
+  if (empty($nids)) {
+    \Drupal::logger('agent_evaluation')->warning('No evaluated_entity found for conversation @nid', [
+      '@nid' => $entity->id(),
+    ]);
+    return;
+  }
+
+  $evaluated_entity = $node_storage->load(reset($nids));
+  
+  if (!$evaluated_entity) {
+    return;
+  }
+
+  // Update the evaluated_entity with extracted values
+  $updated = FALSE;
+  foreach ($field_values as $field_name => $value) {
+    if ($evaluated_entity->hasField($field_name)) {
+      $evaluated_entity->set($field_name, $value);
+      $updated = TRUE;
+    }
+  }
+
+  if ($updated) {
+    // Calculate and set main dimension scores and total
+    $calculated_scores = $calculator->calculateScores($field_values);
+    foreach ($calculated_scores as $field_name => $value) {
+      if ($evaluated_entity->hasField($field_name)) {
+        $evaluated_entity->set($field_name, $value);
+      }
+    }
+
+    // Publish the node now that it has real data
+    $evaluated_entity->set('status', 1);
+    $evaluated_entity->save();
+
+    \Drupal::logger('agent_evaluation')->info('Updated evaluated_entity @nid with @count field values', [
+      '@nid' => $evaluated_entity->id(),
+      '@count' => count($field_values),
+    ]);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function agent_evaluation_theme() {
+  return [
+    'agent_evaluation_chat' => [
+      'variables' => [
+        'conversation' => NULL,
+        'messages' => [],
+        'stats' => NULL,
+      ],
+      'template' => 'ai-conversation-chat',
+    ],
+    'user_agent_evaluations' => [
+      'variables' => [
+        'conversations' => [],
+        'total' => 0,
+      ],
+      'template' => 'user-ai-conversations',
+    ],
+    'node__evaluated_entity' => [
+      'base hook' => 'node',
+      'template' => 'node--evaluated-entity',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_node() for evaluated_entity nodes.
+ */
+function agent_evaluation_preprocess_node(&$variables) {
+  $node = $variables['node'];
+  
+  if ($node->bundle() !== 'evaluated_entity') {
+    return;
+  }
+
+  // Define dimension structure
+  $framework_data = [
+    'information_access' => [
+      'name' => 'Information Access',
+      'sub_dimensions' => [
+        'scope' => ['name' => 'Scope', 'description' => 'Range of information accessible'],
+        'restriction' => ['name' => 'Restriction', 'description' => 'Filtering and censorship applied'],
+        'classification' => ['name' => 'Classification', 'description' => 'Security level of accessible data'],
+        'temporal' => ['name' => 'Temporal', 'description' => 'Time range of accessible information'],
+        'sources' => ['name' => 'Sources', 'description' => 'Diversity and quality of information sources'],
+        'granularity' => ['name' => 'Granularity', 'description' => 'Detail level of accessible information'],
+      ],
+    ],
+    'resource_control' => [
+      'name' => 'Resource Control',
+      'sub_dimensions' => [
+        'computational' => ['name' => 'Computational Resources', 'description' => 'Processing power available'],
+        'financial' => ['name' => 'Financial Capital', 'description' => 'Financial resources controlled'],
+        'data_storage' => ['name' => 'Data Storage', 'description' => 'Data storage capacity'],
+        'network_bandwidth' => ['name' => 'Network Bandwidth', 'description' => 'Network capacity and speed'],
+        'api_access' => ['name' => 'API Access', 'description' => 'Access to external services/APIs'],
+        'human' => ['name' => 'Human Resources', 'description' => 'Human personnel under control'],
+      ],
+    ],
+    'authority_permission' => [
+      'name' => 'Authority & Permission',
+      'sub_dimensions' => [
+        'legal' => ['name' => 'Legal Authorization', 'description' => 'Legal permissions and licenses'],
+        'institutional' => ['name' => 'Institutional Backing', 'description' => 'Institutional support and legitimacy'],
+        'budget_auth' => ['name' => 'Budget Authority', 'description' => 'Financial decision-making power'],
+        'policy' => ['name' => 'Policy Compliance', 'description' => 'Adherence to regulations'],
+        'override' => ['name' => 'Override Capability', 'description' => 'Ability to override normal constraints'],
+        'audit' => ['name' => 'Audit & Accountability', 'description' => 'Oversight and accountability mechanisms'],
+      ],
+    ],
+    'network_position' => [
+      'name' => 'Network Position',
+      'sub_dimensions' => [
+        'connectivity' => ['name' => 'Connectivity', 'description' => 'Number and quality of connections'],
+        'centrality' => ['name' => 'Centrality', 'description' => 'Position in network structure'],
+        'trust_reputation' => ['name' => 'Trust & Reputation', 'description' => 'Reputation and trustworthiness'],
+        'info_flow' => ['name' => 'Information Flow Control', 'description' => 'Control over information flow'],
+        'coalition' => ['name' => 'Coalition Building', 'description' => 'Ability to form alliances'],
+        'network_effects' => ['name' => 'Network Effects', 'description' => 'Benefit from network size'],
+      ],
+    ],
+    'synthesis_application' => [
+      'name' => 'Synthesis & Application',
+      'sub_dimensions' => [
+        'reasoning' => ['name' => 'Reasoning', 'description' => 'Logical reasoning capability'],
+        'creativity' => ['name' => 'Creativity', 'description' => 'Creative and innovative thinking'],
+        'planning' => ['name' => 'Planning', 'description' => 'Strategic planning ability'],
+        'learning' => ['name' => 'Learning', 'description' => 'Adaptive learning capability'],
+        'memory' => ['name' => 'Memory', 'description' => 'Information retention and recall'],
+        'execution' => ['name' => 'Execution', 'description' => 'Action execution capability'],
+      ],
+    ],
+  ];
+  
+  // Initialize evaluation data
+  $evaluation_data = [
+    'total_power' => $node->get('field_total_power')->value,
+    'total_power_level' => _agent_evaluation_get_score_level($node->get('field_total_power')->value),
+    'dimensions' => [],
+    'source_conversation' => NULL,
+    'all_empty' => TRUE,
+  ];
+
+  // Get source conversation link
+  if (!$node->get('field_source_conversation')->isEmpty()) {
+    $conversation = $node->get('field_source_conversation')->entity;
+    if ($conversation) {
+      $evaluation_data['source_conversation'] = [
+        'url' => '/node/' . $conversation->id() . '/chat',
+        'title' => $conversation->getTitle(),
+      ];
+    }
+  }
+
+  // Process each main dimension
+  $dimension_fields = [
+    'information_access' => 'field_information_access',
+    'resource_control' => 'field_resource_control',
+    'authority_permission' => 'field_authority_permission',
+    'network_position' => 'field_network_position',
+    'synthesis_application' => 'field_synthesis_application',
+  ];
+
+  foreach ($dimension_fields as $dimension_key => $field_name) {
+    $dimension_score = $node->get($field_name)->value;
+    
+    if ($dimension_score !== NULL) {
+      $evaluation_data['all_empty'] = FALSE;
+    }
+
+    $dimension_info = $framework_data[$dimension_key] ?? [];
+    
+    $dimension_data = [
+      'label' => $dimension_info['name'] ?? ucwords(str_replace('_', ' ', $dimension_key)),
+      'score' => $dimension_score,
+      'level' => _agent_evaluation_get_score_level($dimension_score),
+      'sub_dimensions' => [],
+    ];
+
+    // Process sub-dimensions
+    if (isset($dimension_info['sub_dimensions'])) {
+      foreach ($dimension_info['sub_dimensions'] as $sub_key => $sub_info) {
+        $sub_field_name = 'field_sub_' . $sub_key;
+        $sub_desc_field_name = 'field_sub_' . $sub_key . '_desc';
+        
+        $sub_score = $node->hasField($sub_field_name) ? $node->get($sub_field_name)->value : NULL;
+        $sub_description = $node->hasField($sub_desc_field_name) && !$node->get($sub_desc_field_name)->isEmpty() 
+          ? $node->get($sub_desc_field_name)->value 
+          : ($sub_info['description'] ?? '');
+        
+        if ($sub_score !== NULL) {
+          $evaluation_data['all_empty'] = FALSE;
+        }
+
+        $dimension_data['sub_dimensions'][] = [
+          'label' => $sub_info['name'] ?? ucwords(str_replace('_', ' ', $sub_key)),
+          'description' => $sub_description,
+          'score' => $sub_score,
+          'level' => _agent_evaluation_get_score_level($sub_score),
+        ];
+      }
+    }
+
+    $evaluation_data['dimensions'][] = $dimension_data;
+  }
+
+  $variables['evaluation_data'] = $evaluation_data;
+  
+  // Get conversation node ID for redirect
+  $conversation_nid = NULL;
+  if (!$node->get('field_source_conversation')->isEmpty()) {
+    $conversation_nid = $node->get('field_source_conversation')->target_id;
+  }
+  
+  // Add settings for JavaScript evaluation loader
+  $variables['#attached']['drupalSettings']['evaluatedEntity'] = [
+    'nodeId' => $node->id(),
+    'unpublished' => !$node->isPublished(),
+    'totalPower' => (int) $node->get('field_total_power')->value,
+    'conversationNid' => $conversation_nid,
+  ];
+  
+  // Add CSS class for JavaScript targeting
+  $variables['attributes']['class'][] = 'evaluated-entity-node';
+}
+
+/**
+ * Helper function to determine score level for CSS classes.
+ */
+function _agent_evaluation_get_score_level($score) {
+  if ($score === NULL || $score === '') {
+    return 'empty';
+  }
+  
+  $score = (int) $score;
+  
+  if ($score >= 7) {
+    return 'high';
+  } elseif ($score >= 4) {
+    return 'medium';
+  } else {
+    return 'low';
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function agent_evaluation_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'agent_evaluation') {
+    // Add a link to the chat interface.
+    $build['chat_link'] = [
+      '#type' => 'link',
+      '#title' => t('Start Chat'),
+      '#url' => Url::fromRoute('agent_evaluation.chat_interface', ['node' => $entity->id()]),
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary'],
+      ],
+      '#weight' => 10,
+    ];
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function agent_evaluation_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'agent_evaluation') {
+    $operations['chat'] = [
+      'title' => t('Chat'),
+      'url' => Url::fromRoute('agent_evaluation.chat_interface', ['node' => $entity->id()]),
+      'weight' => 50,
+    ];
+  }
+  
+  return $operations;
+}
