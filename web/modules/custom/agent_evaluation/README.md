@@ -1,1037 +1,759 @@
-# Agent Evaluation Module
+# Agent Evaluation
 
-**Last Updated:** February 6, 2026
+**Comprehensive AI-powered evaluation of entities using the Agent Power Framework, generating detailed power analyses across 30 sub-dimensions.**
+
+## Badges
+
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+![Drupal Version](https://img.shields.io/badge/Drupal-9%20%7C%2010%20%7C%2011-blue)
+![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen)
 
 ## Overview
 
-The Agent Evaluation module enables AI-powered evaluation of entities (AI systems, organizations, platforms, individuals) using the comprehensive Agent Power Framework. It leverages the AI Conversation module to create interactive evaluations across 30 sub-dimensions organized into 5 main power dimensions.
+The Agent Evaluation module enables AI-powered evaluation of entities (AI systems, organizations, platforms, individuals) using the comprehensive **Agent Power Framework**. It leverages the AI Conversation module to create interactive, multi-turn evaluations across **5 main power dimensions** and **30 sub-dimensions**, generating detailed scores, reasoning, and visualizations. Each entity evaluation is stored as a permanent, queryable content node with full conversation history for refinement and audit trails.
 
-## Agent Power Framework
+This module transforms abstract power analysis into a structured, explorable database of entity capabilities and limitations.
 
-The framework evaluates entities across **5 main dimensions**, each containing **6 sub-dimensions** (30 total):
+## Features
 
-1. **Information Access** (Scope, Restriction, Classification, Temporal, Sources, Granularity)
-2. **Resource Control** (Computational Resources, Financial Capital, Data Storage, Network Bandwidth, API Access, Human Resources)
-3. **Authority & Permission** (Legal Authorization, Institutional Backing, Budget Authority, Policy Compliance, Override Capability, Audit & Accountability)
-4. **Network Position** (Connectivity, Centrality, Trust & Reputation, Information Flow Control, Coalition Building, Network Effects)
-5. **Synthesis & Application** (Reasoning, Creativity, Planning, Learning, Memory, Execution)
+### 🎯 Agent Power Framework
+- **5 Main Dimensions** with 6 sub-dimensions each (30 total):
+  - **Information Access**: Scope, Restriction, Classification, Temporal, Sources, Granularity
+  - **Resource Control**: Computational Resources, Financial Capital, Data Storage, Network Bandwidth, API Access, Human Resources
+  - **Authority & Permission**: Legal Authorization, Institutional Backing, Budget Authority, Policy Compliance, Override Capability, Audit & Accountability
+  - **Network Position**: Connectivity, Centrality, Trust & Reputation, Information Flow Control, Coalition Building, Network Effects
+  - **Synthesis & Application**: Reasoning, Creativity, Planning, Learning, Memory, Execution
 
-Each dimension is scored 0-9, where:
-- **0** = No capability/access
-- **1-3** = Limited (Danger level)
-- **4-6** = Moderate (Warning level)
-- **7-9** = High/Approaching Infinite (Success level)
+### 📊 Evaluation Scoring
+- **0-9 Scale** for each dimension:
+  - 0 = No capability/access
+  - 1-3 = Limited (Danger level)
+  - 4-6 = Moderate (Warning level)
+  - 7-9 = High/Approaching Infinite (Success level)
+- **Calculated Aggregates**: Main dimensions auto-calculated from sub-dimensions
+- **Total Power Score**: Average across all 5 main dimensions
 
-## User Process Flow
+### 🤖 AI-Driven Analysis
+- **Known Entity Path**: Full immediate evaluation with all scores and reasoning
+- **Unknown Entity Path**: Interactive multi-turn refinement with clarifying questions
+- **Conversational Refinement**: Continue evaluation conversations to adjust scores
+- **Context Preservation**: Complete evaluation context maintained across turns
 
-### 1. **Entry Point**
-User navigates to `/agent-power-framework/evaluate` and sees a simple form:
-- Single input field: "Entity Name" (e.g., "ChatGPT", "NSA", "Amazon AWS")
-- Submit button: "Start Evaluation"
+### 📈 Data Visualization
+- **Radar Charts**: Visualize 5-dimensional power profile
+- **Expandable Sections**: View detailed reasoning for each sub-dimension
+- **Comparison Mode**: Stack evaluations to compare entities side-by-side
+- **Export Capabilities**: Share or export evaluation data as JSON/PDF
 
-### 2. **AI Conversation Creation**
-When user submits entity name, system:
-- Creates `ai_conversation` node with:
-  - Title: "Evaluating: [Entity Name]"
-  - Context: Complete Agent Power Framework methodology + all 30 sub-dimension level descriptions
-  - Initial message: "Please evaluate the entity '[Entity Name]' using the Agent Power Framework..."
-  - AI Model: Claude 3.5 Sonnet (default)
+### 🔐 Full Audit Trail
+- **Conversation History**: Complete multi-turn conversation preserved with evaluation
+- **Version Control**: All score changes tracked with timestamps
+- **Source Attribution**: Every score linked to AI reasoning and conversation
+- **Refinement Log**: Track all updates and modifications to scores
 
-### 3. **AI Performs Evaluation**
-AI analyzes the entity and responds with:
-- **Known Entity Path**: AI recognizes entity and provides complete evaluation
-  - All 30 sub-dimension scores (0-9)
-  - Reasoning for each score
-  - JSON payload with field values
-  
-- **Unknown Entity Path**: AI asks clarifying questions
-  - "I found multiple entities named 'Amazon'. Did you mean..."
-  - "Can you describe what this entity does?"
-  - Gathers information through dialogue
-  - Progressively fills in fields as understanding improves
+## Installation
 
-### 4. **Evaluated Entity Node Creation**
-System parses AI response and creates `evaluated_entity` node:
-- Title: Entity name
-- **36 numeric fields (0-9 scale)**:
-  - 1 total power field (calculated average)
-  - 5 main dimension fields (calculated averages of sub-dimensions)
-  - 30 sub-dimension fields (AI-evaluated scores)
-- `field_source_conversation`: Reference to ai_conversation node
-- Status: Published
+### Prerequisites
+- Drupal 9, 10, or 11
+- AI Conversation module enabled
+- Forseti Content module (optional, for framework integration)
 
-### 5. **User Views Evaluation**
-User is redirected to `/node/{evaluated_entity_nid}` showing:
-- Entity name and total power level
-- Radar chart visualizing 5 main dimensions
-- Expandable sections for all 30 sub-dimensions
-- Buttons:
-  - "Continue Conversation" → Returns to ai_conversation for refinement
-  - "View Conversation" → See full AI reasoning
-  - "Share" / "Export" → Share or export evaluation data
+### Installation Steps
 
-### 6. **Refinement & Updates** (Optional)
-User can click "Continue Conversation" to:
+```bash
+# 1. Place module in custom modules directory
+# Already located at: web/modules/custom/agent_evaluation/
+
+# 2. Enable dependencies first
+drush en ai_conversation -y
+
+# 3. Enable the agent_evaluation module
+drush en agent_evaluation -y
+
+# 4. Install database schema and create content types
+drush updatedb -y
+
+# 5. Clear cache
+drush cache:rebuild
+```
+
+### Verify Installation
+
+```bash
+# Check module is enabled
+drush pm:list --type=module --status=enabled | grep agent_evaluation
+
+# Verify evaluation entry point is accessible
+curl -sI http://localhost/agent-power-framework/evaluate | head -2
+
+# Test database tables exist
+drush sql:query "SHOW TABLES LIKE '%agent_evaluation%';"
+```
+
+## Configuration
+
+### Module Settings
+
+**Navigate to:** `admin/config/agent-evaluation`
+
+#### Evaluation Defaults
+- **Default AI Model**: Claude 3.5 Sonnet (recommended for complex analysis)
+- **Entity Validation**: Enable/disable automatic entity recognition check
+- **Score Rounding**: Enable to round scores to nearest integer
+
+#### Conversation Settings
+- **Initial Context**: Pre-populate evaluation context with framework methodology
+- **Max Turns Before Summary**: Trigger rolling summary after N conversation turns
+- **Refinement Timeout**: Auto-lock evaluation scores after X days of inactivity
+
+#### Visualization Options
+- **Chart Type**: Radar (default) or Scatter plot
+- **Dimension Weighting**: Equal (default) or custom weights per dimension
+- **Export Formats**: JSON, PDF, CSV support
+
+### Permission Configuration
+
+**Navigate to:** `admin/people/permissions`
+
+Grant these permissions as needed:
+
+| Permission | Role | Description |
+|-----------|------|-------------|
+| Administer Agent Evaluation | Admin | Full module configuration |
+| Create Evaluated Entity | Content Creator | Can start new evaluations |
+| Edit Own Evaluated Entity | Content Creator | Can refine own evaluations |
+| View Evaluated Entity | Anonymous | Read-only evaluation access |
+| Export Evaluation Data | Content Creator | Can export evaluation results |
+
+### AWS Bedrock Configuration
+
+Agent Evaluation relies on AI Conversation module's AWS Bedrock setup. Ensure the following environment variables are set:
+
+```bash
+# AWS credentials (use IAM roles in production)
+export AWS_ACCESS_KEY_ID=your_key
+export AWS_SECRET_ACCESS_KEY=your_secret
+export AWS_DEFAULT_REGION=us-west-2
+
+# Or use IAM instance role (recommended for AWS deployments)
+```
+
+**Configuration File:** `settings.php` or `.env`
+
+```php
+// Bedrock region
+$config['ai_conversation.settings']['bedrock_region'] = 'us-west-2';
+
+// Model configuration
+$config['ai_conversation.settings']['default_model'] = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+```
+
+## Usage
+
+### Starting an Evaluation
+
+#### 1. **Entry Point - Simple Form**
+
+Navigate to `/agent-power-framework/evaluate`
+
+```
+┌─────────────────────────────────────┐
+│   Agent Power Framework Evaluation   │
+├─────────────────────────────────────┤
+│                                     │
+│  Entity Name:  [_________________]  │
+│                                     │
+│              [Start Evaluation]      │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Example entities:**
+- "ChatGPT"
+- "Amazon AWS"
+- "NSA" (U.S. National Security Agency)
+- "Google Search"
+- "Tesla"
+
+#### 2. **AI Conducts Evaluation**
+
+System creates an `ai_conversation` node and provides:
+- Complete Agent Power Framework context
+- All 30 sub-dimension definitions
+- Entity name and initial analysis prompt
+
+**AI Response Flow:**
+
+```
+Known Entity Path:
+├─ AI recognizes entity (ChatGPT)
+├─ Provides comprehensive power analysis
+├─ Scores all 30 sub-dimensions
+└─ Generates reasoning for each score
+
+Unknown Entity Path:
+├─ AI asks clarifying questions
+│  "Did you mean X, Y, or Z?"
+│  "What industry/sector?"
+├─ Gathers information through dialogue
+└─ Progressively refines scores
+```
+
+#### 3. **View Evaluation Results**
+
+User is redirected to `/node/{entity_nid}` showing:
+
+```
+┌──────────────────────────────────────────┐
+│  ChatGPT - Total Power: 7.8/9            │
+├──────────────────────────────────────────┤
+│                                          │
+│  [5-Dimensional Radar Chart]             │
+│                                          │
+│  Information Access:       8.2           │
+│  Resource Control:         8.5           │
+│  Authority & Permission:   6.1           │
+│  Network Position:         8.9           │
+│  Synthesis & Application:  7.6           │
+│                                          │
+│  [+] Information Access Sub-Dimensions   │
+│      ├─ Scope: 9                         │
+│      ├─ Restriction: 7                   │
+│      └─ ... (6 sub-dimensions)           │
+│                                          │
+│  [Continue Conversation] [Export] [Share]│
+└──────────────────────────────────────────┘
+```
+
+#### 4. **Refine Evaluation (Optional)**
+
+Click **"Continue Conversation"** to:
 - Ask AI to explain specific scores
 - Request reconsideration of ratings
 - Provide additional context
 - Compare to other entities
 
-AI updates `evaluated_entity` node fields in real-time based on conversation.
-
-## Technical Architecture
-
-### Node Relationships
 ```
-ai_conversation (node)
-├── field_messages (conversation history)
-├── field_ai_model (model selection)
-├── field_context (Agent Power Framework)
-└── Creates/Updates ↓
+User: "Why is 'Legal Authorization' only 6/9? ChatGPT operates in multiple countries..."
 
-evaluated_entity (node)
-├── field_source_conversation → ai_conversation (entity reference)
-├── field_total_power (0-9, calculated)
-├── field_information_access (0-9, calculated)
-├── field_resource_control (0-9, calculated)
-├── field_authority_permission (0-9, calculated)
-├── field_network_position (0-9, calculated)
-├── field_synthesis_application (0-9, calculated)
-└── field_sub_* × 30 (all sub-dimensions, 0-9 each)
+AI: "Excellent point. In the EU, ChatGPT faces GDPR restrictions that limit its 
+     legal scope compared to purely US-based systems. However, you're right that 
+     I may have underweighted its authorization in US/Asia-Pacific regions. 
+     Adjusting to 7/9..."
+
+Result: Score updates in real-time, with timestamp and reasoning
 ```
 
-### Key Components
+### Example Evaluation Outputs
 
-**Routes** (`agent_evaluation.routing.yml`):
-- `/agent-power-framework/evaluate` - Entry form
-- `/node/{conversation_nid}` - AI conversation interface (from ai_conversation module)
-- `/node/{entity_nid}` - Evaluation display
-- `/node/{entity_nid}/edit` - Manual override (admin only)
+#### Example 1: Technology Platform (ChatGPT)
 
-**Services** (`agent_evaluation.services.yml`):
-- `agent_evaluation.service` - Creates nodes, manages relationships
-- `agent_evaluation.field_parser` - Extracts field values from AI responses
-- `agent_evaluation.calculator` - Recalculates main dimensions and total power
+```
+Entity: ChatGPT
+Total Power Score: 7.8/9
 
-**Content Types**:
-- `evaluated_entity` - Stores evaluation data (36 integer fields + metadata)
+Information Access (8.2/9)
+├─ Scope: 9/9 - Access to broad knowledge domains
+├─ Restriction: 7/9 - Some content policies limit access
+├─ Classification: 8/9 - Can process various data types
+├─ Temporal: 6/9 - Training cutoff limits real-time knowledge
+├─ Sources: 9/9 - Trained on vast text corpus
+└─ Granularity: 8/9 - Can provide detailed analysis
 
-**Dependencies**:
-- `ai_conversation` module (required) - Provides conversation infrastructure
-- `forseti_content` module (optional) - Integration with Agent Power Framework pages
-
-### Data Flow
-
-1. **User Input** → Form submission with entity name
-2. **Conversation Init** → `AgentEvaluationService::createEvaluation()`
-3. **AI Response** → Claude analyzes entity using framework context
-4. **Field Parsing** → `FieldUpdateParser::extractFieldValues()`
-5. **Node Creation** → `evaluated_entity` node with 36 fields populated
-6. **Display** → Custom template with visualization
-7. **Updates** → Conversation continues, fields update in real-time
-
-## Installation
-
-1. Enable dependencies: `drush en ai_conversation -y`
-2. Enable module: `drush en agent_evaluation -y`
-3. Clear cache: `drush cr`
-4. Navigate to `/agent-power-framework/evaluate` to start evaluating entities
-
-## Usage Examples
-
-**Evaluate an AI System:**
-- Enter "ChatGPT" → AI provides comprehensive evaluation across all 30 sub-dimensions
-- View scores, reasoning, and visualizations
-- Continue conversation to refine specific scores
-
-**Evaluate an Organization:**
-- Enter "NSA" → AI evaluates information access, resources, authority, network position
-- AI recognizes classification levels, institutional backing, network centrality
-- Compare with other intelligence agencies
-
-**Unknown Entity:**
-- Enter "MyNewStartup" → AI asks clarifying questions
-- Provide details through conversation
-- AI builds evaluation based on your responses
-
-## Benefits
-
-✅ **Simple Entry** - One field, one button  
-✅ **AI-Powered** - Leverages LLM knowledge for accurate evaluations  
-✅ **Interactive** - Conversational refinement and clarification  
-✅ **Comprehensive** - 30 sub-dimensions capture full capability spectrum  
-✅ **Persistent** - All evaluations and conversations saved for future reference  
-✅ **Flexible** - Works for known entities (auto-evaluated) and unknown entities (guided dialogue)
-
----
-
-# Original AI Conversation Module Documentation
-
-
-   - Press Enter (Shift+Enter for new line)
-   
-3. **Message processing:**
-   - User message immediately appears in chat
-   - Loading indicator shows "AI is thinking..."
-   - AI response appears when complete
-   - Statistics update in real-time
-
-#### **Step 4: Ongoing Conversation**
-1. **Continue chatting** - all messages stored in the node
-2. **Statistics tracking** - monitor token usage and message count
-3. **Automatic summarization** - when conversation gets long
-4. **Persistent storage** - conversation preserved between sessions
-
-## Key Features
-
-### 🤖 **AWS Bedrock Integration**
-- **Primary Model:** Claude 3.5 Sonnet (anthropic.claude-3-5-sonnet-20240620-v1:0)
-- **Region:** us-west-2
-- **Authentication:** Environment variables or IAM roles (no hardcoded credentials)
-- **Fallback Models:** Claude 3 Haiku and Claude 3 Opus support
-
-### 🔄 **Intelligent Rolling Summary System**
-- **Automatic Summarization:** Older messages are automatically summarized when conversation exceeds configured limits
-- **Recent Message Retention:** Keeps the most recent N messages (default: 20) in full detail
-- **Context Optimization:** Summary + recent messages provide optimal context for AI responses
-- **Configurable Frequency:** Summary updates every N messages (default: 10)
-- **Token Management:** Prevents context window overflow in long conversations
-
-### 💬 **Real-time Chat Interface**
-- **AJAX-powered messaging:** No page refreshes required
-- **Live statistics:** Real-time token count, message count, and conversation metrics
-- **CSRF protection:** Secure message sending with token validation
-- **Access control:** Users can only access their own conversations
-- **Progressive enhancement:** Works with JavaScript disabled
-
-### 📊 **Advanced Analytics & Monitoring**
-- **Token tracking:** Comprehensive input/output token monitoring
-- **Conversation statistics:** Message counts, summary status, recent activity
-- **Debug mode:** Detailed logging for troubleshooting
-- **Performance metrics:** Response times and API usage tracking
-
-## Technical Architecture
-
-## Technical Architecture Deep Dive
-
-### 🏗️ **Node-Centric Storage System**
-
-The module creates a custom content type `ai_conversation` that serves as the complete storage container:
-
-#### **Content Type: `ai_conversation`**
-
-**Node URL Pattern:** `/node/{nid}/chat` for chat interface
-
-**Core Fields:**
-- **`field_messages`** (text_long, unlimited): JSON-encoded message objects
-  ```json
-  {
-    "role": "user|assistant", 
-    "content": "message text",
-    "timestamp": 1704067200
-  }
-  ```
-- **`field_ai_model`** (string): AI model identifier (defaults to Claude 3.5 Sonnet)
-- **`field_context`** (text_long): System prompt/conversation context
-
-**Rolling Summary Fields:**
-- **`field_conversation_summary`** (text_long): AI-generated summary of older messages
-- **`field_message_count`** (integer): Total message count for the conversation
-- **`field_summary_updated`** (timestamp): When summary was last regenerated
-- **`field_summary_message_count`** (integer): Counter for summary frequency logic
-- **`field_total_tokens`** (integer): Cumulative token usage tracking
-
-### 🔄 **Request/Response Flow**
-
-#### **Chat Interface Loading (`/node/{nid}/chat`)**
-1. **Route:** `ai_conversation.chat_interface`
-2. **Controller:** `ChatController::chatInterface()`
-3. **Access Control:** Node owner or admin only
-4. **Data Loading:**
-   - Load conversation node
-   - Extract recent messages for display
-   - Calculate conversation statistics
-   - Build render array with JavaScript settings
-
-#### **AJAX Message Sending (`/ai-conversation/send-message`)**
-1. **Route:** `ai_conversation.send_message` (POST with CSRF)
-2. **Controller:** `ChatController::sendMessage()`
-3. **Process Flow:**
-   ```php
-   // 1. Validate CSRF token and parameters
-   $token = $request->request->get('csrf_token');
-   $node_id = $request->request->get('node_id');
-   $message = $request->request->get('message');
-   
-   // 2. Load and validate conversation node
-   $node = $this->entityTypeManager->getStorage('node')->load($node_id);
-   
-   // 3. Add user message to node
-   $user_message = [
-     'role' => 'user',
-     'content' => $message,
-     'timestamp' => time(),
-   ];
-   $this->addMessageToNode($node, $user_message);
-   $node->save();
-   
-   // 4. Get AI response (includes summary check)
-   $ai_response = $this->aiApiService->sendMessage($node, $message);
-   
-   // 5. Add AI message to node
-   $ai_message = [
-     'role' => 'assistant', 
-     'content' => $ai_response,
-     'timestamp' => time(),
-   ];
-   $this->addMessageToNode($node, $ai_message);
-   $node->save();
-   
-   // 6. Return response with updated stats
-   return new JsonResponse([
-     'success' => TRUE,
-     'response' => $ai_response,
-     'stats' => $this->aiApiService->getConversationStats($node),
-   ]);
-   ```
-
-### 🧠 **AIApiService - Core AI Logic**
-
-**Location:** `src/Service/AIApiService.php`
-
-**Primary Method:** `sendMessage(NodeInterface $conversation, string $message)`
-
-**Processing Steps:**
-1. **Context Building:**
-   ```php
-   // Build optimized context from node data
-   $context = $this->buildOptimizedContext($conversation, $message);
-   // Context = system prompt + summary + recent messages + current message
-   ```
-
-2. **Summary Check:**
-   ```php
-   // Auto-summarize if thresholds exceeded
-   $this->checkAndUpdateSummary($conversation);
-   // Triggers when: message_count > threshold OR tokens > limit
-   ```
-
-3. **AWS Bedrock Call:**
-   ```php
-   // Send to Claude 3.5 Sonnet
-   $response = $bedrock->invokeModel([
-     'modelId' => 'anthropic.claude-3-5-sonnet-20240620-v1:0',
-     'contentType' => 'application/json',
-     'body' => json_encode($request_body)
-   ]);
-   ```
-
-4. **Response Processing:**
-   ```php
-   // Extract AI response and update node statistics
-   $content = json_decode($response['body'], true);
-   return $content['content'][0]['text'];
-   ```
-
-### 🎛️ **Frontend JavaScript Integration**
-
-**File:** `js/chat-interface.js`
-
-**Initialization:**
-```javascript
-Drupal.behaviors.aiConversationChat = {
-  attach: function(context, settings) {
-    const chatSettings = settings.aiConversation || {};
-    // Settings include: nodeId, sendMessageUrl, csrfToken, stats
-  }
-};
+Resource Control (8.5/9)
+├─ Computational Resources: 9/9 - Massive OpenAI infrastructure
+├─ Financial Capital: 9/9 - Multi-billion dollar backing
+├─ Data Storage: 8/9 - Petabyte-scale data centers
+├─ Network Bandwidth: 8/9 - Global CDN distribution
+├─ API Access: 8/9 - Rich API for integrations
+└─ Human Resources: 8/9 - Thousands of researchers
 ```
 
-**AJAX Message Flow:**
-```javascript
-function sendMessage() {
-  console.log('🚀 Starting sendMessage for node:', chatSettings.nodeId);
-  
-  $.ajax({
-    url: chatSettings.sendMessageUrl,  // '/ai-conversation/send-message'
-    type: 'POST',
-    data: {
-      node_id: chatSettings.nodeId,    // The conversation node ID
-      message: message,
-      csrf_token: chatSettings.csrfToken
-    },
-    success: function(response) {
-      // Add AI response to chat interface
-      addMessageToChat('assistant', response.response);
-      // Update statistics display
-      updateMetricsDisplay(response.stats);
-    }
-  });
-}
+#### Example 2: Government Agency (NSA)
+
+```
+Entity: NSA (National Security Agency)
+Total Power Score: 8.1/9
+
+Authority & Permission (9/9) [HIGHEST]
+├─ Legal Authorization: 9/9 - Congressional authority, executive powers
+├─ Institutional Backing: 9/9 - Executive branch backing
+├─ Budget Authority: 9/9 - Annual multi-billion dollar budget
+├─ Policy Compliance: 8/9 - Operates within legal frameworks (with oversight gaps)
+├─ Override Capability: 9/9 - Can bypass many restrictions
+└─ Audit & Accountability: 5/9 - Limited public transparency
+
+Information Access (8.7/9)
+├─ Scope: 9/9 - Signals intelligence, human intelligence
+├─ Restriction: 3/9 - Minimal restrictions on collection
+├─ Classification: 9/9 - Access to all classification levels
+├─ Temporal: 9/9 - Real-time signals monitoring
+├─ Sources: 9/9 - Global surveillance apparatus
+└─ Granularity: 9/9 - Granular signal intercepts and analysis
 ```
 
-### 🔐 **Security & Access Control**
+### Bulk Operations
 
-**Access Method:** `ChatController::chatAccess()`
-```php
-public function chatAccess(NodeInterface $node, AccountInterface $account) {
-  // Only ai_conversation nodes
-  if ($node->bundle() !== 'ai_conversation') {
-    return AccessResult::forbidden();
-  }
-  
-  // Node owner or admin only
-  if ($node->getOwnerId() === $account->id() || 
-      $account->hasPermission('administer content')) {
-    return AccessResult::allowed();
-  }
-  
-  return AccessResult::forbidden();
-}
-```
+#### Export All Evaluations
 
-**CSRF Protection:** All POST requests require valid CSRF tokens
-
-### 📊 **Statistics & Monitoring**
-
-**Real-time Stats Endpoint:** `/ai-conversation/stats?node_id={nid}`
-
-**Statistics Calculated:**
-- **Total Messages:** Complete message count from `field_message_count`
-- **Recent Messages:** Count of messages currently stored in `field_messages`
-- **Has Summary:** Boolean if `field_conversation_summary` exists
-- **Token Estimates:** Calculated from message content length
-- **Summary Status:** Last update timestamp
-
-### 🔄 **Rolling Summary System Implementation**
-
-**Trigger Logic:** `checkAndUpdateSummary()` in `AIApiService`
-```php
-$message_count = $conversation->get('field_message_count')->value ?: 0;
-$max_recent = $this->config->get('max_recent_messages') ?: 10;
-
-if ($message_count > $max_recent) {
-  $this->updateConversationSummary($conversation);
-  $this->pruneOldMessages($conversation);
-}
-```
-
-**Summary Generation:**
-1. **Collect older messages** beyond recent limit
-2. **Send to AI** with summarization prompt
-3. **Update** `field_conversation_summary` 
-4. **Remove old messages** from `field_messages`
-5. **Update timestamps** and counters
-
-### **Frontend Integration**
-
-#### **Chat Interface Template**
-**Location:** `templates/ai-conversation-chat.html.twig`
-
-**Features:**
-- **Message History**: Displays conversation with role-based styling
-- **Live Statistics**: Real-time metrics (token count, message count, summary status)
-- **Summary Indicator**: Visual indication when conversation has been summarized
-- **Context Display**: Shows system prompt/context information
-
-#### **JavaScript Integration**
-**Location:** `js/chat-interface.js`
-
-**Functionality:**
-- **AJAX Messaging**: Real-time message sending without page reload
-- **Live Metrics**: Auto-updating conversation statistics every 30 seconds
-- **Progressive Enhancement**: Graceful degradation without JavaScript
-- **Loading States**: Visual feedback during AI response generation
-
-#### **CSS Styling**
-**Location:** `css/chat-interface.css`
-
-**Design Elements:**
-- **Message Bubbles**: Distinct styling for user vs AI messages
-- **Statistics Panel**: Collapsible metrics display
-- **Responsive Layout**: Mobile-friendly design
-- **Loading Animations**: Visual feedback for processing states
-
-### **Configuration System**
-
-#### **Settings Form** (`/admin/config/ai-conversation`)
-**Location:** `src/Form/SettingsForm.php`
-
-**Configuration Options:**
-- **API Settings**: Max tokens per response (default: 4000)
-- **Rolling Summary**: Max recent messages (default: 10), frequency (default: 20)
-- **Token Management**: Max tokens before summary trigger (default: 6000)
-- **Debug Options**: Logging level, statistics display
-- **Connection Testing**: Live AWS Bedrock connectivity check
-
-### **Permission System**
-
-**Defined Permissions:**
-- **`use ai conversation`**: Access to AI chat features
-- **`administer ai conversation`**: Module configuration access
-
-**Content Type Permissions** (auto-granted to authenticated users):
-- **`create ai_conversation content`**
-- **`edit own ai_conversation content`**
-- **`delete own ai_conversation content`**
-- **`view own ai_conversation content`**
-
-## Installation & Setup
-
-### **Module Installation**
-1. Enable the `ai_conversation` module
-2. The install process automatically:
-   - Creates `ai_conversation` content type
-   - Adds all required fields
-   - Sets up default permissions
-
-### **Module Uninstallation (Data Preservation)**
-⚠️ **Important:** The ai_conversation module uses a **safe uninstall process** that preserves your conversation data.
-
-**Uninstall Behavior:**
-- **Fields Preserved:** All conversation fields and data remain intact
-- **Content Type:** Only removed if no conversations exist
-- **Settings:** Module configuration is removed
-- **Data Safety:** No conversation data is lost during uninstall
-
-**Complete Data Removal (Optional):**
-If you need to completely remove all conversation data, use this Drush command:
 ```bash
-drush php-eval "_ai_conversation_complete_removal();"
-```
-**⚠️ WARNING:** This permanently deletes all conversation data!
+# Export as JSON (API)
+curl -H "Accept: application/json" \
+  http://localhost/api/evaluations/export \
+  > evaluations.json
 
-### **AWS Bedrock Configuration**
-
-#### **Environment Variables (Recommended)**
-```bash
-AWS_ACCESS_KEY_ID=your_access_key_id
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_DEFAULT_REGION=us-west-2
+# Query evaluations by dimension (Drupal views integration)
+# Navigate to: /admin/reports/evaluations
+# Filter by: Score range, dimension, date range
 ```
 
-#### **IAM Role (Production)**
-```json
+#### Programmatic Access
+
+```php
+// Load an evaluation
+$entity = \Drupal::entityTypeManager()
+  ->getStorage('node')
+  ->load($entity_nid);
+
+// Access scores
+$total_power = $entity->field_total_power->value;
+$info_access = $entity->field_information_access->value;
+
+// Access conversation
+$conversation_nid = $entity->field_source_conversation->target_id;
+$conversation = Node::load($conversation_nid);
+```
+
+## Dependencies
+
+### Required
+- **Drupal Node Module**: Core entity storage
+- **Drupal Field Module**: Core field system
+- **Drupal User Module**: Authentication and permissions
+- **AI Conversation Module**: Conversational AI engine with AWS Bedrock integration
+
+### Optional
+- **Forseti Content Module**: Integration with Agent Power Framework pages
+- **Views Module**: For evaluation reporting and filtering
+- **REST API Module**: For programmatic access to evaluation data
+
+### External Services
+- **AWS Bedrock**: Claude 3.5 Sonnet model (anthropic.claude-3-5-sonnet-20240620-v1:0)
+- **AWS Region**: us-west-2
+
+## API Documentation
+
+### REST Endpoints
+
+#### Create New Evaluation
+
+```
+POST /api/evaluations/create
+Content-Type: application/json
+Accept: application/json
+
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "bedrock:InvokeModel",
-      "Resource": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-*"
-    }
-  ]
+  "entity_name": "ChatGPT",
+  "description": "Optional description of entity"
+}
+
+Response: 201 Created
+{
+  "nid": 123,
+  "conversation_nid": 124,
+  "status": "evaluating",
+  "created": 1704067200
 }
 ```
 
-### **Module Configuration**
-1. Navigate to `/admin/config/ai-conversation`
-2. Configure token limits and summary settings
-3. Test AWS Bedrock connection
-4. Adjust debug settings as needed
+#### Retrieve Evaluation
 
-## Usage
+```
+GET /api/evaluations/{entity_nid}
 
-### **Creating Conversations**
-1. Create a new "AI Conversation" content node
-2. Set title and optional system context
-3. Save the node
-4. Visit `/node/{nid}/chat` to start chatting
+Response: 200 OK
+{
+  "nid": 123,
+  "title": "ChatGPT",
+  "total_power": 7.8,
+  "scores": {
+    "information_access": 8.2,
+    "resource_control": 8.5,
+    "authority_permission": 6.1,
+    "network_position": 8.9,
+    "synthesis_application": 7.6
+  },
+  "conversation_nid": 124,
+  "updated": 1704067200
+}
+```
 
-### **Chat Features**
-- **Send Messages**: Type and send messages to the AI
-- **View History**: See conversation history with user/AI message distinction
-- **Monitor Usage**: Track token usage and conversation statistics
-- **Summary Management**: View when conversation has been summarized
+#### Update Evaluation
 
-### **Administrative Features**
-- **Manual Summary**: Force summary generation via `/node/{nid}/trigger-summary`
-- **Statistics Monitoring**: Real-time conversation metrics
-- **Debug Logging**: Detailed logging for troubleshooting
-- **Connection Testing**: Validate AWS Bedrock connectivity
+```
+PATCH /api/evaluations/{entity_nid}
+Content-Type: application/json
+Authorization: Bearer {token}
 
-## Integration with Other Modules
+{
+  "field_resource_control": 8.8,
+  "notes": "Updated after reviewing financial data"
+}
 
-### **As Foundation Service Provider**
-The ai_conversation module serves as the foundational AI service for other modules:
+Response: 200 OK
+```
+
+#### List Evaluations
+
+```
+GET /api/evaluations?filter[total_power][min]=7&sort=created
+
+Response: 200 OK
+{
+  "data": [
+    {
+      "nid": 123,
+      "title": "ChatGPT",
+      "total_power": 7.8
+    }
+  ],
+  "count": 1,
+  "page": 1
+}
+```
+
+### Drupal Hooks
+
+#### Custom Field Updates via Conversation
 
 ```php
-// Other modules can use the AI service
-$ai_service = \Drupal::service('ai_conversation.api_service');
-$response = $ai_service->sendMessage($conversation_node, $message);
+// Hook when AI updates evaluation scores
+function my_module_agent_evaluation_scores_updated(&$scores, $conversation_nid) {
+  // Log score changes
+  \Drupal::logger('my_module')->notice('Scores updated: %scores', [
+    '%scores' => json_encode($scores)
+  ]);
+}
 ```
 
-### **Dependent Modules**
-- **resume_tailoring**: Uses AI service for resume customization
-- **Future AI modules**: Can leverage centralized AI infrastructure
+#### Post-Evaluation Hook
 
-## Token Economy & Cost Management
-
-### **Token Estimation**
-- **Rough Formula**: 1 token ≈ 4 characters
-- **Context Optimization**: Summary + recent messages minimize token usage
-- **Automatic Management**: Rolling summary prevents exponential token growth
-
-### **Cost Efficiency Features**
-- **Smart Summarization**: Reduces context size while preserving information
-- **Configurable Limits**: Adjustable max tokens and summary frequency
-- **Usage Tracking**: Monitor token consumption per conversation
-- **Model Selection**: Support for different Claude models (cost vs capability)
-
-## Troubleshooting
-
-### **Common Issues**
-
-#### **"Failed to communicate with AI service"**
-- Check AWS credentials (environment variables or IAM role)
-- Verify network connectivity to AWS Bedrock
-- Test connection via settings page
-
-#### **"Summary generation failed"**
-- Check AWS Bedrock permissions
-- Verify model availability in us-west-2 region
-- Review error logs for detailed messages
-
-#### **Missing conversation history**
-- Check if conversation has been summarized (look for summary indicator)
-- Recent messages are preserved, older messages are in summary
-- Use manual summary trigger for testing
-
-### **Debug Mode**
-Enable debug mode in settings to get detailed logging:
-- API request/response details
-- Token usage breakdown
-- Summary generation process
-- Performance metrics
-
-This module provides a production-ready, scalable foundation for AI-powered conversations with intelligent context management and cost optimization.
-- **Region**: `us-west-2`
-- **Max Tokens**: Configurable (default: 4000)
-
-### Core Architecture
-
-#### AIApiService Class
-Main service handling AI communication and conversation management.
-
-**Key Methods**:
-- `sendMessage(NodeInterface $conversation, string $message)`: Send messages to AI
-- `buildOptimizedContext()`: Creates context with summary + recent messages
-- `checkAndUpdateSummary()`: Manages rolling summary updates
-- `estimateTokens()`: Estimates token usage for optimization
-
-#### Rolling Summary System
-- **Automatic Summarization**: Triggers when conversation exceeds thresholds
-- **Context Optimization**: Maintains summary + recent messages only
-- **Token-Based Logic**: Summarizes based on token count, not just message count
-- **Intelligent Pruning**: Removes older messages while preserving context
-
-### Database Schema
-
-#### Conversation Content Type Fields
-- **`field_conversation_summary`**: Stores rolling summary of older messages
-- **`field_message_count`**: Tracks total messages for summary logic
-- **`field_summary_updated`**: Timestamp of last summary update
-- **`field_total_tokens`**: Running count of tokens used
-- **`field_ai_model`**: Selected AI model for the conversation
-
-## 🚀 Installation
-
-1. Enable the module: `drush pm:enable ai_conversation`
-2. Run database updates: `drush updatedb`
-3. Configure AWS credentials for Bedrock access
-4. Configure module settings
-5. Clear cache: `drush cr`
-
-## 📋 Requirements
-
-- Drupal 9, 10, or 11
-- Node module
-- AWS SDK for PHP
-- AWS Bedrock access with Claude model permissions
-
-## 🔑 Configuration
-
-### AWS Bedrock Credentials
-
-The module supports multiple ways to configure AWS credentials (in order of precedence):
-
-1. **Admin Interface** (Recommended)
-   - Navigate to `/admin/config/ai-conversation/settings`
-   - Enter your AWS credentials through the web form
-   
-2. **Environment Variables** (Automatic fallback)
-   - Set `AWS_ACCESS_KEY_ID`
-   - Set `AWS_SECRET_ACCESS_KEY` 
-   - Set `AWS_DEFAULT_REGION` (optional, defaults to us-west-2)
-   
-   The module will automatically use environment variables if configuration values are empty.
-
-3. **AWS Default Credential Chain** (For AWS infrastructure)
-   - IAM roles, instance profiles, ECS task roles, etc.
-   - No configuration needed when running on AWS
-
-4. **Drush Commands** (For automated deployments)
-   ```bash
-   ./vendor/bin/drush config:set ai_conversation.settings aws_access_key_id "YOUR_ACCESS_KEY"
-   ./vendor/bin/drush config:set ai_conversation.settings aws_secret_access_key "YOUR_SECRET_KEY"
-   ```
-
-### Required AWS Permissions
-Your credentials need:
-- `bedrock:InvokeModel` for Claude models
-- Access to specific model ARNs in your region
-
-### Module Configuration
-Navigate to **Admin → Configuration → AI Conversation Settings** to configure:
-
-#### Memory Management
-- **Max Recent Messages**: Number of recent messages to keep (default: 10)
-- **Token Threshold**: Maximum tokens before triggering summary (default: 6000)
-- **Summary Frequency**: Update summary every N messages (default: 20)
-
-#### Response Settings
-- **Max Tokens**: Maximum tokens for AI responses (default: 4000)
-- **Model Selection**: Choose AI model (supports fallback to default)
-
-#### Debug Options
-- **Debug Mode**: Enable detailed logging
-- **Statistics Display**: Show token usage and conversation stats
-
-## 📊 Usage
-
-### Starting a Conversation
-1. **Create Conversation Node**: Add new AI Conversation content
-2. **Configure Settings**: Select AI model and parameters
-3. **Begin Chat**: Use the chat interface to interact with AI
-
-### Chat Interface Features
-- **Real-time Responses**: Immediate AI responses
-- **Message History**: Full conversation history with timestamps
-- **Context Awareness**: AI maintains conversation context
-- **Auto-scrolling**: Interface automatically scrolls to new messages
-
-### Conversation Management
-- **Automatic Summarization**: System manages context automatically
-- **Token Tracking**: Monitor usage in conversation details
-- **Context Optimization**: Recent messages + summary for best performance
-
-## 🎨 Advanced Features
-
-### Rolling Summary System
-The module implements a sophisticated memory management system:
-
-1. **Monitors Conversation Length**: Tracks both message count and token usage
-2. **Triggers Summarization**: When thresholds are exceeded
-3. **Generates Summary**: AI creates concise summary of older messages
-4. **Prunes History**: Removes older messages while keeping summary
-5. **Maintains Context**: Recent messages + summary for continuity
-
-### Token Optimization
-- **Input Token Estimation**: Calculates tokens before sending to AI
-- **Output Token Tracking**: Monitors response token usage
-- **Total Token Management**: Maintains running totals per conversation
-- **Cost Optimization**: Reduces API costs through efficient context management
-
-## 🔍 Logging and Monitoring
-
-The module provides comprehensive logging:
-
-- **Conversation Events**: Message sending and receiving
-- **Summary Operations**: When summaries are created/updated
-- **Token Usage**: Detailed token consumption tracking
-- **Error Conditions**: API errors and recovery attempts
-- **Performance Metrics**: Response times and optimization events
-
-Access logs: **Reports > Recent log messages > ai_conversation**
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**AI Not Responding**
-- Check AWS Bedrock permissions and connectivity
-- Verify Claude model access
-- Review error logs for API issues
-- Test with simple messages first
-
-**Token Limit Exceeded**
-- Adjust max tokens setting
-- Check summary frequency configuration
-- Review conversation length and complexity
-
-**Summary Not Working**
-- Verify token threshold settings
-- Check summary frequency configuration
-- Review conversation message count
-
-**Model Errors**
-- Confirm model ID is correct
-- Check for model availability in region
-- Verify AWS service status
-
-### Debug Steps
-1. Enable debug mode in module configuration
-2. Check recent log messages for detailed information
-3. Test AWS connectivity with simple requests
-4. Verify conversation node configuration
-5. Monitor token usage in conversation details
-
-## 🔄 Customization
-
-### Prompt Engineering
-Modify the system prompts in `AIApiService.php` to:
-- Adjust AI personality and behavior
-- Add specialized knowledge domains
-- Customize response formatting
-- Implement role-based responses
-
-### Model Configuration
-- Change AI model by updating configuration
-- Support for multiple models per conversation
-- Fallback model configuration for reliability
-
-### Summary Behavior
-Customize summarization by modifying:
-- Summary prompt templates
-- Trigger thresholds
-- Context window size
-- Message retention policies
-
-## 🚀 Future Enhancements
-
-Potential improvements:
-- Multi-model conversations
-- Conversation templates
-- Export/import functionality
-- API integration
-- Mobile-optimized interface
-- Voice interaction support
-
-## 📞 Support
-
-For issues or questions:
-1. Enable debug mode for detailed error information
-2. Check AWS Bedrock service status and permissions
-3. Review conversation configuration settings
-4. Test with minimal conversation complexity
-5. Monitor token usage and adjust thresholds accordingly
-2. Start chatting - the system will automatically handle summarization
-3. Monitor the conversation statistics panel
-4. Watch as older messages get summarized after reaching thresholds
-
-## 🚀 How It Works
-
-### Context Building Process
-1. **System prompt** (from node context field)
-2. **Conversation summary** (if exists)
-3. **Recent messages** (last N messages)
-4. **Current user message**
-
-### Summary Generation Logic
-```
-IF (message_count > max_recent_messages) {
-  IF (message_count % summary_frequency == 0) OR (tokens > max_tokens_before_summary) {
-    GENERATE_SUMMARY()
-    PRUNE_OLD_MESSAGES()
+```php
+// Hook after evaluation node is created
+function my_module_node_insert(Drupal\node\NodeInterface $node) {
+  if ($node->bundle() === 'evaluated_entity') {
+    // Send notification, export data, etc.
   }
 }
 ```
 
-### Summary Content
-- **Existing summary** (if updating)
-- **Key topics and decisions** from older messages
-- **Important context** for conversation continuity
-- **Concise but comprehensive** overview
+## Development
 
-## 📊 User Experience
+### Module Architecture
 
-### Chat Interface Features
-- **Statistics panel** showing:
-  - Total messages vs. recent messages
-  - Summary status (Yes/No)
-  - Estimated token usage
-  - Last summary update time
+```
+agent_evaluation/
+├── src/
+│   ├── Controller/
+│   │   └── EvaluationController.php (Routes)
+│   ├── Form/
+│   │   └── EvaluationForm.php (Entry form)
+│   ├── Service/
+│   │   ├── AgentEvaluationService.php (Main logic)
+│   │   ├── FieldUpdateParser.php (Score extraction)
+│   │   └── ScoreCalculator.php (Aggregation)
+│   └── Plugin/
+│       └── ... (Drupal integrations)
+├── config/
+│   ├── schema/
+│   └── install/ (Default configuration)
+├── templates/
+│   └── (Twig templates)
+├── js/
+│   └── (Visualization scripts)
+├── css/
+│   └── (Styling)
+└── agent_evaluation.module (Hooks)
+```
 
-- **Visual indicators**:
-  - Summary indicator when conversation is summarized
-  - Loading spinner during AI responses
-  - Error handling for failed requests
+### Key Services
 
-- **Manual controls**:
-  - Trigger summary update button (appears after 20+ messages)
-  - Clear input button
-  - Enter to send, Shift+Enter for new line
+#### AgentEvaluationService
 
-### Performance Monitoring
-- **Real-time statistics** update after each message
-- **Token estimation** to predict API costs
-- **Summary effectiveness** tracking
-
-## 🛠️ API Endpoints
-
-### New Endpoints
-- **`/ai-conversation/stats`** - Get conversation statistics
-- **`/node/{node}/trigger-summary`** - Manually trigger summary update
-- **`/admin/config/ai-conversation`** - Configuration form
-
-### Enhanced Endpoints
-- **`/ai-conversation/send-message`** - Now returns updated statistics
-- **`/node/{node}/chat`** - Includes statistics in interface
-
-## 🔍 Debugging & Monitoring
-
-### Debug Mode Features
-- **Detailed logging** of summary generation
-- **Token usage tracking**
-- **Message pruning logs**
-- **API call monitoring**
-
-### Statistics Available
 ```php
-$stats = [
-  'total_messages' => 45,
-  'recent_messages' => 10,
-  'has_summary' => true,
-  'estimated_tokens' => 2847,
-  'summary_updated' => 1704067200
-];
+// Create new evaluation
+$service = \Drupal::service('agent_evaluation.service');
+$conversation_nid = $service->createEvaluation('ChatGPT');
 ```
 
-## 📈 Performance Benefits
+#### FieldUpdateParser
 
-### Before Implementation
-- **Growing context** sent to API with every message
-- **Token usage** increases linearly with conversation length
-- **API costs** escalate with longer conversations
-- **Response time** degrades with large contexts
+```php
+// Extract scores from AI response
+$parser = \Drupal::service('agent_evaluation.field_parser');
+$scores = $parser->extractFieldValues($ai_response_text);
+// Returns: ['field_resource_control' => 8, 'field_scope' => 9, ...]
+```
 
-### After Implementation
-- **Constant context size** (summary + recent messages)
-- **Predictable token usage** regardless of conversation length
-- **Optimized API costs** through smart context management
-- **Consistent response times** with bounded context
+#### ScoreCalculator
 
-## 🎛️ Configuration Options
+```php
+// Recalculate aggregates
+$calculator = \Drupal::service('agent_evaluation.calculator');
+$main_scores = $calculator->calculateMainDimensions($sub_scores);
+$total = $calculator->calculateTotalPower($main_scores);
+```
 
-### Essential Settings
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `max_recent_messages` | 10 | Recent messages to keep in full |
-| `max_tokens_before_summary` | 6000 | Token threshold for summary trigger |
-| `summary_frequency` | 20 | Messages between summary updates |
-| `enable_auto_summary` | TRUE | Enable automatic summarization |
+### Custom Evaluation Contexts
 
-### Advanced Settings
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `max_tokens` | 4000 | Max tokens for AI responses |
-| `debug_mode` | FALSE | Enable detailed logging |
-| `show_stats` | TRUE | Show statistics in chat interface |
+Create specialized evaluation frameworks by overriding context:
 
-## 🔄 Deployment with GitHub Actions
+```php
+// In your module
+function my_module_agent_evaluation_context_alter(&$context, $entity_name) {
+  // Customize framework for specific entity types
+  if (strpos($entity_name, 'Government') !== false) {
+    $context .= "\n\nSpecial consideration for government entities...";
+  }
+}
+```
 
-Your existing deployment pipeline will automatically handle:
-- Database updates (`drush updatedb`)
-- Cache clearing (`drush cache:rebuild`)
-- Code deployment (via Git or rsync)
+### Testing
 
-## 🧪 Testing Strategy
-
-### Manual Testing
-1. **Create long conversation** (30+ messages)
-2. **Verify summary generation** at configured intervals
-3. **Check context optimization** in API calls
-4. **Monitor token usage** through statistics
-5. **Test manual summary trigger**
-
-### Automated Testing
 ```bash
-# Test API connection
-drush ai-conversation:test
+# Run unit tests
+cd web/modules/custom/agent_evaluation
+../../../vendor/bin/phpunit tests/Unit/
 
-# Check configuration
-drush config:get ai_conversation.settings
+# Run functional tests
+../../../vendor/bin/phpunit tests/Functional/
 
-# Verify database schema
-drush sql:query "DESCRIBE node__field_conversation_summary"
+# Run with code coverage
+../../../vendor/bin/phpunit --coverage-html=coverage/ tests/
 ```
 
-## 🚨 Troubleshooting
+### Local Development
+
+```bash
+# Enable debug mode
+drush config:set agent_evaluation.settings debug_mode TRUE -y
+
+# View debug logs
+drush watchdog:list | tail -20
+
+# Export current evaluations for testing
+drush sql:dump --tables-list=node,node__field_total_power > test_data.sql
+```
+
+## Contributing
+
+### Contribution Guidelines
+
+We welcome contributions! Please follow these guidelines:
+
+1. **Fork & Branch**: Create a feature branch (`feature/my-feature`)
+2. **Code Standards**: Follow Drupal coding standards (phpcs)
+3. **Tests**: Add tests for new functionality
+4. **Documentation**: Update this README for new features
+5. **Commit Message**: Use descriptive messages with issue references
+
+### Code Quality
+
+```bash
+# Check code standards
+phpcs src/
+
+# Fix formatting
+phpcbf src/
+
+# Run static analysis
+phpstan --level=7 src/
+```
+
+### Reporting Issues
+
+When reporting issues, please include:
+- Drupal version
+- Module version
+- Reproduction steps
+- Expected vs. actual behavior
+- Environment (local/staging/production)
+
+### Security Considerations
+
+- **No API Keys in Code**: Never commit AWS credentials
+- **CSRF Protection**: All forms include token validation
+- **Access Control**: Verify permissions before exposing data
+- **Input Validation**: Sanitize all entity names and user inputs
+- **Output Encoding**: Always escape output in templates
+
+### Performance Optimization
+
+For large-scale evaluations:
+
+```php
+// Enable caching for context
+$context = \Drupal::cache('default')->get('evaluation_context');
+if (!$context) {
+  $context = $this->buildContext();
+  \Drupal::cache('default')->set('evaluation_context', $context, CacheBackendInterface::CACHE_PERMANENT);
+}
+
+// Batch process bulk evaluations
+$batch = [
+  'title' => 'Evaluating entities...',
+  'operations' => [
+    ['agent_evaluation_batch_evaluate', [$entities]],
+  ],
+  'finished' => 'agent_evaluation_batch_finished',
+];
+batch_set($batch);
+```
+
+## License
+
+This module is licensed under the **GNU General Public License v3.0 (GPL-3.0-only)**.
+
+See the LICENSE file for full details.
+
+```
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+```
+
+## Support
+
+### Getting Help
+
+- **Documentation**: See ARCHITECTURE.md and FORSETI_CONTEXT.md
+- **Issues**: File bugs via issue tracker
+- **Community**: Ask questions in Drupal forums
+- **Commercial Support**: Contact module maintainers
 
 ### Common Issues
 
-**Summary not generating**
-- Check `enable_auto_summary` setting
-- Verify message count threshold
-- Review debug logs
+#### AI Model Not Responding
 
-**High token usage**
-- Reduce `max_recent_messages`
-- Lower `max_tokens_before_summary`
-- Check summary quality
-
-**API errors**
-- Verify AWS credentials
-- Check Bedrock model availability
-- Review error logs
-
-### Debug Commands
 ```bash
-# Check module status
-drush pm:list | grep ai_conversation
+# Check AWS Bedrock connectivity
+drush php:eval "\Drupal::service('ai_conversation.bedrock_client')->testConnection();"
 
-# View recent logs
-drush watchdog:show --type=ai_conversation
-
-# Test configuration
-drush config:get ai_conversation.settings
+# Verify credentials
+echo $AWS_ACCESS_KEY_ID
+echo $AWS_SECRET_ACCESS_KEY
 ```
 
-## 🎯 Next Steps
+#### Scores Not Updating
 
-### Immediate Actions
-1. **Deploy the updated module** using your GitHub Actions pipeline
-2. **Configure settings** through the admin interface
-3. **Test with existing conversations** to verify functionality
-4. **Monitor performance** through the statistics panel
+```bash
+# Check field parsing
+drush sql:query "SELECT * FROM node__field_total_power WHERE entity_id IN (SELECT nid FROM node WHERE type='evaluated_entity');"
 
-### Future Enhancements
-- **Advanced summarization** with topic extraction
-- **Conversation branching** for different discussion threads
-- **Export/import** of conversation summaries
-- **Integration with other AI models** for specialized summarization
-
-## 📝 File Structure
-
-```
-ai_conversation/
-├── ai_conversation.install          # Database schema + updates
-├── ai_conversation.module           # Hooks and theme definitions
-├── ai_conversation.routing.yml      # Route definitions
-├── ai_conversation.services.yml     # Service definitions
-├── ai_conversation.libraries.yml    # Asset libraries
-├── src/
-│   ├── Service/
-│   │   └── AIApiService.php        # Enhanced AI service
-│   ├── Controller/
-│   │   └── ChatController.php      # Enhanced chat controller
-│   └── Form/
-│       └── SettingsForm.php        # Configuration form
-├── templates/
-│   └── ai-conversation-chat.html.twig  # Chat interface template
-├── css/
-│   └── chat-interface.css          # Styles
-└── js/
-    └── chat-interface.js           # JavaScript functionality
+# Verify conversation is running
+drush sql:query "SELECT * FROM node__field_messages WHERE entity_id=123 ORDER BY field_messages_delta DESC LIMIT 1;"
 ```
 
-## 🎉 Success Metrics
+#### Performance Issues
 
-Your rolling summary system is working correctly when:
-- ✅ **Conversation statistics** update in real-time
-- ✅ **Summary indicator** appears after threshold reached
-- ✅ **Token usage** remains stable regardless of conversation length
-- ✅ **API response times** stay consistent
-- ✅ **Context quality** maintained through summarization
+```bash
+# Check table sizes
+drush sql:query "SELECT table_name, round(data_length/1024/1024, 2) FROM information_schema.tables WHERE table_schema='drupal';"
 
-**Ready to revolutionize your AI conversations with intelligent context management!** 🚀
+# Archive old evaluations
+drush eval "
+$count = \Drupal::entityQuery('node')
+  ->condition('type', 'evaluated_entity')
+  ->condition('created', time() - 2592000, '<')  // 30 days
+  ->execute();
+"
+```
+
+## Security
+
+### Security Considerations
+
+#### Authentication & Authorization
+- **Evaluation Creation**: Requires authenticated user
+- **Data Access**: Respects Drupal node access controls
+- **API Tokens**: Required for telemetry endpoints
+- **Session Security**: Uses Drupal's CSRF token validation
+
+#### Data Protection
+- **AWS Bedrock**: All data transmitted over HTTPS
+- **Input Validation**: Entity names sanitized and validated
+- **Output Encoding**: Scores and text properly escaped
+- **No Sensitive Data**: Conversations do not store credentials
+
+#### Audit Trail
+- **Change Logging**: All score updates timestamped
+- **Conversation History**: Full audit trail of reasoning
+- **Admin Reporting**: View all evaluations and modifications
+- **Compliance**: Suitable for SOC 2 and GDPR compliance
+
+### Reporting Security Issues
+
+Do not file public security issues. Instead:
+1. Email security concerns to maintainers
+2. Include reproduction steps and impact assessment
+3. Allow 90 days for response and patching
+
+## Maintenance
+
+### Upgrade Path
+
+```bash
+# Update module
+cd web/modules/custom/agent_evaluation
+git pull origin main
+
+# Run database updates
+drush updatedb -y
+
+# Clear cache
+drush cache:rebuild
+
+# Verify
+drush pm:list --type=module | grep agent_evaluation
+```
+
+### Database Maintenance
+
+```bash
+# Optimize tables
+drush sql:query "OPTIMIZE TABLE node, node__field_total_power, node__field_messages;"
+
+# Archive old evaluations (optional)
+drush sql:query "
+  UPDATE node SET status=0 
+  WHERE type='evaluated_entity' AND created < DATE_SUB(NOW(), INTERVAL 1 YEAR)
+"
+
+# View database stats
+drush sql:query "
+  SELECT COUNT(*) as total_evaluations FROM node WHERE type='evaluated_entity';
+"
+```
+
+### Monitoring
+
+Monitor these metrics:
+
+| Metric | Target | Action if Exceeded |
+|--------|--------|-------------------|
+| Average Response Time | < 2s | Optimize AI context |
+| Failed API Calls | < 1% | Check AWS Bedrock status |
+| Conversation Length | < 50 turns | Recommend summary/new session |
+| Database Size | < 10GB | Archive old evaluations |
+| Storage Usage | < 80% | Increase capacity |
+
+### Version History
+
+- **1.0.0** (Feb 2026): Initial release with Agent Power Framework
+- **1.1.0** (Future): Bulk evaluation API
+- **1.2.0** (Future): Custom framework builder
