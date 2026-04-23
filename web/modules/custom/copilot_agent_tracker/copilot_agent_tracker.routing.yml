@@ -235,3 +235,69 @@ copilot_agent_tracker.langgraph_console_subsection:
     _permission: 'administer copilot agent tracker'
     section: 'home|build|test|run|observe|release|admin'
     subsection: '[a-z0-9-]+'
+
+copilot_agent_tracker.langgraph_console_admin_settings:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/settings'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::settings'
+    _title: 'Console Settings'
+  methods: [GET, POST]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _admin_route: true
+
+copilot_agent_tracker.langgraph_console_admin_permissions:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/permissions'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::permissions'
+    _title: 'Console Permissions & Team Assignment'
+  methods: [GET]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _admin_route: true
+
+copilot_agent_tracker.langgraph_console_admin_audit_log:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/audit-log'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::auditLog'
+    _title: 'Console Audit Log'
+  methods: [GET]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _admin_route: true
+
+copilot_agent_tracker.langgraph_console_admin_health:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/health'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::health'
+    _title: 'System Health Dashboard'
+  methods: [GET]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _admin_route: true
+
+copilot_agent_tracker.langgraph_console_admin_health_json:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/health.json'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::healthJson'
+  methods: [GET]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _format: json
+    _admin_route: true
+
+copilot_agent_tracker.langgraph_console_admin_navigation:
+  path: '/admin/reports/copilot-agent-tracker/langgraph-console/admin/navigation'
+  defaults:
+    _controller: '\Drupal\copilot_agent_tracker\Controller\LangGraphConsoleAdminController::navigation'
+    _title: 'Console Navigation Settings'
+  methods: [GET, POST]
+  requirements:
+    _permission: 'administer console settings'
+  options:
+    _admin_route: true

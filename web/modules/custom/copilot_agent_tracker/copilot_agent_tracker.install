@@ -229,6 +229,62 @@ function copilot_agent_tracker_schema(): array {
     ],
   ];
 
+  $schema['copilot_agent_tracker_audit'] = [
+    'description' => 'Audit log for LangGraph console configuration and permission changes.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+      ],
+      'timestamp' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Unix timestamp of the action.',
+      ],
+      'operator_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'UID of the user who performed the action.',
+      ],
+      'action' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Action type (e.g., settings_changed, permission_updated).',
+      ],
+      'resource_id' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Resource identifier (e.g., setting name, agent id).',
+      ],
+      'before_value' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'Previous value (JSON serialized, truncated to 1KB).',
+      ],
+      'after_value' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'New value (JSON serialized, truncated to 1KB).',
+      ],
+      'csrf_verified' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'Boolean: whether CSRF token was valid.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'idx_timestamp' => ['timestamp'],
+      'idx_operator' => ['operator_id'],
+      'idx_action' => ['action'],
+    ],
+  ];
+
   return $schema;
 }
 
@@ -243,6 +299,7 @@ function copilot_agent_tracker_uninstall(): void {
     'copilot_agent_tracker_events',
     'copilot_agent_tracker_replies',
     'copilot_agent_tracker_inbox_resolutions',
+    'copilot_agent_tracker_audit',
   ] as $table) {
     if ($schema->tableExists($table)) {
       $schema->dropTable($table);
@@ -370,5 +427,23 @@ function copilot_agent_tracker_update_8006(): void {
       'length' => 512,
       'not null' => FALSE,
     ]);
+  }
+}
+
+/**
+ * Create audit table for LangGraph console (Phase 7).
+ */
+function copilot_agent_tracker_update_8007(): void {
+  $db = \Drupal::database();
+  $schema_handler = $db->schema();
+
+  if ($schema_handler->tableExists('copilot_agent_tracker_audit')) {
+    return;
+  }
+
+  $schema = copilot_agent_tracker_schema();
+  $spec = $schema['copilot_agent_tracker_audit'] ?? NULL;
+  if ($spec) {
+    $schema_handler->createTable('copilot_agent_tracker_audit', $spec);
   }
 }
