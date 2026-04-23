@@ -53,7 +53,7 @@ class ForsetiPipelineStatusResolver {
   public function __construct(string $features_path = '') {
     $this->features_path = $features_path !== ''
       ? $features_path
-      : rtrim(getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq', '/') . '/features';
+      : rtrim(getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life', '/') . '/features';
   }
 
   /**

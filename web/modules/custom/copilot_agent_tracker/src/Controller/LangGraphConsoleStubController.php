@@ -57,7 +57,7 @@ final class LangGraphConsoleStubController extends ControllerBase {
    * Resolve a path under COPILOT_HQ_ROOT.
    */
   private function hqPath(string $relative): string {
-    $root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/');
+    $root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/');
     return $root . '/' . ltrim($relative, '/');
   }
 
@@ -762,7 +762,7 @@ final class LangGraphConsoleStubController extends ControllerBase {
   public function admin(): array {
     ['tick' => $tick, 'parity' => $parity] = $this->loadTelemetry();
 
-    $hq_root    = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/');
+    $hq_root    = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/');
     $ticks_path = $this->hqPath(self::TICKS_RELATIVE);
     $par_path   = $this->hqPath(self::PARITY_RELATIVE);
     $dry_run    = isset($tick['dry_run']) ? (bool) $tick['dry_run'] : NULL;
@@ -2096,7 +2096,7 @@ final class LangGraphConsoleStubController extends ControllerBase {
   private function subAdminConfig(array $sub, array $back): array {
     ['tick' => $tick] = $this->loadTelemetry();
     $rows = [
-      [$this->t('COPILOT_HQ_ROOT'), rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/')],
+      [$this->t('COPILOT_HQ_ROOT'), rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/')],
       [$this->t('Provider'), (string) ($tick['provider'] ?? '—')],
       [$this->t('Agent cap'), isset($tick['agent_cap']) ? (string) $tick['agent_cap'] : '—'],
       [$this->t('Mode'), isset($tick['dry_run']) ? ((bool) $tick['dry_run'] ? 'dry-run' : 'live') : '—'],

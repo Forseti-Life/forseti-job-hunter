@@ -219,7 +219,7 @@ final class AdminSettingsForm extends ConfigFormBase {
    *   The settings values to save.
    */
   private function saveJsonFallback(array $values): void {
-    $hq_root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/');
+    $hq_root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/');
     $admin_dir = $hq_root . '/admin';
     $settings_file = $admin_dir . '/settings.json';
 

@@ -41,7 +41,7 @@ final class HealthAggregator {
    * @return array<string, mixed>
    */
   private function collectFresh(): array {
-    $hqRoot = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/');
+    $hqRoot = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/');
 
     $orchestratorStatus = $this->getOrchestratorStatus($hqRoot);
     $agents = $this->getAgentStatus($hqRoot);

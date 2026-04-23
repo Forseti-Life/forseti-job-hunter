@@ -243,7 +243,7 @@ class ForsetiPagesController extends ControllerBase {
    * Resolve a path under COPILOT_HQ_ROOT.
    */
   protected function resolveHqPath(string $relative_path): string {
-    $root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life/copilot-hq'), '/');
+    $root = rtrim((string) (getenv('COPILOT_HQ_ROOT') ?: '/home/ubuntu/forseti.life'), '/');
     return $root . '/' . ltrim($relative_path, '/');
   }
 
