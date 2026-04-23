@@ -1,6 +1,0 @@
-name: 'Copilot Agent Tracker'
-type: module
-description: 'Tracks Copilot agent status and work item progress (admin UI + internal API).'
-package: 'Forseti'
-core_version_requirement: ^11
-

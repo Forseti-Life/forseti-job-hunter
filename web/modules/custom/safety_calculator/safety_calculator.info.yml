@@ -1,8 +1,0 @@
-name: Safety Calculator
-type: module
-description: 'Provides safety score calculations and risk assessment for locations using H3 geospatial data.'
-core_version_requirement: ^11
-package: Forseti
-dependencies:
-  - drupal:node
-  - amisafe:amisafe

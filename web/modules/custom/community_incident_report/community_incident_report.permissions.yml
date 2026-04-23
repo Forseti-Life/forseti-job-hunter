@@ -1,9 +1,0 @@
-submit community incident reports:
-  title: 'Submit community incident reports'
-  description: 'Create new community safety incident report submissions.'
-  restrict access: false
-
-view community incident reports:
-  title: 'View community incident reports'
-  description: 'View the public community incident reports listing.'
-  restrict access: false

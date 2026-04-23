@@ -1,8 +1,0 @@
-access company research:
-  title: 'Access company research tools'
-  description: 'Allows users to research companies and view results'
-
-administer company research:
-  title: 'Administer company research'
-  description: 'Configure company research settings and manage research data'
-  restrict access: true
