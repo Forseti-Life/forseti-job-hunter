@@ -3214,6 +3214,7 @@ class CompanyController extends ControllerBase {
 
     $job_ids = array_column($rows, 'job_id');
     $jobs_by_id = [];
+    $companies_by_job = [];
     if ($job_ids) {
       $job_results = $this->database->select('jobhunter_job_requirements', 'jr')
         ->fields('jr', ['id', 'job_title'])
@@ -3230,7 +3231,6 @@ class CompanyController extends ControllerBase {
          WHERE jr.id IN (:ids[])',
         [':ids[]' => $job_ids]
       )->fetchAll(\PDO::FETCH_ASSOC);
-      $companies_by_job = [];
       foreach ($company_results as $cr) {
         $companies_by_job[(int) $cr['job_id']] = $cr['company_name'] ?? '';
       }
