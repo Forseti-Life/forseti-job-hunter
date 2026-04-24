@@ -1,3 +1,4 @@
+<!-- AUTOMATION VALIDATION: 2026-04-23 - automation of development confirmed for this repo -->
 # Job Hunter — Drupal Module for AI-Powered Job Application Automation
 
 Add intelligent job search automation to your Drupal site. Helps users automate resume tailoring, discover jobs across multiple platforms, and submit applications with AI assistance.
