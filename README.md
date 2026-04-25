@@ -140,6 +140,14 @@ Candidate management and outreach automation.
 - **Application Submission** — Queue workers submit via Playwright bridge (Greenhouse, LinkedIn, etc.)
 - **Error Handling** — Graceful retry, admin queue management
 
+### CIO Auto-Apply Targeting
+
+- The CIO auto-apply loop now prioritizes jobs that can be automatically submitted end-to-end.
+- It includes direct automatable ATS platforms (for example: Greenhouse, Lever, Ashby, SmartRecruiters, Workable).
+- For login-required ATS (for example: Workday, iCIMS, USAJobs), jobs are included only when credentials are already stored.
+- Aggregator/custom career-page jobs are skipped by the loop so automation cycles focus on increasing `submitted` outcomes.
+- Service-level duplicate protection now blocks creating another application record for the same user/job when an application is already in-flight or completed (`pending`, `queued`, `processing`, `submitted`, `confirmed`, `manual_required`, `manual_completed`, `resume_uploaded`).
+
 ---
 
 ## Architecture

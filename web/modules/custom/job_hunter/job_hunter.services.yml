@@ -98,6 +98,7 @@ services:
       - '@database'
       - '@job_hunter.application_submission_service'
       - '@logger.factory'
+      - '@job_hunter.apply_url_resolver'
     tags:
       - { name: drush.command }
 
