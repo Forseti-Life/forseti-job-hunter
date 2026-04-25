@@ -78,6 +78,9 @@ function job_hunter_install() {
     _job_hunter_create_error_queue_content_type();
     _job_hunter_create_error_queue_fields();
     
+    // Initialize Drupal queues
+    _job_hunter_create_queues();
+    
     $messenger->addMessage(t('Job Hunter module installed successfully. Custom database tables and error queue content type created.'));
     $logger->info('Job Hunter module installation completed.');
     
@@ -3685,4 +3688,42 @@ function job_hunter_update_9061() {
   $schema->createTable('job_hunter_profile', $table_schema);
 
   return t('Created job_hunter_profile table with age_18_or_older field.');
+}
+
+/**
+ * Initialize Drupal queues for Job Hunter.
+ *
+ * Creates queue entries in the Drupal queue table to ensure queues are
+ * discoverable by drush queue:run commands and cron processors.
+ */
+function _job_hunter_create_queues() {
+  $queue_service = \Drupal::service('queue');
+  
+  $queues = [
+    'job_hunter_resume_tailoring',
+    'job_hunter_genai_parsing',
+    'job_hunter_job_posting_parsing',
+    'job_hunter_error_queue',
+  ];
+  
+  foreach ($queues as $queue_name) {
+    try {
+      // Getting a queue reference will create it if it doesn't exist
+      $queue = $queue_service->get($queue_name);
+      \Drupal::logger('job_hunter')->info('Queue initialized: @name', ['@name' => $queue_name]);
+    } catch (\Exception $e) {
+      \Drupal::logger('job_hunter')->error('Failed to initialize queue @name: @error', [
+        '@name' => $queue_name,
+        '@error' => $e->getMessage(),
+      ]);
+    }
+  }
+}
+
+/**
+ * Initialize Job Hunter queues (Drupal queue table entries).
+ */
+function job_hunter_update_9062() {
+  _job_hunter_create_queues();
+  return t('Initialized Job Hunter queues in the Drupal queue table.');
 }
