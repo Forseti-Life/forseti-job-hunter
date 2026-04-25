@@ -24,6 +24,20 @@ use Drupal\node\NodeInterface;
 class ApplicationSubmissionService {
 
   /**
+   * Submission statuses that block creating another application for same user/job.
+   */
+  protected const DUPLICATE_BLOCKING_STATUSES = [
+    'pending',
+    'queued',
+    'processing',
+    'submitted',
+    'confirmed',
+    'manual_required',
+    'manual_completed',
+    'resume_uploaded',
+  ];
+
+  /**
    * The database connection.
    *
    * @var \Drupal\Core\Database\Connection
@@ -276,11 +290,11 @@ class ApplicationSubmissionService {
         $details['title'] = $job['job_title'] ?? 'Unknown';
       }
 
-      // Check for duplicate application
+      // Check for duplicate application.
       $existing = $this->database->select('jobhunter_applications', 'a')
         ->condition('a.uid', $uid)
         ->condition('a.job_id', $job_id)
-        ->condition('a.submission_status', ['submitted', 'pending'], 'IN')
+        ->condition('a.submission_status', self::DUPLICATE_BLOCKING_STATUSES, 'IN')
         ->countQuery()
         ->execute()
         ->fetchField();
@@ -585,6 +599,7 @@ class ApplicationSubmissionService {
    *   Absolute filesystem path to the PDF, or NULL if not generated yet.
    */
   protected function getResumePdfPath(int $uid, int $job_id): ?string {
+    // Try job-specific tailored resume first.
     $uri = $this->database->select('jobhunter_tailored_resumes', 't')
       ->fields('t', ['pdf_path'])
       ->condition('uid', $uid)
@@ -595,12 +610,36 @@ class ApplicationSubmissionService {
       ->execute()
       ->fetchField();
 
-    if (!$uri) {
-      return NULL;
+    if ($uri) {
+      $real_path = $this->fileSystem->realpath($uri);
+      if ($real_path && file_exists($real_path)) {
+        return $real_path;
+      }
     }
 
-    $real_path = $this->fileSystem->realpath($uri);
-    return ($real_path && file_exists($real_path)) ? $real_path : NULL;
+    // Fallback: use the most recent valid tailored resume PDF for this user
+    // (tailoring pipeline may not have run yet for the target job).
+    $rows = $this->database->select('jobhunter_tailored_resumes', 't')
+      ->fields('t', ['pdf_path'])
+      ->condition('uid', $uid)
+      ->isNotNull('pdf_path')
+      ->orderBy('created', 'DESC')
+      ->range(0, 10)
+      ->execute()
+      ->fetchCol();
+
+    foreach ($rows as $fallback_uri) {
+      $real_path = $this->fileSystem->realpath($fallback_uri);
+      if ($real_path && file_exists($real_path)) {
+        $this->loggerFactory->get('job_hunter')->info(
+          'getResumePdfPath: no job-specific PDF for uid=@uid job=@job, falling back to @path',
+          ['@uid' => $uid, '@job' => $job_id, '@path' => $real_path]
+        );
+        return $real_path;
+      }
+    }
+
+    return NULL;
   }
 
   /**

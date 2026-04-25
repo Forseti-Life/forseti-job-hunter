@@ -40,6 +40,10 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+vendor/
+web/core/assets/vendor/
+web/core/modules/package_manager/tests/fixtures/fake_site/vendor/
+web/core/themes/stable9/css/core/assets/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
