@@ -78,6 +78,9 @@ function job_hunter_install() {
     _job_hunter_create_error_queue_content_type();
     _job_hunter_create_error_queue_fields();
     
+    // Initialize Drupal queues
+    _job_hunter_create_queues();
+    
     $messenger->addMessage(t('Job Hunter module installed successfully. Custom database tables and error queue content type created.'));
     $logger->info('Job Hunter module installation completed.');
     
@@ -3634,4 +3637,93 @@ function job_hunter_update_9060() {
   }
 
   return t('Added email and linkedin_url columns to jobhunter_contacts.');
+}
+
+/**
+ * Create job_hunter_profile table with age_18_or_older field.
+ *
+ * Resolves schema mismatch where UserProfileForm declares db_column: 'age_18_or_older'
+ * but the table did not exist. This update creates the job_hunter_profile table
+ * to support the field definition used by the form.
+ */
+function job_hunter_update_9061() {
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('job_hunter_profile')) {
+    return t('job_hunter_profile table already exists — skipped.');
+  }
+
+  $table_schema = [
+    'description' => 'Job hunter profile data.',
+    'fields' => [
+      'uid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'User ID (primary key).',
+      ],
+      'age_18_or_older' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'Whether applicant is 18 or older (1=yes, 0=no, NULL=unknown).',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp when row was created.',
+      ],
+      'changed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp when row was last modified.',
+      ],
+    ],
+    'primary key' => ['uid'],
+  ];
+
+  $schema->createTable('job_hunter_profile', $table_schema);
+
+  return t('Created job_hunter_profile table with age_18_or_older field.');
+}
+
+/**
+ * Initialize Drupal queues for Job Hunter.
+ *
+ * Creates queue entries in the Drupal queue table to ensure queues are
+ * discoverable by drush queue:run commands and cron processors.
+ */
+function _job_hunter_create_queues() {
+  $queue_service = \Drupal::service('queue');
+  
+  $queues = [
+    'job_hunter_resume_tailoring',
+    'job_hunter_genai_parsing',
+    'job_hunter_job_posting_parsing',
+    'job_hunter_error_queue',
+  ];
+  
+  foreach ($queues as $queue_name) {
+    try {
+      // Getting a queue reference will create it if it doesn't exist
+      $queue = $queue_service->get($queue_name);
+      \Drupal::logger('job_hunter')->info('Queue initialized: @name', ['@name' => $queue_name]);
+    } catch (\Exception $e) {
+      \Drupal::logger('job_hunter')->error('Failed to initialize queue @name: @error', [
+        '@name' => $queue_name,
+        '@error' => $e->getMessage(),
+      ]);
+    }
+  }
+}
+
+/**
+ * Initialize Job Hunter queues (Drupal queue table entries).
+ */
+function job_hunter_update_9062() {
+  _job_hunter_create_queues();
+  return t('Initialized Job Hunter queues in the Drupal queue table.');
 }

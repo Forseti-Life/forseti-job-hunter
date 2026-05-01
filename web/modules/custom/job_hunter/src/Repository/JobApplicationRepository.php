@@ -615,4 +615,295 @@ class JobApplicationRepository {
     return $job;
   }
 
+  // ── User Skills and Profile ────────────────────────────────────────────────
+
+  /**
+   * Get user's skills string from jobhunter_job_seeker table.
+   *
+   * @param int $uid
+   *   User ID.
+   *
+   * @return string
+   *   The user's skills string, or empty string if not found.
+   */
+  public function getUserSkills(int $uid): string {
+    try {
+      $seeker_row = $this->database->select('jobhunter_job_seeker', 'js')
+        ->fields('js', ['skills'])
+        ->condition('js.uid', $uid)
+        ->execute()
+        ->fetchObject();
+      return $seeker_row ? (string) ($seeker_row->skills ?? '') : '';
+    }
+    catch (\Exception $e) {
+      return '';
+    }
+  }
+
+  // ── Applications Dashboard ────────────────────────────────────────────────
+
+  /**
+   * Get user's recent applications (paginated).
+   *
+   * @param int $uid
+   *   User ID.
+   * @param int $limit
+   *   Maximum number of results.
+   *
+   * @return array
+   *   Array of application rows (associative arrays).
+   */
+  public function getUserApplications(int $uid, int $limit = 100): array {
+    try {
+      return $this->database->select('jobhunter_applications', 'a')
+        ->fields('a', ['id', 'job_id', 'submission_status', 'submission_date', 'created'])
+        ->condition('a.uid', $uid)
+        ->orderBy('a.created', 'DESC')
+        ->range(0, $limit)
+        ->execute()
+        ->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Get job titles and companies for given job IDs.
+   *
+   * @param array $job_ids
+   *   Array of job IDs.
+   *
+   * @return array
+   *   Keyed array: job_id => ['title' => ..., 'company' => ...]
+   */
+  public function getJobTitlesByIds(array $job_ids): array {
+    if (empty($job_ids)) {
+      return [];
+    }
+    try {
+      $rows = $this->database->select('jobhunter_saved_jobs', 'j')
+        ->fields('j', ['id', 'title', 'company'])
+        ->condition('j.id', $job_ids, 'IN')
+        ->execute()
+        ->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+      return (array) $rows;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Bulk update application statuses for a user.
+   *
+   * @param array $ids
+   *   Application IDs to update.
+   * @param string $new_status
+   *   New status value.
+   * @param int $uid
+   *   User ID (for security: only update own applications).
+   *
+   * @return int
+   *   Number of rows updated.
+   */
+  public function updateApplicationStatuses(array $ids, string $new_status, int $uid): int {
+    if (empty($ids)) {
+      return 0;
+    }
+    try {
+      $updated = $this->database->update('jobhunter_applications')
+        ->fields(['submission_status' => $new_status])
+        ->condition('id', $ids, 'IN')
+        ->condition('uid', $uid)
+        ->execute();
+      return (int) ($updated ?? 0);
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  // ── Analytics ──────────────────────────────────────────────────────────────
+
+  /**
+   * Count user's saved jobs (not archived).
+   *
+   * @param int $uid
+   *   User ID.
+   *
+   * @return int
+   *   Count of saved jobs.
+   */
+  public function countUserSavedJobs(int $uid): int {
+    try {
+      $count = (int) $this->database->query(
+        "SELECT COUNT(*) FROM {jobhunter_saved_jobs} sj WHERE sj.uid = :uid AND sj.archived = 0",
+        [':uid' => $uid]
+      )->fetchField();
+      return $count;
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get application funnel data (stage counts) for user.
+   *
+   * @param int $uid
+   *   User ID.
+   *
+   * @return array
+   *   Keyed array: stage => count
+   */
+  public function getApplicationFunnel(int $uid): array {
+    try {
+      $funnel_raw = $this->database->query(
+        "SELECT jr.application_status AS stage, COUNT(*) AS cnt
+         FROM {jobhunter_saved_jobs} sj
+         JOIN {jobhunter_job_requirements} jr ON sj.job_id = jr.id
+         WHERE sj.uid = :uid AND sj.archived = 0
+         GROUP BY jr.application_status",
+        [':uid' => $uid]
+      )->fetchAllKeyed();
+      return (array) $funnel_raw;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  // ── Offers ────────────────────────────────────────────────────────────────
+
+  /**
+   * Check if offers table exists.
+   *
+   * @return bool
+   *   TRUE if table exists.
+   */
+  public function offersTableExists(): bool {
+    try {
+      return $this->database->schema()->tableExists('jobhunter_offers');
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Get all offers for a user.
+   *
+   * @param int $uid
+   *   User ID.
+   *
+   * @return array
+   *   Array of offer rows.
+   */
+  public function getOffersForUser(int $uid): array {
+    try {
+      return $this->database->select('jobhunter_offers', 'o')
+        ->fields('o')
+        ->condition('o.uid', $uid)
+        ->orderBy('o.response_deadline', 'ASC')
+        ->orderBy('o.created', 'ASC')
+        ->execute()
+        ->fetchAll();
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Check if company table has 'name' field (vs legacy 'company_name').
+   *
+   * @return bool
+   *   TRUE if 'name' field exists, FALSE otherwise.
+   */
+  public function companyTableHasNameField(): bool {
+    try {
+      return $this->database->schema()->fieldExists('jobhunter_companies', 'name');
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Get saved job row for a user.
+   *
+   * @param int $uid
+   *   User ID.
+   * @param int $saved_job_id
+   *   Saved job ID.
+   * @param array $fields
+   *   Fields to fetch.
+   *
+   * @return object|null
+   *   The saved job row or NULL if not found.
+   */
+  public function getSavedJobForUser(int $uid, int $saved_job_id, array $fields = []): ?object {
+    if (empty($fields)) {
+      $fields = ['job_id'];
+    }
+    try {
+      return $this->database->select('jobhunter_saved_jobs', 'sj')
+        ->fields('sj', $fields)
+        ->condition('sj.uid', $uid)
+        ->condition('sj.id', $saved_job_id)
+        ->execute()
+        ->fetchObject();
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
+  }
+
+  /**
+   * Get job requirement row.
+   *
+   * @param int $job_id
+   *   Job ID.
+   *
+   * @return object|null
+   *   The job requirement row or NULL if not found.
+   */
+  public function getJobRequirement(int $job_id): ?object {
+    try {
+      return $this->database->select('jobhunter_job_requirements', 'j')
+        ->fields('j', ['id', 'job_title', 'company_id'])
+        ->condition('j.id', $job_id)
+        ->execute()
+        ->fetchObject();
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
+  }
+
+  /**
+   * Get company row by ID, using dynamic field name.
+   *
+   * @param int $company_id
+   *   Company ID.
+   * @param string $name_field
+   *   Field name to fetch ('name' or 'company_name').
+   *
+   * @return object|null
+   *   The company row or NULL if not found.
+   */
+  public function getCompanyById(int $company_id, string $name_field = 'name'): ?object {
+    try {
+      return $this->database->select('jobhunter_companies', 'c')
+        ->fields('c', [$name_field])
+        ->condition('c.id', $company_id)
+        ->execute()
+        ->fetchObject();
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
+  }
+
 }

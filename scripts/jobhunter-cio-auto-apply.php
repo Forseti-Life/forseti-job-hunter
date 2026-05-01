@@ -53,7 +53,7 @@ $options = [
   'limit' => 10,
   'rounds' => 2,
   'queue-time-limit' => 180,
-  'retry-manual' => true,
+  'retry-manual' => false,
   'title-keywords' => '',
 ];
 
@@ -95,6 +95,7 @@ $kernel->preHandle($request);
 
 $db = \Drupal::database();
 $submissionService = \Drupal::service('job_hunter.application_submission_service');
+$urlResolver = \Drupal::service('job_hunter.apply_url_resolver');
 $logger = \Drupal::logger('job_hunter');
 
 $uid = $options['uid'];
@@ -134,6 +135,9 @@ for ($round = 1; $round <= $rounds; $round++) {
   $query->leftJoin('jobhunter_job_requirements', 'j', 'j.id = sj.job_id');
   $query->addField('j', 'job_title');
   $query->addField('j', 'status', 'job_status');
+  $query->addField('j', 'job_url');
+  $query->addField('j', 'apply_options');
+  $query->addField('j', 'company_id');
   $query->leftJoin('jobhunter_companies', 'c', 'c.id = j.company_id');
   $query->addField('c', 'name', 'company_name');
 
@@ -164,11 +168,35 @@ for ($round = 1; $round <= $rounds; $round++) {
       continue;
     }
 
+    $resolved = $urlResolver->resolve([
+      'apply_options' => (string) ($row->apply_options ?? ''),
+      'job_url' => (string) ($row->job_url ?? ''),
+    ]);
+    $atsPlatform = (string) ($resolved['ats_platform'] ?? '');
+
+    $isAutomatable = in_array($atsPlatform, \Drupal\job_hunter\Service\BrowserAutomationService::AUTOMATABLE_PLATFORMS, true);
+    $isLoginRequired = in_array($atsPlatform, \Drupal\job_hunter\Service\BrowserAutomationService::LOGIN_REQUIRED_PLATFORMS, true);
+
+    $hasCredentials = false;
+    if ($isLoginRequired && !empty($row->company_id)) {
+      $hasCredentials = (bool) ($db->select('jobhunter_employer_credentials', 'cred')
+        ->condition('cred.uid', $uid)
+        ->condition('cred.company_id', (int) $row->company_id)
+        ->countQuery()
+        ->execute()
+        ->fetchField());
+    }
+
+    if (!$isAutomatable && !($isLoginRequired && $hasCredentials)) {
+      continue;
+    }
+
     $candidates[] = [
       'job_id' => (int) $jobId,
       'title' => (string) ($row->job_title ?? 'Unknown'),
       'company' => (string) ($row->company_name ?? 'Unknown'),
       'latest_status' => $latestStatus,
+      'ats_platform' => $atsPlatform,
     ];
   }
 

@@ -5,7 +5,9 @@ namespace Drupal\job_hunter\Commands;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\job_hunter\Service\ApplyUrlResolverService;
 use Drupal\job_hunter\Service\ApplicationSubmissionService;
+use Drupal\job_hunter\Service\BrowserAutomationService;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -51,17 +53,26 @@ class CioAutoApplyCommands extends DrushCommands {
   protected $loggerFactory;
 
   /**
+   * Apply URL resolver.
+   *
+   * @var \Drupal\job_hunter\Service\ApplyUrlResolverService
+   */
+  protected $urlResolver;
+
+  /**
    * Construct CIO auto-apply commands.
    */
   public function __construct(
     Connection $database,
     ApplicationSubmissionService $application_submission_service,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
+    ApplyUrlResolverService $url_resolver
   ) {
     parent::__construct();
     $this->database = $database;
     $this->applicationSubmissionService = $application_submission_service;
     $this->loggerFactory = $logger_factory;
+    $this->urlResolver = $url_resolver;
   }
 
   /**
@@ -126,7 +137,7 @@ class CioAutoApplyCommands extends DrushCommands {
   public function autoApply($options = [
     'uid' => NULL,
     'limit' => 10,
-    'retry-manual' => TRUE,
+    'retry-manual' => FALSE,
     'dry-run' => FALSE,
     'run-queue' => TRUE,
     'queue-time-limit' => 180,
@@ -252,6 +263,8 @@ class CioAutoApplyCommands extends DrushCommands {
     $query->leftJoin('jobhunter_job_requirements', 'j', 'j.id = sj.job_id');
     $query->addField('j', 'job_title');
     $query->addField('j', 'status', 'job_status');
+    $query->addField('j', 'job_url');
+    $query->addField('j', 'apply_options');
     $query->addField('j', 'company_id');
 
     $query->leftJoin('jobhunter_companies', 'c', 'c.id = j.company_id');
@@ -276,15 +289,53 @@ class CioAutoApplyCommands extends DrushCommands {
         continue;
       }
 
+      $resolved = $this->urlResolver->resolve([
+        'apply_options' => (string) ($row->apply_options ?? ''),
+        'job_url' => (string) ($row->job_url ?? ''),
+      ]);
+      $ats_platform = (string) ($resolved['ats_platform'] ?? '');
+
+      if (!$this->isAutoApplicablePlatform($uid, $ats_platform, (int) ($row->company_id ?? 0))) {
+        continue;
+      }
+
       $candidates[] = [
         'job_id' => (int) $job_id,
         'job_title' => (string) ($row->job_title ?? 'Unknown title'),
         'company_name' => (string) ($row->company_name ?? 'Unknown company'),
         'latest_status' => $latest_status,
+        'ats_platform' => $ats_platform,
       ];
     }
 
     return $candidates;
+  }
+
+  /**
+   * Determine whether the job can be auto-submitted in the current run.
+   */
+  protected function isAutoApplicablePlatform(int $uid, string $ats_platform, int $company_id): bool {
+    if (in_array($ats_platform, BrowserAutomationService::AUTOMATABLE_PLATFORMS, TRUE)) {
+      return TRUE;
+    }
+
+    if (in_array($ats_platform, BrowserAutomationService::LOGIN_REQUIRED_PLATFORMS, TRUE)) {
+      return $company_id > 0 && $this->userHasCompanyCredentials($uid, $company_id);
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Return TRUE when user has stored credentials for the company.
+   */
+  protected function userHasCompanyCredentials(int $uid, int $company_id): bool {
+    return (bool) $this->database->select('jobhunter_employer_credentials', 'c')
+      ->condition('c.uid', $uid)
+      ->condition('c.company_id', $company_id)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
   }
 
   /**
