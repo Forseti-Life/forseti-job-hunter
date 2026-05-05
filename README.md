@@ -1,13 +1,12 @@
-<!-- AUTOMATION VALIDATION: 2026-04-23 - automation of development confirmed for this repo -->
-# Job Hunter — Drupal Module for AI-Powered Job Application Automation
+# Job Hunter
 
-Add intelligent job search automation to your Drupal site. Helps users automate resume tailoring, discover jobs across multiple platforms, and submit applications with AI assistance.
+Standalone Drupal product repo for AI-assisted job search, resume tailoring, and application automation.
 
-**Perfect for:** Job boards • HR systems • Career development platforms • Staffing agencies • Educational job placement services
+This repository contains the full Job Hunter application scaffold and custom code. It is not just a single Drupal module.
 
 ---
 
-## Why This Module?
+## Why this product?
 
 Job application is tedious. Users spend hours tailoring resumes and filling identical forms. With Job Hunter, they can focus on interviews instead.
 
@@ -21,23 +20,17 @@ Job application is tedious. Users spend hours tailoring resumes and filling iden
 
 ## Quick Start
 
-### 1. Install
+### 1. Set up the repo
 
 ```bash
-composer require drupal/job_hunter
-drush pm:enable job_hunter
-drush updatedb
+composer install
+vendor/bin/drush updb -y
+vendor/bin/drush cr
 ```
 
-### 2. Configure
+### 2. Work in the product
 
-Navigate to **Admin → Configuration → Job Hunter Settings** (`/admin/config/job_hunter`)
-
-- Set your master resume node
-- Configure AWS Bedrock credentials (for AI features)
-- (Optional) Add job API keys (Google Jobs, Adzuna, USAJobs)
-
-### 3. Done!
+The product repo contains the full Drupal application plus custom code, scripts, and supporting automation. Use the existing repo scripts under `scripts/` for backup, cache, standards, and automation workflows.
 
 Users can now access:
 - `/jobhunter` — Job discovery & saved jobs
