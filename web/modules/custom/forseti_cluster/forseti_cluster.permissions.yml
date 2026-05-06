@@ -1,3 +1,0 @@
-administer forseti cluster:
-  title: 'Administer Forseti cluster communication'
-  restrict access: true

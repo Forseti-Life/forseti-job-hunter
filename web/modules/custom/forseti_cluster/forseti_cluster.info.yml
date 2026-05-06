@@ -1,8 +1,0 @@
-name: 'Forseti Cluster'
-type: module
-description: 'Admin UI for forseti-meshd installation cluster communication. Manages peer registry, capabilities, and service requests via the local mesh daemon.'
-package: 'Forseti'
-core_version_requirement: ^10 || ^11
-dependencies:
-  - drupal:system
-configure: forseti_cluster.admin

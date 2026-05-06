@@ -1,6 +1,0 @@
-forseti_games.games:
-  title: 'Games'
-  description: 'Play fun games on Forseti.Life'
-  route_name: forseti_games.home
-  menu_name: main
-  weight: 50
