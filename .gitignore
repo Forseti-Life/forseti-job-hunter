@@ -41,6 +41,8 @@ build/Release
 node_modules/
 jspm_packages/
 vendor/
+/keys/
+/web/
 web/core/assets/vendor/
 web/core/modules/package_manager/tests/fixtures/fake_site/vendor/
 web/core/themes/stable9/css/core/assets/

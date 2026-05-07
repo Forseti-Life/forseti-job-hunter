@@ -1,5 +1,0 @@
-services:
-  _defaults:
-    autoconfigure: true
-  simple_oauth_test.route_subscriber:
-    class: Drupal\simple_oauth_test\Routing\SimpleOauthTestRouteSubscriber

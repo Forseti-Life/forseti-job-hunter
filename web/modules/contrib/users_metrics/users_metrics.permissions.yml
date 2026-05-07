@@ -1,8 +1,0 @@
-access users metrics:
-  title: 'Access users metrics'
-  description: 'View user registration and login statistics'
-
-administer users metrics:
-  title: 'Administer users metrics'
-  description: 'Configure users metrics settings (excluded roles and UIDs)'
-  restrict access: true
