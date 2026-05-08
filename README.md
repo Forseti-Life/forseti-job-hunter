@@ -20,6 +20,18 @@ This module has comprehensive documentation organized for different audiences:
 ## Overview
 A comprehensive AI-powered Drupal module that automates the entire job application process using Generative AI. This system analyzes user resumes, scrapes job postings from employer websites, tailors applications using AI, and automatically submits applications across multiple employer platforms.
 
+## Bedrock integration points
+
+The main repository-level Bedrock call site currently documented in this repo is a focused production utility rather than the entire module runtime:
+
+- `reparse-resume-production.php` creates an AWS `BedrockRuntime` client and issues direct `invokeModel()` calls to extract structured resume data.
+- That script performs at least two explicit Bedrock passes:
+  - core profile extraction
+  - professional experience extraction
+- The module configuration/UI still exposes Bedrock region, model, and token settings through the Job Hunter settings flow, but the concrete direct Bedrock invocation visible in this repository is the reparse script above.
+
+If you need to audit or refactor the direct Bedrock request/response contract in this repo, start with `reparse-resume-production.php`.
+
 ## Maintenance Notes
 - 2026-04-13: Realigned the contact tracker with the current feature brief by adding `name`, `title`, and `company_id` compatibility to `jobhunter_contacts`, switching the UI to company-backed contacts, and matching saved-job contact surfacing on `company_id` before legacy-name fallback.
 - 2026-03-02: Standardized GenAI fallback decisions into `GenAiFallbackService` for reusable process-flow gating (deterministic checks first, shared JSON contract, shared parsing). Initial production use is in Step 2 application-location verification.
