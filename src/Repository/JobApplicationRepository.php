@@ -171,6 +171,46 @@ class JobApplicationRepository {
       ->fetchField();
   }
 
+  /**
+   * Fetch a staged job-search result row by ID.
+   *
+   * @param int $staging_id
+   *   Primary key from jobhunter_job_search_results.
+   *
+   * @return object|null
+   *   Row as stdClass, or NULL if not found.
+   */
+  public function getStagingResultById(int $staging_id): ?object {
+    $row = $this->database->select('jobhunter_job_search_results', 's')
+      ->fields('s')
+      ->condition('s.id', $staging_id)
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+    return $row ?: NULL;
+  }
+
+  /**
+   * Mark a staged search result as imported into the main jobs table.
+   *
+   * @param int $staging_id
+   *   Primary key from jobhunter_job_search_results.
+   * @param int $job_id
+   *   Imported jobhunter_job_requirements ID.
+   * @param int $uid
+   *   User who triggered the import.
+   */
+  public function markStagingResultImported(int $staging_id, int $job_id, int $uid): void {
+    $this->database->update('jobhunter_job_search_results')
+      ->fields([
+        'imported_to_job_id' => $job_id,
+        'imported_at' => time(),
+        'imported_by_uid' => $uid,
+      ])
+      ->condition('id', $staging_id)
+      ->execute();
+  }
+
   // ── Job Seeker ─────────────────────────────────────────────────────────
 
   /**

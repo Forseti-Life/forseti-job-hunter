@@ -141,6 +141,10 @@ class ApplicationActionController extends ControllerBase {
     try {
       $target_job_id = $this->resolveTargetJobIdFromToken($encoded);
 
+      if (!$target_job_id && preg_match('/^staging_(\d+)$/', $encoded, $matches)) {
+        $target_job_id = $this->createJobFromStagingResult((int) $matches[1], $uid);
+      }
+
       if (!$target_job_id) {
         $target_job_id = $this->createJobFromSearchPayload($encoded);
       }
@@ -338,6 +342,88 @@ class ApplicationActionController extends ControllerBase {
     }
 
     return $this->repository->insertJobRequirement($fields);
+  }
+
+  /**
+   * Import a staged external-search result into the main jobs table.
+   *
+   * @param int $staging_id
+   *   jobhunter_job_search_results.id value from a staging_* token.
+   * @param int $uid
+   *   User triggering the save action.
+   *
+   * @return int|null
+   *   Imported job ID, or NULL if the staging row is unusable.
+   */
+  private function createJobFromStagingResult(int $staging_id, int $uid): ?int {
+    $staging_row = $this->repository->getStagingResultById($staging_id);
+    if (!$staging_row) {
+      return NULL;
+    }
+
+    if (!empty($staging_row->imported_to_job_id)) {
+      return (int) $staging_row->imported_to_job_id;
+    }
+
+    $job_data = json_decode((string) ($staging_row->job_data_json ?? ''), TRUE);
+    $job_data = is_array($job_data) ? $job_data : [];
+
+    $external_job_id = trim((string) ($staging_row->external_job_id ?? ''));
+    if ($external_job_id === '') {
+      $external_job_id = trim((string) ($job_data['htidocid'] ?? $job_data['job_id'] ?? $job_data['id'] ?? ''));
+    }
+
+    $normalized_external_job_id = $external_job_id !== ''
+      ? $this->normalizeExternalJobId($external_job_id)
+      : '';
+    if ($normalized_external_job_id !== '') {
+      $existing_job_id = $this->findJobIdByExternalId($normalized_external_job_id);
+      if ($existing_job_id !== NULL) {
+        $this->repository->markStagingResultImported($staging_id, $existing_job_id, $uid);
+        return $existing_job_id;
+      }
+    }
+
+    $job_title = trim((string) ($staging_row->job_title ?? $job_data['title'] ?? $job_data['job_title'] ?? 'Imported External Job'));
+    $location = trim((string) ($staging_row->location ?? $job_data['address_city'] ?? $job_data['location'] ?? ''));
+    $job_url = trim((string) ($job_data['job_url'] ?? $job_data['link'] ?? $job_data['url'] ?? ''));
+    $source_platform = '';
+    if ($job_url !== '') {
+      $parsed_host = parse_url($job_url, PHP_URL_HOST);
+      if (is_string($parsed_host) && $parsed_host !== '') {
+        $source_platform = substr(preg_replace('/^www\./', '', strtolower($parsed_host)), 0, 100);
+      }
+    }
+
+    $fields = [
+      'job_title' => $job_title,
+      'status' => 'active',
+      'created' => time(),
+      'updated' => time(),
+      'external_source' => (string) ($job_data['source'] ?? 'External API'),
+      'source_platform' => $source_platform,
+    ];
+
+    if ($location !== '') {
+      $fields['location'] = $location;
+    }
+    if ($job_url !== '') {
+      $fields['job_url'] = substr($job_url, 0, 512);
+    }
+    if ($normalized_external_job_id !== '') {
+      $fields['external_job_id'] = $normalized_external_job_id;
+    }
+    if (!empty($job_data['description'])) {
+      $fields['job_description'] = (string) $job_data['description'];
+    }
+
+    $new_job_id = $this->repository->insertJobRequirement($fields);
+    if ($new_job_id <= 0) {
+      return NULL;
+    }
+
+    $this->repository->markStagingResultImported($staging_id, $new_job_id, $uid);
+    return $new_job_id;
   }
 
   /**
