@@ -325,13 +325,21 @@ class JobApplicationRepository {
    *   Associative row, or NULL if not found.
    */
   public function findLatestApplicationByJobAndUser(int $uid, int $job_id, array $fields = []): ?array {
+    $schema = $this->database->schema();
     $query = $this->database->select('jobhunter_applications', 'a')
       ->condition('a.uid', $uid)
       ->condition('a.job_id', $job_id)
       ->orderBy('created', 'DESC')
       ->range(0, 1);
     if ($fields) {
-      $query->fields('a', $fields);
+      foreach ($fields as $field) {
+        if ($schema->fieldExists('jobhunter_applications', $field)) {
+          $query->addField('a', $field);
+        }
+        else {
+          $query->addExpression('NULL', $field);
+        }
+      }
     }
     else {
       $query->fields('a');

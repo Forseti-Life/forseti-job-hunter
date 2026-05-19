@@ -118,6 +118,20 @@ function _job_hunter_create_saved_jobs_table() {
         'default' => 0,
         'description' => 'Per-user archive flag (1 = archived by this user).',
       ],
+      'deadline_date' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'Application deadline date (YYYY-MM-DD).',
+      ],
+      'follow_up_date' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'Follow-up reminder date (YYYY-MM-DD).',
+      ],
       'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
       'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
     ],
@@ -205,6 +219,35 @@ function _job_hunter_create_applications_table() {
       'confirmation_screenshot' => ['type' => 'blob', 'description' => 'Screenshot of confirmation page'],
       'automation_success' => ['type' => 'int', 'default' => 0, 'description' => 'Whether automation succeeded (1=yes)'],
       'admin_review_required' => ['type' => 'int', 'default' => 0, 'description' => 'Whether admin review needed (1=yes)'],
+      'ats_platform' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
+        'description' => 'Detected ATS platform: workday, greenhouse, lever, taleo, icims, usajobs, custom, aggregator',
+      ],
+      'apply_url' => [
+        'type' => 'varchar',
+        'length' => 1000,
+        'not null' => FALSE,
+        'description' => 'Resolved canonical apply URL after following aggregator redirects',
+      ],
+      'selected_apply_option' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+        'description' => 'Title of the apply_option selected from job apply_options array',
+      ],
+      'attempt_count' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Number of submission attempts made',
+      ],
+      'metadata' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'JSON metadata: form field mapping, resolution steps, ATS detection details',
+      ],
       'error_details' => ['type' => 'text', 'description' => 'JSON details of submission error'],
       'created' => ['type' => 'varchar', 'length' => 19, 'description' => 'Created timestamp (YYYY-MM-DD HH:MM:SS)'],
       'changed' => ['type' => 'varchar', 'length' => 19, 'description' => 'Last updated timestamp (YYYY-MM-DD HH:MM:SS)'],
@@ -1237,10 +1280,28 @@ function _job_hunter_create_job_requirements_table() {
       'ai_extraction_status' => ['type' => 'varchar', 'length' => 32, 'default' => 'pending', 'description' => 'pending, completed, failed'],
       'external_source' => ['type' => 'varchar', 'length' => 100, 'description' => 'External source: cloud_talent_solution, linkedin, indeed, etc.'],
       'external_job_id' => ['type' => 'varchar', 'length' => 512, 'description' => 'External job ID from source system'],
+      'job_hash' => ['type' => 'varchar', 'length' => 32, 'not null' => FALSE, 'description' => 'MD5 hash of normalized company|title|location for cross-source deduplication.'],
+      'via' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE, 'description' => 'Source platform where job was posted (e.g., LinkedIn, Indeed).'],
+      'thumbnail' => ['type' => 'varchar', 'length' => 512, 'not null' => FALSE, 'description' => 'Company logo/thumbnail URL.'],
+      'share_link' => ['type' => 'varchar', 'length' => 512, 'not null' => FALSE, 'description' => 'Google Jobs direct share link.'],
+      'work_from_home' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Work from home option available (1=yes, 0=no).'],
+      'health_insurance' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Health insurance benefit offered (1=yes, 0=no).'],
+      'dental_coverage' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Dental coverage benefit offered (1=yes, 0=no).'],
+      'paid_time_off' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Paid time off benefit offered (1=yes, 0=no).'],
+      'job_highlights' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE, 'description' => 'JSON-encoded structured highlights (qualifications, responsibilities, benefits).'],
+      'apply_options' => ['type' => 'text', 'not null' => FALSE, 'description' => 'JSON-encoded array of application links and options.'],
       'potential_duplicates_json' => ['type' => 'text', 'size' => 'medium', 'description' => 'JSON array of potential duplicate job IDs with similarity scores'],
     ],
     'primary key' => ['id'],
-    'indexes' => ['company_id' => ['company_id'], 'status' => ['status'], 'external_job_id' => [['external_job_id', 100]]],
+    'indexes' => [
+      'company_id' => ['company_id'],
+      'status' => ['status'],
+      'external_job_id' => [['external_job_id', 100]],
+      'idx_job_hash' => ['job_hash'],
+      'idx_via' => ['via'],
+      'idx_work_from_home' => ['work_from_home'],
+      'idx_health_insurance' => ['health_insurance'],
+    ],
   ];
   
   $schema->createTable('jobhunter_job_requirements', $table_schema);
@@ -3388,6 +3449,75 @@ function _job_hunter_repair_resume_application_schema(): string {
 }
 
 /**
+ * Repairs skipped saved-jobs schema additions on preserved-table installs.
+ *
+ * Some environments preserve custom tables across reinstalls, which can leave
+ * jobhunter_saved_jobs without newer workflow-support columns even though
+ * Drupal has advanced past the original update hook that added them.
+ *
+ * @return string
+ *   Update result.
+ */
+function _job_hunter_repair_saved_jobs_schema(): string {
+  $schema = \Drupal::database()->schema();
+  $changes = [];
+
+  if (!$schema->tableExists('jobhunter_saved_jobs')) {
+    return t('jobhunter_saved_jobs table does not exist — skipping.');
+  }
+
+  if (!$schema->fieldExists('jobhunter_saved_jobs', 'deadline_date')) {
+    $schema->addField('jobhunter_saved_jobs', 'deadline_date', [
+      'type' => 'varchar',
+      'length' => 10,
+      'not null' => FALSE,
+      'default' => NULL,
+      'description' => 'Application deadline date (YYYY-MM-DD).',
+    ]);
+    $changes[] = 'jobhunter_saved_jobs.deadline_date';
+  }
+
+  if (!$schema->fieldExists('jobhunter_saved_jobs', 'follow_up_date')) {
+    $schema->addField('jobhunter_saved_jobs', 'follow_up_date', [
+      'type' => 'varchar',
+      'length' => 10,
+      'not null' => FALSE,
+      'default' => NULL,
+      'description' => 'Follow-up reminder date (YYYY-MM-DD).',
+    ]);
+    $changes[] = 'jobhunter_saved_jobs.follow_up_date';
+  }
+
+  if ($changes === []) {
+    return t('Saved jobs schema already matches the expected shape.');
+  }
+
+  return t('Repaired schema fields: @fields', [
+    '@fields' => implode(', ', $changes),
+  ]);
+}
+
+/**
+ * Repairs external job/application schema drift on preserved-table installs.
+ *
+ * Replays idempotent historical updates that added external-job metadata and
+ * application automation columns so My Jobs and job discovery pages can safely
+ * rely on the expected schema.
+ *
+ * @return string
+ *   Update result.
+ */
+function _job_hunter_repair_external_job_workflow_schema(): string {
+  $results = [
+    (string) job_hunter_update_9032(),
+    (string) job_hunter_update_9035(),
+    (string) job_hunter_update_9036(),
+  ];
+
+  return implode(' ', array_filter($results));
+}
+
+/**
  * Add version_label, version_notes to jobhunter_job_seeker_resumes; add source_resume_id to jobhunter_applications.
  */
 function job_hunter_update_9052() {
@@ -3831,4 +3961,18 @@ function job_hunter_update_9062() {
  */
 function job_hunter_update_9063() {
   return _job_hunter_repair_resume_application_schema();
+}
+
+/**
+ * Repairs saved-jobs schema drift on preserved-table installs.
+ */
+function job_hunter_update_9064() {
+  return _job_hunter_repair_saved_jobs_schema();
+}
+
+/**
+ * Repairs external job/application workflow schema drift.
+ */
+function job_hunter_update_9065() {
+  return _job_hunter_repair_external_job_workflow_schema();
 }
