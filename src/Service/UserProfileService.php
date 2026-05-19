@@ -34,6 +34,29 @@ class UserProfileService {
   ];
 
   /**
+   * Extracts human-readable executive profile text from mixed storage shapes.
+   */
+  private function getExecutiveProfileText(array $consolidated): string {
+    $executive_profile = $consolidated['executive_profile'] ?? NULL;
+
+    if (is_string($executive_profile)) {
+      return trim($executive_profile);
+    }
+
+    if (is_array($executive_profile)) {
+      if (!empty($executive_profile['summary']) && is_string($executive_profile['summary'])) {
+        return trim($executive_profile['summary']);
+      }
+
+      if (!empty($executive_profile[0]['summary']) && is_string($executive_profile[0]['summary'])) {
+        return trim($executive_profile[0]['summary']);
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Calculates user profile completeness percentage.
    *
    * @param \Drupal\user\Entity\User $user
@@ -384,6 +407,8 @@ class UserProfileService {
       }
     }
 
+    $executive_profile_text = $this->getExecutiveProfileText($consolidated);
+
     switch ($field_name) {
       case 'field_resume_file':
         if (!empty($jobSeekerData->resume_node_id)) {
@@ -404,7 +429,7 @@ class UserProfileService {
 
       case 'field_professional_summary':
         return !empty($jobSeekerData->professional_summary)
-          || !empty($consolidated['executive_profile'])
+          || $executive_profile_text !== ''
           || !empty($contact['headline']);
 
       case 'field_skills_summary':
@@ -412,7 +437,7 @@ class UserProfileService {
 
       case 'field_experience_years':
         return !empty($jobSeekerData->experience_years)
-          || preg_match('/\b\d+\+?\s*years\b/i', (string) ($consolidated['executive_profile'] ?? '')) === 1
+          || preg_match('/\b\d+\+?\s*years\b/i', $executive_profile_text) === 1
           || !empty($consolidated['professional_experience'])
           || !empty($consolidated['early_career']['positions']);
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\job_hunter\Form\Subform;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Database\Connection;
@@ -23,6 +24,7 @@ use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
  */
 class ResumeUploadSubform {
 
+  use DependencySerializationTrait;
   use StringTranslationTrait;
   use JobHunterLoggerTrait;
 
@@ -181,12 +183,19 @@ class ResumeUploadSubform {
             $version_notes = $resume_record['version_notes'] ?? NULL;
           }
           else {
+            $existing_count = $database->select('jobhunter_job_seeker_resumes', 'jsr')
+              ->condition('job_seeker_id', $job_seeker_id)
+              ->countQuery()
+              ->execute()
+              ->fetchField();
+
             // Auto-register.
             $resume_record_id = $database->insert('jobhunter_job_seeker_resumes')
               ->fields([
                 'job_seeker_id' => $job_seeker_id,
                 'file_id' => $file_id,
                 'resume_name' => pathinfo($filename, PATHINFO_FILENAME),
+                'is_primary' => ($existing_count == 0) ? 1 : 0,
                 'created' => time(),
                 'changed' => time(),
               ])
@@ -203,6 +212,21 @@ class ResumeUploadSubform {
               $parsing_status = $parsed_record['status'];
               $parsing_error = $parsed_record['error_message'];
               $parsed_data = json_decode($parsed_record['parsed_data'], TRUE);
+            }
+            else {
+              $extracted_text = $this->ensureResumeQueuedForParsing(
+                $database,
+                $uid,
+                (int) $resume_record_id,
+                $file,
+                $filename,
+                is_string($extracted_text) ? $extracted_text : ''
+              );
+
+              if ($extracted_text !== '') {
+                $parsing_status = 'queued';
+                $parsed_data = ['status' => 'queued'];
+              }
             }
           }
 
@@ -602,6 +626,53 @@ class ResumeUploadSubform {
     }
 
     $form_state->setRedirect('job_hunter.user_profile_edit');
+  }
+
+  /**
+   * Ensures a registered resume has queued parsing work when parsed data is absent.
+   */
+  private function ensureResumeQueuedForParsing(Connection $database, int $uid, int $resumeId, \Drupal\file\Entity\File $file, string $filename, string $extractedText = ''): string {
+    $extractedText = trim($extractedText);
+    if ($extractedText === '') {
+      $extractedText = trim((string) $this->extractTextFromFile($file));
+      if ($extractedText !== '') {
+        $database->update('jobhunter_job_seeker_resumes')
+          ->fields([
+            'extracted_text' => $extractedText,
+            'changed' => \Drupal::time()->getRequestTime(),
+          ])
+          ->condition('id', $resumeId)
+          ->execute();
+      }
+    }
+
+    if ($extractedText === '') {
+      return '';
+    }
+
+    $timestamp = \Drupal::time()->getRequestTime();
+    $database->insert('jobhunter_resume_parsed_data')
+      ->fields([
+        'uid' => $uid,
+        'resume_file_id' => (int) $file->id(),
+        'resume_path' => $file->getFileUri(),
+        'parsed_data' => json_encode(['status' => 'queued']),
+        'status' => 'queued',
+        'error_message' => NULL,
+        'created' => $timestamp,
+        'changed' => $timestamp,
+      ])
+      ->execute();
+
+    \Drupal::queue('job_hunter_genai_parsing')->createItem([
+      'uid' => $uid,
+      'resume_id' => $resumeId,
+      'file_id' => (int) $file->id(),
+      'extracted_text' => $extractedText,
+      'filename' => $filename,
+    ]);
+
+    return $extractedText;
   }
 
   /**
