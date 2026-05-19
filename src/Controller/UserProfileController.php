@@ -1353,6 +1353,8 @@ class UserProfileController extends ControllerBase {
           'job_id' => $job_id,
           'profile_json' => $profile,
           'job_data' => [
+            'job_title' => $job_data->job_title ?? '',
+            'company_name' => $extracted['company']['name'] ?? '',
             'extracted_json' => $job_data->extracted_json,
             'skills_required_json' => $job_data->skills_required_json,
             'keywords_json' => $job_data->keywords_json,
