@@ -1212,7 +1212,7 @@ class UserProfileController extends ControllerBase {
     // Load existing tailoring feedback (if any) for pre-population.
     $tailored_resume_id = $tailored_record ? (int) $tailored_record->id : 0;
     $existing_feedback = NULL;
-    if ($tailored_resume_id) {
+    if ($tailored_resume_id && $database->schema()->tableExists('jobhunter_tailoring_feedback')) {
       $existing_feedback = $database->select('jobhunter_tailoring_feedback', 'tf')
         ->fields('tf', ['rating', 'note'])
         ->condition('tf.uid', $user->id())
@@ -2431,6 +2431,10 @@ PROMPT;
 
     if (!$owner_uid || (int) $owner_uid !== $uid) {
       return new JsonResponse(['error' => 'Access denied.'], 403);
+    }
+
+    if (!$database->schema()->tableExists('jobhunter_tailoring_feedback')) {
+      return new JsonResponse(['error' => 'Tailoring feedback storage is not available yet. Please run database updates.'], 503);
     }
 
     $now = time();

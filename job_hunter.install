@@ -3518,6 +3518,22 @@ function _job_hunter_repair_external_job_workflow_schema(): string {
 }
 
 /**
+ * Repairs missing tailoring feedback table on preserved-table installs.
+ *
+ * @return string
+ *   Update result.
+ */
+function _job_hunter_repair_tailoring_feedback_schema(): string {
+  $schema = \Drupal::database()->schema();
+  if ($schema->tableExists('jobhunter_tailoring_feedback')) {
+    return t('Tailoring feedback schema already matches the expected shape.');
+  }
+
+  _job_hunter_create_tailoring_feedback_table();
+  return t('Created jobhunter_tailoring_feedback table for tailored resume ratings.');
+}
+
+/**
  * Add version_label, version_notes to jobhunter_job_seeker_resumes; add source_resume_id to jobhunter_applications.
  */
 function job_hunter_update_9052() {
@@ -3975,4 +3991,11 @@ function job_hunter_update_9064() {
  */
 function job_hunter_update_9065() {
   return _job_hunter_repair_external_job_workflow_schema();
+}
+
+/**
+ * Repairs missing tailoring feedback table on preserved-table installs.
+ */
+function job_hunter_update_9066() {
+  return _job_hunter_repair_tailoring_feedback_schema();
 }
