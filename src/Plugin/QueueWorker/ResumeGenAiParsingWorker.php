@@ -739,10 +739,6 @@ class ResumeGenAiParsingWorker extends QueueWorkerBase implements ContainerFacto
       return '';
     }
 
-    if (in_array($normalized, ['unknown', 'n/a', 'na', 'none', 'null', 'not provided', 'not specified', 'tbd', 'present', 'current', 'now'], TRUE)) {
-      return '';
-    }
-
     // Normalize abbreviations and remove punctuation-only differences.
     $normalized = preg_replace('/\bst\.?\b/u', 'saint', $normalized);
     $normalized = preg_replace('/[\.,\-\/\(\)]/u', ' ', $normalized);

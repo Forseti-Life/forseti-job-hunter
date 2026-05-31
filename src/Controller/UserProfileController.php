@@ -1212,7 +1212,7 @@ class UserProfileController extends ControllerBase {
     // Load existing tailoring feedback (if any) for pre-population.
     $tailored_resume_id = $tailored_record ? (int) $tailored_record->id : 0;
     $existing_feedback = NULL;
-    if ($tailored_resume_id && $database->schema()->tableExists('jobhunter_tailoring_feedback')) {
+    if ($tailored_resume_id) {
       $existing_feedback = $database->select('jobhunter_tailoring_feedback', 'tf')
         ->fields('tf', ['rating', 'note'])
         ->condition('tf.uid', $user->id())
@@ -1353,8 +1353,6 @@ class UserProfileController extends ControllerBase {
           'job_id' => $job_id,
           'profile_json' => $profile,
           'job_data' => [
-            'job_title' => $job_data->job_title ?? '',
-            'company_name' => $extracted['company']['name'] ?? '',
             'extracted_json' => $job_data->extracted_json,
             'skills_required_json' => $job_data->skills_required_json,
             'keywords_json' => $job_data->keywords_json,
@@ -1811,12 +1809,6 @@ PROMPT;
    * Check if we're in a development environment.
    */
   private function isDevelopmentEnvironment() {
-    // Check if this is our development workspace
-    $workspace_path = '/workspaces/stlouisintegration.com';
-    if (file_exists($workspace_path)) {
-      return TRUE;
-    }
-    
     // Check environment variables that indicate development
     $env_indicators = ['CODESPACE_NAME', 'GITPOD_WORKSPACE_ID', 'C9_USER'];
     foreach ($env_indicators as $indicator) {
@@ -1828,6 +1820,11 @@ PROMPT;
     // Check if we're in local development
     $host = $_SERVER['SERVER_NAME'] ?? 'localhost';
     if (in_array($host, ['localhost', '127.0.0.1', 'local.dev'])) {
+      return TRUE;
+    }
+    
+    // Check for dev environment variable
+    if (getenv('APP_ENV') === 'development' || getenv('ENVIRONMENT') === 'development') {
       return TRUE;
     }
     
@@ -2433,10 +2430,6 @@ PROMPT;
 
     if (!$owner_uid || (int) $owner_uid !== $uid) {
       return new JsonResponse(['error' => 'Access denied.'], 403);
-    }
-
-    if (!$database->schema()->tableExists('jobhunter_tailoring_feedback')) {
-      return new JsonResponse(['error' => 'Tailoring feedback storage is not available yet. Please run database updates.'], 503);
     }
 
     $now = time();

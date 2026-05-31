@@ -1,0 +1,99 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  composer-validation:
+    name: Composer Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: php-actions/composer@v6
+        with:
+          command: validate
+          args: --strict
+
+  phpcs:
+    name: Code Standards (PHPCS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: php-actions/composer@v6
+      - name: Run PHP Code Sniffer
+        run: vendor/bin/phpcs --standard=PSR12 src/
+
+  drupal-10-install:
+    name: Drupal 10 Install Test
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: drupal
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mysql, curl, json
+      - name: Install Drupal 10
+        run: |
+          mkdir drupal-test
+          cd drupal-test
+          composer create-project drupal/recommended-project:^10 .
+      - name: Link module
+        run: |
+          cd drupal-test
+          ln -s ${{ github.workspace }} web/modules/custom/job_hunter
+      - name: Install module
+        run: |
+          cd drupal-test
+          php web/core/scripts/drupal install minimal
+          php vendor/bin/drush pm:enable job_hunter
+
+  drupal-11-install:
+    name: Drupal 11 Install Test
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: drupal
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysql, curl, json
+      - name: Install Drupal 11
+        run: |
+          mkdir drupal-test
+          cd drupal-test
+          composer create-project drupal/recommended-project:^11 .
+      - name: Link module
+        run: |
+          cd drupal-test
+          ln -s ${{ github.workspace }} web/modules/custom/job_hunter
+      - name: Install module
+        run: |
+          cd drupal-test
+          php web/core/scripts/drupal install minimal
+          php vendor/bin/drush pm:enable job_hunter

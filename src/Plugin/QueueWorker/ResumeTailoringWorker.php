@@ -109,8 +109,6 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
         'action' => 'generate_tailored_resume',
         'job_requisition' => [
           'id' => (int) $job_id,
-          'job_title' => (string) ($job_data['job_title'] ?? ''),
-          'company_name' => (string) ($job_data['company_name'] ?? ''),
           'extracted_json' => $extracted,
           'skills_required_json' => $skills,
           'keywords_json' => $keywords,
@@ -712,8 +710,8 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     $job = $payload['job_requisition'] ?? [];
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
 
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? $job['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? $job['company_name'] ?? 'the company';
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT);
     $job_description = $job['raw_posting_text'] ?? '';
@@ -825,8 +823,8 @@ PROMPT;
     $job = $payload['job_requisition'] ?? [];
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
 
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? $job['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? $job['company_name'] ?? 'the company';
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
     
@@ -899,8 +897,8 @@ PROMPT;
   private function buildExperiencePrompt(array $payload,Array $company, int $index) {
     $job = $payload['job_requisition'] ?? [];
 
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? $job['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? $job['company_name'] ?? 'the company';
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
     
@@ -973,8 +971,8 @@ PROMPT;
     $job = $payload['job_requisition'] ?? [];
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
 
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? $job['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? $job['company_name'] ?? 'the company';
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
     

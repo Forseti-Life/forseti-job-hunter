@@ -280,7 +280,7 @@
     
     // Send job data to save endpoint
     $.ajax({
-      url: '/jobhunter/job-discovery/save',
+      url: '/job-discovery/save',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

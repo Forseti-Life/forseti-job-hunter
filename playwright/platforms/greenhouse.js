@@ -43,34 +43,6 @@ async function apply(payload, buildResult) {
     await page.goto(apply_url, { waitUntil: 'networkidle', timeout: 30000 });
     await humanDelay(800, 1500);
 
-    // ── Detect expired/unavailable jobs ─────────────────────────────────────
-    const pageUrl       = page.url();
-    const pageBodyText  = (await page.textContent('body').catch(() => '')).toLowerCase();
-    const jobExpiredSignals = [
-      'job is no longer available',
-      'position has been filled',
-      'this job is closed',
-      'posting has expired',
-      'no longer accepting',
-      'job has been removed',
-      '404',
-    ];
-    const isExpired = jobExpiredSignals.some(s => pageBodyText.includes(s));
-    // Also detect redirect away from the apply URL (job boards redirect on 404)
-    const isRedirected = !pageUrl.includes('greenhouse.io') && !pageUrl.includes('boards.greenhouse.io');
-    // Detect if the form elements are simply absent (no first_name input = not the apply form)
-    const hasApplyForm = await page.$('#first_name, #app_first_name, input[name="first_name"]');
-
-    if (isExpired || (!hasApplyForm && isRedirected)) {
-      return buildResult({
-        outcome:      'manual_required',
-        reason:       'job_expired',
-        error:        'Greenhouse job page does not contain an apply form — job may be expired or unavailable.',
-        instructions: 'This job posting may no longer be active. Verify the listing and apply manually if still open.',
-        apply_url,
-      });
-    }
-
     // Check for CAPTCHA
     const captchaDetected = await page.$('[data-callback], .g-recaptcha, iframe[src*="recaptcha"], iframe[src*="hcaptcha"]');
     if (captchaDetected) {
@@ -194,10 +166,10 @@ async function apply(payload, buildResult) {
     await humanDelay(1500, 2500);
 
     // ── Confirmation detection ──────────────────────────────────────────────
-    const confirmPageText = await page.textContent('body').catch(() => '');
-    const confirmPageUrl  = page.url();
-    const confirmed = confirmPageUrl.includes('/confirmation') ||
-      /thank you|application received|successfully submitted|we.ll be in touch/i.test(confirmPageText);
+    const pageText  = await page.textContent('body').catch(() => '');
+    const pageUrl   = page.url();
+    const confirmed = pageUrl.includes('/confirmation') ||
+      /thank you|application received|successfully submitted|we.ll be in touch/i.test(pageText);
 
     screenshot_post = await takeScreenshot(page, screenshot_dir, application_id, 'post');
 

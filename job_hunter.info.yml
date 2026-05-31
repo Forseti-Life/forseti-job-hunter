@@ -3,7 +3,7 @@ type: module
 description: 'AI-powered job application automation with comprehensive job tracking, application workflow, and external service integration. SAFE UNINSTALL: Preserves all content and fields during uninstallation.'
 core_version_requirement: ^10 || ^11
 version: '1.0.1'
-package: 'Forseti'
+package: 'Job Application'
 
 dependencies:
   - drupal:node
@@ -20,6 +20,6 @@ dependencies:
   - ai_conversation:ai_conversation
 
 # Module maintainer information
-author: 'Forseti Development Team'
-homepage: 'https://forseti.life'
-support: 'https://github.com/keithaumiller/forseti.life'
+author: 'Job Hunter Development Team'
+homepage: 'https://github.com/Forseti-Life/drupal-job-hunter'
+support: 'https://github.com/Forseti-Life/drupal-job-hunter/issues'
