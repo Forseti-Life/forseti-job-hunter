@@ -824,15 +824,15 @@ class UserProfileForm extends FormBase {
       ];
       $form['professional_experience']['experience_editor']['professional_experience_entries'][$i]['dates']['start_date'] = [
         '#type' => 'textfield',
-        '#title' => $this->t('Start (YYYY or YYYY-MM)'),
+        '#title' => $this->t('Start (YYYY-MM)'),
         '#size' => 10,
-        '#default_value' => $this->normalizeExperienceEditorDate($role['start_date'] ?? ''),
+        '#default_value' => $role['start_date'] ?? '',
       ];
       $form['professional_experience']['experience_editor']['professional_experience_entries'][$i]['dates']['end_date'] = [
         '#type' => 'textfield',
-        '#title' => $this->t('End (YYYY or YYYY-MM, or blank)'),
+        '#title' => $this->t('End (YYYY-MM or blank)'),
         '#size' => 10,
-        '#default_value' => $this->normalizeExperienceEditorDate($role['end_date'] ?? ''),
+        '#default_value' => $role['end_date'] ?? '',
       ];
 
       $form['professional_experience']['experience_editor']['professional_experience_entries'][$i]['location'] = [
@@ -1422,13 +1422,13 @@ class UserProfileForm extends FormBase {
     }
     if (is_array($entries)) {
       foreach ($entries as $idx => $entry) {
-        $start = $this->normalizeExperienceEditorDate($entry['dates']['start_date'] ?? '');
-        $end = $this->normalizeExperienceEditorDate($entry['dates']['end_date'] ?? '');
-        if ($start !== '' && !preg_match('/^\d{4}(?:-\d{2})?$/', $start)) {
-          $form_state->setErrorByName('professional_experience', $this->t('Role @num: Start date must be in YYYY or YYYY-MM format.', ['@num' => $idx + 1]));
+        $start = trim((string) ($entry['dates']['start_date'] ?? ''));
+        $end = trim((string) ($entry['dates']['end_date'] ?? ''));
+        if ($start !== '' && !preg_match('/^\d{4}-\d{2}$/', $start)) {
+          $form_state->setErrorByName('professional_experience', $this->t('Role @num: Start date must be in YYYY-MM format.', ['@num' => $idx + 1]));
         }
-        if ($end !== '' && !preg_match('/^\d{4}(?:-\d{2})?$/', $end)) {
-          $form_state->setErrorByName('professional_experience', $this->t('Role @num: End date must be in YYYY or YYYY-MM format (or blank).', ['@num' => $idx + 1]));
+        if ($end !== '' && !preg_match('/^\d{4}-\d{2}$/', $end)) {
+          $form_state->setErrorByName('professional_experience', $this->t('Role @num: End date must be in YYYY-MM format (or blank).', ['@num' => $idx + 1]));
         }
       }
     }
@@ -3134,8 +3134,8 @@ class UserProfileForm extends FormBase {
           continue;
         }
 
-        $start = $this->normalizeExperienceEditorDate($entry['dates']['start_date'] ?? '');
-        $end = $this->normalizeExperienceEditorDate($entry['dates']['end_date'] ?? '');
+        $start = trim((string) ($entry['dates']['start_date'] ?? ''));
+        $end = trim((string) ($entry['dates']['end_date'] ?? ''));
         $tech_raw = (string) ($entry['technologies'] ?? '');
         $ach_raw = (string) ($entry['key_achievements'] ?? '');
 
@@ -3643,8 +3643,8 @@ class UserProfileForm extends FormBase {
       }
 
       $advanced = is_array($entry['advanced'] ?? NULL) ? $entry['advanced'] : [];
-      $start = $this->normalizeExperienceEditorDate($entry['dates']['start_date'] ?? $entry['start_date'] ?? '');
-      $end = $this->normalizeExperienceEditorDate($entry['dates']['end_date'] ?? $entry['end_date'] ?? '');
+      $start = trim((string) ($entry['dates']['start_date'] ?? $entry['start_date'] ?? ''));
+      $end = trim((string) ($entry['dates']['end_date'] ?? $entry['end_date'] ?? ''));
       $tech_raw = (string) ($entry['technologies'] ?? '');
       $ach_raw = (string) ($entry['key_achievements'] ?? '');
 
@@ -4989,23 +4989,6 @@ PROMPT;
     }
     
     return $additions;
-  }
-
-  /**
-   * Normalizes experience date placeholders for the editor and save path.
-   */
-  private function normalizeExperienceEditorDate(mixed $value): string {
-    $value = trim((string) $value);
-    if ($value === '') {
-      return '';
-    }
-
-    $lower = strtolower($value);
-    if (in_array($lower, ['unknown', 'n/a', 'na', 'not provided', 'tbd', 'present', 'current', 'now'], TRUE)) {
-      return '';
-    }
-
-    return $value;
   }
 
   /**

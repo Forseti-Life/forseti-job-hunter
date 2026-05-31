@@ -9,7 +9,7 @@ job_hunter.dashboard:
     _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::dashboard'
     _title: 'Job Hunter Dashboard'
   requirements:
-    _access: 'TRUE'
+    _permission: 'access job hunter'
 
 # Job Hunter Home (alternate entry point)
 job_hunter.home:

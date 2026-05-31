@@ -296,18 +296,8 @@ class JobDiscoveryService {
         ->condition('sj.uid', $this->currentUser->id());
 
       // Include per-saved-job fields needed for follow-up and deadline display.
-      if ($this->database->schema()->fieldExists('jobhunter_saved_jobs', 'follow_up_date')) {
-        $query->addField('sj', 'follow_up_date', 'follow_up_date');
-      }
-      else {
-        $query->addExpression('NULL', 'follow_up_date');
-      }
-      if ($this->database->schema()->fieldExists('jobhunter_saved_jobs', 'deadline_date')) {
-        $query->addField('sj', 'deadline_date', 'sj_deadline_date');
-      }
-      else {
-        $query->addExpression('NULL', 'sj_deadline_date');
-      }
+      $query->addField('sj', 'follow_up_date', 'follow_up_date');
+      $query->addField('sj', 'deadline_date', 'sj_deadline_date');
 
       $query->leftJoin('jobhunter_companies', 'c', 'j.company_id = c.id');
       $query->addField('c', $company_name_field, 'company_name');
@@ -346,10 +336,8 @@ class JobDiscoveryService {
       if (!empty($filters['platform'])) {
         // Filter by source_platform or via field.
         $platform_group = $query->orConditionGroup()
-          ->condition('j.source_platform', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
-        if ($this->database->schema()->fieldExists('jobhunter_job_requirements', 'via')) {
-          $platform_group->condition('j.via', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
-        }
+          ->condition('j.source_platform', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE')
+          ->condition('j.via', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
         $query->condition($platform_group);
       }
 
@@ -405,10 +393,8 @@ class JobDiscoveryService {
       }
       if (!empty($filters['platform'])) {
         $platform_group = $query->orConditionGroup()
-          ->condition('j.source_platform', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
-        if ($this->database->schema()->fieldExists('jobhunter_job_requirements', 'via')) {
-          $platform_group->condition('j.via', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
-        }
+          ->condition('j.source_platform', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE')
+          ->condition('j.via', '%' . $this->database->escapeLike($filters['platform']) . '%', 'LIKE');
         $query->condition($platform_group);
       }
       $query->addExpression('COUNT(*)', 'total');
@@ -506,21 +492,19 @@ class JobDiscoveryService {
       $platforms = [];
 
       // Collect from via field first (user-friendly names).
-      if ($this->database->schema()->fieldExists('jobhunter_job_requirements', 'via')) {
-        $via_query = $this->database->select('jobhunter_saved_jobs', 'sj');
-        $via_query->innerJoin('jobhunter_job_requirements', 'j', 'sj.job_id = j.id');
-        $via_query->addField('j', 'via');
-        $via_query->condition('sj.uid', $this->currentUser->id());
-        $via_query->condition('j.via', '', '!=');
-        $via_query->isNotNull('j.via');
-        $via_query->distinct();
-        $via_results = $via_query->execute()->fetchCol();
-        foreach ($via_results as $v) {
-          $display = trim($v);
-          $slug = $this->normalizePlatformSlug($display);
-          // Friendly names always win.
-          $platforms[$slug] = $display;
-        }
+      $via_query = $this->database->select('jobhunter_saved_jobs', 'sj');
+      $via_query->innerJoin('jobhunter_job_requirements', 'j', 'sj.job_id = j.id');
+      $via_query->addField('j', 'via');
+      $via_query->condition('sj.uid', $this->currentUser->id());
+      $via_query->condition('j.via', '', '!=');
+      $via_query->isNotNull('j.via');
+      $via_query->distinct();
+      $via_results = $via_query->execute()->fetchCol();
+      foreach ($via_results as $v) {
+        $display = trim($v);
+        $slug = $this->normalizePlatformSlug($display);
+        // Friendly names always win.
+        $platforms[$slug] = $display;
       }
 
       // Collect from source_platform field — only add if no friendly name already.

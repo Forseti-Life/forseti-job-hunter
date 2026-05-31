@@ -78,9 +78,6 @@ function job_hunter_install() {
     _job_hunter_create_error_queue_content_type();
     _job_hunter_create_error_queue_fields();
     
-    // Initialize Drupal queues
-    _job_hunter_create_queues();
-    
     $messenger->addMessage(t('Job Hunter module installed successfully. Custom database tables and error queue content type created.'));
     $logger->info('Job Hunter module installation completed.');
     
@@ -117,20 +114,6 @@ function _job_hunter_create_saved_jobs_table() {
         'not null' => TRUE,
         'default' => 0,
         'description' => 'Per-user archive flag (1 = archived by this user).',
-      ],
-      'deadline_date' => [
-        'type' => 'varchar',
-        'length' => 10,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Application deadline date (YYYY-MM-DD).',
-      ],
-      'follow_up_date' => [
-        'type' => 'varchar',
-        'length' => 10,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Follow-up reminder date (YYYY-MM-DD).',
       ],
       'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
       'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
@@ -177,27 +160,6 @@ function _job_hunter_create_applications_table() {
       'uid' => ['type' => 'int', 'not null' => TRUE, 'default' => 0, 'description' => 'User ID'],
       'job_id' => ['type' => 'int', 'not null' => TRUE, 'description' => 'Job requirement ID'],
       'tailored_resume_used' => ['type' => 'text', 'description' => 'The tailored resume content used for this application'],
-      'source_resume_id' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Legacy FK to the base resume used for this application.',
-      ],
-      'submitted_resume_id' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'FK to base or tailored resume used for this application.',
-      ],
-      'submitted_resume_type' => [
-        'type' => 'varchar',
-        'length' => 16,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Resume type: base or tailored.',
-      ],
       'submission_status' => [
         'type' => 'varchar',
         'length' => 50,
@@ -219,35 +181,6 @@ function _job_hunter_create_applications_table() {
       'confirmation_screenshot' => ['type' => 'blob', 'description' => 'Screenshot of confirmation page'],
       'automation_success' => ['type' => 'int', 'default' => 0, 'description' => 'Whether automation succeeded (1=yes)'],
       'admin_review_required' => ['type' => 'int', 'default' => 0, 'description' => 'Whether admin review needed (1=yes)'],
-      'ats_platform' => [
-        'type' => 'varchar',
-        'length' => 50,
-        'not null' => FALSE,
-        'description' => 'Detected ATS platform: workday, greenhouse, lever, taleo, icims, usajobs, custom, aggregator',
-      ],
-      'apply_url' => [
-        'type' => 'varchar',
-        'length' => 1000,
-        'not null' => FALSE,
-        'description' => 'Resolved canonical apply URL after following aggregator redirects',
-      ],
-      'selected_apply_option' => [
-        'type' => 'varchar',
-        'length' => 100,
-        'not null' => FALSE,
-        'description' => 'Title of the apply_option selected from job apply_options array',
-      ],
-      'attempt_count' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Number of submission attempts made',
-      ],
-      'metadata' => [
-        'type' => 'text',
-        'not null' => FALSE,
-        'description' => 'JSON metadata: form field mapping, resolution steps, ATS detection details',
-      ],
       'error_details' => ['type' => 'text', 'description' => 'JSON details of submission error'],
       'created' => ['type' => 'varchar', 'length' => 19, 'description' => 'Created timestamp (YYYY-MM-DD HH:MM:SS)'],
       'changed' => ['type' => 'varchar', 'length' => 19, 'description' => 'Last updated timestamp (YYYY-MM-DD HH:MM:SS)'],
@@ -1280,28 +1213,10 @@ function _job_hunter_create_job_requirements_table() {
       'ai_extraction_status' => ['type' => 'varchar', 'length' => 32, 'default' => 'pending', 'description' => 'pending, completed, failed'],
       'external_source' => ['type' => 'varchar', 'length' => 100, 'description' => 'External source: cloud_talent_solution, linkedin, indeed, etc.'],
       'external_job_id' => ['type' => 'varchar', 'length' => 512, 'description' => 'External job ID from source system'],
-      'job_hash' => ['type' => 'varchar', 'length' => 32, 'not null' => FALSE, 'description' => 'MD5 hash of normalized company|title|location for cross-source deduplication.'],
-      'via' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE, 'description' => 'Source platform where job was posted (e.g., LinkedIn, Indeed).'],
-      'thumbnail' => ['type' => 'varchar', 'length' => 512, 'not null' => FALSE, 'description' => 'Company logo/thumbnail URL.'],
-      'share_link' => ['type' => 'varchar', 'length' => 512, 'not null' => FALSE, 'description' => 'Google Jobs direct share link.'],
-      'work_from_home' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Work from home option available (1=yes, 0=no).'],
-      'health_insurance' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Health insurance benefit offered (1=yes, 0=no).'],
-      'dental_coverage' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Dental coverage benefit offered (1=yes, 0=no).'],
-      'paid_time_off' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0, 'description' => 'Paid time off benefit offered (1=yes, 0=no).'],
-      'job_highlights' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE, 'description' => 'JSON-encoded structured highlights (qualifications, responsibilities, benefits).'],
-      'apply_options' => ['type' => 'text', 'not null' => FALSE, 'description' => 'JSON-encoded array of application links and options.'],
       'potential_duplicates_json' => ['type' => 'text', 'size' => 'medium', 'description' => 'JSON array of potential duplicate job IDs with similarity scores'],
     ],
     'primary key' => ['id'],
-    'indexes' => [
-      'company_id' => ['company_id'],
-      'status' => ['status'],
-      'external_job_id' => [['external_job_id', 100]],
-      'idx_job_hash' => ['job_hash'],
-      'idx_via' => ['via'],
-      'idx_work_from_home' => ['work_from_home'],
-      'idx_health_insurance' => ['health_insurance'],
-    ],
+    'indexes' => ['company_id' => ['company_id'], 'status' => ['status'], 'external_job_id' => [['external_job_id', 100]]],
   ];
   
   $schema->createTable('jobhunter_job_requirements', $table_schema);
@@ -1469,19 +1384,6 @@ function _job_hunter_create_job_seeker_resumes_table() {
       'file_id' => ['type' => 'int', 'not null' => TRUE],
       'resume_name' => ['type' => 'varchar', 'length' => 255],
       'extracted_text' => ['type' => 'text', 'size' => 'big', 'description' => 'Extracted text from resume file'],
-      'version_label' => [
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Optional human-friendly label for this resume version.',
-      ],
-      'version_notes' => [
-        'type' => 'text',
-        'size' => 'medium',
-        'not null' => FALSE,
-        'description' => 'Optional notes describing what this resume version emphasizes.',
-      ],
       'is_primary' => ['type' => 'int', 'size' => 'tiny', 'default' => 0],
       'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
       'changed' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
@@ -3361,183 +3263,34 @@ function job_hunter_update_9051() {
 }
 
 /**
- * Repairs skipped resume/application schema additions on preserved-table installs.
- *
- * Some environments preserve custom tables across reinstalls, which can leave
- * install-created tables on an older shape while Drupal still records a newer
- * module schema version. Keep this repair idempotent so updb can safely heal
- * those environments.
- *
- * @return string
- *   Update result.
- */
-function _job_hunter_repair_resume_application_schema(): string {
-  $schema = \Drupal::database()->schema();
-  $db = \Drupal::database();
-  $changes = [];
-
-  if ($schema->tableExists('jobhunter_job_seeker_resumes')) {
-    if (!$schema->fieldExists('jobhunter_job_seeker_resumes', 'version_label')) {
-      $schema->addField('jobhunter_job_seeker_resumes', 'version_label', [
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => FALSE,
-        'default' => NULL,
-      ]);
-      $changes[] = 'jobhunter_job_seeker_resumes.version_label';
-    }
-
-    if (!$schema->fieldExists('jobhunter_job_seeker_resumes', 'version_notes')) {
-      $schema->addField('jobhunter_job_seeker_resumes', 'version_notes', [
-        'type' => 'text',
-        'size' => 'medium',
-        'not null' => FALSE,
-      ]);
-      $changes[] = 'jobhunter_job_seeker_resumes.version_notes';
-    }
-  }
-
-  if ($schema->tableExists('jobhunter_applications')) {
-    if (!$schema->fieldExists('jobhunter_applications', 'source_resume_id')) {
-      $schema->addField('jobhunter_applications', 'source_resume_id', [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-        'default' => NULL,
-      ]);
-      $changes[] = 'jobhunter_applications.source_resume_id';
-    }
-
-    if (!$schema->fieldExists('jobhunter_applications', 'submitted_resume_id')) {
-      $schema->addField('jobhunter_applications', 'submitted_resume_id', [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'FK to base or tailored resume used for this application.',
-      ]);
-      $changes[] = 'jobhunter_applications.submitted_resume_id';
-    }
-
-    if (!$schema->fieldExists('jobhunter_applications', 'submitted_resume_type')) {
-      $schema->addField('jobhunter_applications', 'submitted_resume_type', [
-        'type' => 'varchar',
-        'length' => 16,
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Resume type: base or tailored.',
-      ]);
-      $changes[] = 'jobhunter_applications.submitted_resume_type';
-    }
-
-    if (
-      $schema->fieldExists('jobhunter_applications', 'source_resume_id') &&
-      $schema->fieldExists('jobhunter_applications', 'submitted_resume_id') &&
-      $schema->fieldExists('jobhunter_applications', 'submitted_resume_type')
-    ) {
-      $db->query("UPDATE {jobhunter_applications} SET submitted_resume_id = source_resume_id, submitted_resume_type = 'base' WHERE source_resume_id IS NOT NULL AND submitted_resume_id IS NULL");
-    }
-  }
-
-  if ($changes === []) {
-    return t('Resume/application schema already matches the expected shape.');
-  }
-
-  return t('Repaired schema fields: @fields', [
-    '@fields' => implode(', ', $changes),
-  ]);
-}
-
-/**
- * Repairs skipped saved-jobs schema additions on preserved-table installs.
- *
- * Some environments preserve custom tables across reinstalls, which can leave
- * jobhunter_saved_jobs without newer workflow-support columns even though
- * Drupal has advanced past the original update hook that added them.
- *
- * @return string
- *   Update result.
- */
-function _job_hunter_repair_saved_jobs_schema(): string {
-  $schema = \Drupal::database()->schema();
-  $changes = [];
-
-  if (!$schema->tableExists('jobhunter_saved_jobs')) {
-    return t('jobhunter_saved_jobs table does not exist — skipping.');
-  }
-
-  if (!$schema->fieldExists('jobhunter_saved_jobs', 'deadline_date')) {
-    $schema->addField('jobhunter_saved_jobs', 'deadline_date', [
-      'type' => 'varchar',
-      'length' => 10,
-      'not null' => FALSE,
-      'default' => NULL,
-      'description' => 'Application deadline date (YYYY-MM-DD).',
-    ]);
-    $changes[] = 'jobhunter_saved_jobs.deadline_date';
-  }
-
-  if (!$schema->fieldExists('jobhunter_saved_jobs', 'follow_up_date')) {
-    $schema->addField('jobhunter_saved_jobs', 'follow_up_date', [
-      'type' => 'varchar',
-      'length' => 10,
-      'not null' => FALSE,
-      'default' => NULL,
-      'description' => 'Follow-up reminder date (YYYY-MM-DD).',
-    ]);
-    $changes[] = 'jobhunter_saved_jobs.follow_up_date';
-  }
-
-  if ($changes === []) {
-    return t('Saved jobs schema already matches the expected shape.');
-  }
-
-  return t('Repaired schema fields: @fields', [
-    '@fields' => implode(', ', $changes),
-  ]);
-}
-
-/**
- * Repairs external job/application schema drift on preserved-table installs.
- *
- * Replays idempotent historical updates that added external-job metadata and
- * application automation columns so My Jobs and job discovery pages can safely
- * rely on the expected schema.
- *
- * @return string
- *   Update result.
- */
-function _job_hunter_repair_external_job_workflow_schema(): string {
-  $results = [
-    (string) job_hunter_update_9032(),
-    (string) job_hunter_update_9035(),
-    (string) job_hunter_update_9036(),
-  ];
-
-  return implode(' ', array_filter($results));
-}
-
-/**
- * Repairs missing tailoring feedback table on preserved-table installs.
- *
- * @return string
- *   Update result.
- */
-function _job_hunter_repair_tailoring_feedback_schema(): string {
-  $schema = \Drupal::database()->schema();
-  if ($schema->tableExists('jobhunter_tailoring_feedback')) {
-    return t('Tailoring feedback schema already matches the expected shape.');
-  }
-
-  _job_hunter_create_tailoring_feedback_table();
-  return t('Created jobhunter_tailoring_feedback table for tailored resume ratings.');
-}
-
-/**
  * Add version_label, version_notes to jobhunter_job_seeker_resumes; add source_resume_id to jobhunter_applications.
  */
 function job_hunter_update_9052() {
-  return _job_hunter_repair_resume_application_schema();
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('jobhunter_job_seeker_resumes', 'version_label')) {
+    $schema->addField('jobhunter_job_seeker_resumes', 'version_label', [
+      'type' => 'varchar',
+      'length' => 128,
+      'not null' => FALSE,
+      'default' => NULL,
+    ]);
+  }
+  if (!$schema->fieldExists('jobhunter_job_seeker_resumes', 'version_notes')) {
+    $schema->addField('jobhunter_job_seeker_resumes', 'version_notes', [
+      'type' => 'text',
+      'size' => 'medium',
+      'not null' => FALSE,
+    ]);
+  }
+  if (!$schema->fieldExists('jobhunter_applications', 'source_resume_id')) {
+    $schema->addField('jobhunter_applications', 'source_resume_id', [
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => FALSE,
+      'default' => NULL,
+    ]);
+  }
+  return t('Added version_label, version_notes to jobhunter_job_seeker_resumes; added source_resume_id to jobhunter_applications.');
 }
 
 /**
@@ -3881,121 +3634,4 @@ function job_hunter_update_9060() {
   }
 
   return t('Added email and linkedin_url columns to jobhunter_contacts.');
-}
-
-/**
- * Create job_hunter_profile table with age_18_or_older field.
- *
- * Resolves schema mismatch where UserProfileForm declares db_column: 'age_18_or_older'
- * but the table did not exist. This update creates the job_hunter_profile table
- * to support the field definition used by the form.
- */
-function job_hunter_update_9061() {
-  $schema = \Drupal::database()->schema();
-
-  if ($schema->tableExists('job_hunter_profile')) {
-    return t('job_hunter_profile table already exists — skipped.');
-  }
-
-  $table_schema = [
-    'description' => 'Job hunter profile data.',
-    'fields' => [
-      'uid' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'User ID (primary key).',
-      ],
-      'age_18_or_older' => [
-        'type' => 'int',
-        'size' => 'tiny',
-        'not null' => FALSE,
-        'default' => NULL,
-        'description' => 'Whether applicant is 18 or older (1=yes, 0=no, NULL=unknown).',
-      ],
-      'created' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Timestamp when row was created.',
-      ],
-      'changed' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Timestamp when row was last modified.',
-      ],
-    ],
-    'primary key' => ['uid'],
-  ];
-
-  $schema->createTable('job_hunter_profile', $table_schema);
-
-  return t('Created job_hunter_profile table with age_18_or_older field.');
-}
-
-/**
- * Initialize Drupal queues for Job Hunter.
- *
- * Creates queue entries in the Drupal queue table to ensure queues are
- * discoverable by drush queue:run commands and cron processors.
- */
-function _job_hunter_create_queues() {
-  $queue_service = \Drupal::service('queue');
-  
-  $queues = [
-    'job_hunter_resume_tailoring',
-    'job_hunter_genai_parsing',
-    'job_hunter_job_posting_parsing',
-    'job_hunter_error_queue',
-  ];
-  
-  foreach ($queues as $queue_name) {
-    try {
-      // Getting a queue reference will create it if it doesn't exist
-      $queue = $queue_service->get($queue_name);
-      \Drupal::logger('job_hunter')->info('Queue initialized: @name', ['@name' => $queue_name]);
-    } catch (\Exception $e) {
-      \Drupal::logger('job_hunter')->error('Failed to initialize queue @name: @error', [
-        '@name' => $queue_name,
-        '@error' => $e->getMessage(),
-      ]);
-    }
-  }
-}
-
-/**
- * Initialize Job Hunter queues (Drupal queue table entries).
- */
-function job_hunter_update_9062() {
-  _job_hunter_create_queues();
-  return t('Initialized Job Hunter queues in the Drupal queue table.');
-}
-
-/**
- * Repairs resume/application schema drift on preserved-table installs.
- */
-function job_hunter_update_9063() {
-  return _job_hunter_repair_resume_application_schema();
-}
-
-/**
- * Repairs saved-jobs schema drift on preserved-table installs.
- */
-function job_hunter_update_9064() {
-  return _job_hunter_repair_saved_jobs_schema();
-}
-
-/**
- * Repairs external job/application workflow schema drift.
- */
-function job_hunter_update_9065() {
-  return _job_hunter_repair_external_job_workflow_schema();
-}
-
-/**
- * Repairs missing tailoring feedback table on preserved-table installs.
- */
-function job_hunter_update_9066() {
-  return _job_hunter_repair_tailoring_feedback_schema();
 }

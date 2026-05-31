@@ -2,7 +2,6 @@
 
 namespace Drupal\job_hunter\Form\Subform;
 
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Database\Connection;
@@ -17,7 +16,6 @@ use Drupal\Core\Database\Connection;
  */
 class EducationHistorySubform {
 
-  use DependencySerializationTrait;
   use StringTranslationTrait;
 
   /**

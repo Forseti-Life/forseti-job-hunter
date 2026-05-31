@@ -81,7 +81,9 @@ class UsaJobsApiService {
     }
 
     if (empty($email)) {
-      $email = 'noreply@forseti.life'; // Fallback
+      // Fallback: user must provide email for USAJobs API
+      // Using a generic noreply pattern; configure via settings
+      $email = 'noreply@example.com';
     }
 
     // Build query parameters

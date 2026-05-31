@@ -763,7 +763,12 @@ class ApplicationSubmissionController extends ControllerBase {
 
     // Load current user's skills for match score computation (AC-2/SEC-3: current user only).
     $uid = (int) $this->currentUser()->id();
-    $user_skills_raw = $this->repository->getUserSkills($uid);
+    $seeker_row = \Drupal::database()->select('jobhunter_job_seeker', 'js')
+      ->fields('js', ['skills'])
+      ->condition('js.uid', $uid)
+      ->execute()
+      ->fetchObject();
+    $user_skills_raw = $seeker_row ? (string) ($seeker_row->skills ?? '') : '';
     $user_skill_tokens = $this->tokenizeText($user_skills_raw);
     $user_has_skills = !empty($user_skill_tokens);
 
@@ -1907,7 +1912,13 @@ class ApplicationSubmissionController extends ControllerBase {
   public function applicationsDashboard(): array {
     $uid = (int) $this->currentUser()->id();
 
-    $applications = $this->repository->getUserApplications($uid);
+    $applications = \Drupal::database()->select('jobhunter_applications', 'a')
+      ->fields('a', ['id', 'job_id', 'submission_status', 'submission_date', 'created'])
+      ->condition('a.uid', $uid)
+      ->orderBy('a.created', 'DESC')
+      ->range(0, 100)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_ASSOC);
 
     // Build status options HTML.
     $status_options_html = '';
@@ -1926,7 +1937,11 @@ class ApplicationSubmissionController extends ControllerBase {
     $job_ids = array_filter(array_unique(array_column($applications, 'job_id')));
     $job_titles = [];
     if (!empty($job_ids)) {
-      $rows_q = $this->repository->getJobTitlesByIds($job_ids);
+      $rows_q = \Drupal::database()->select('jobhunter_saved_jobs', 'j')
+        ->fields('j', ['id', 'title', 'company'])
+        ->condition('j.id', $job_ids, 'IN')
+        ->execute()
+        ->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
       foreach ($rows_q as $jid => $jrow) {
         $c = !empty($jrow['company']) ? ' — ' . $jrow['company'] : '';
         $job_titles[(int) $jid] = htmlspecialchars((string) ($jrow['title'] ?? '—')) . htmlspecialchars($c);
@@ -2052,8 +2067,13 @@ HTML;
 
     // AC-6: Only update applications belonging to the current user.
     // The WHERE uid = :uid clause ensures cross-user manipulation is impossible.
-    $updated_count = $this->repository->updateApplicationStatuses($ids, $new_status, $uid);
+    $updated = \Drupal::database()->update('jobhunter_applications')
+      ->fields(['submission_status' => $new_status])
+      ->condition('id', $ids, 'IN')
+      ->condition('uid', $uid)
+      ->execute();
 
+    $updated_count = (int) ($updated ?? 0);
     $status_label  = ucwords(str_replace('_', ' ', $new_status));
 
     // Redirect back to the dashboard with a success message.
@@ -2101,11 +2121,15 @@ HTML;
    */
   public function analytics() {
     $uid = (int) $this->currentUser()->id();
+    $db  = \Drupal::database();
 
     // ── Aggregate data (SEC-3: all queries scoped to $uid) ──────────────────
 
     // Total saved jobs for this user (join saved_jobs → job_requirements).
-    $saved_count = $this->repository->countUserSavedJobs($uid);
+    $saved_count = (int) $db->query(
+      "SELECT COUNT(*) FROM {jobhunter_saved_jobs} sj WHERE sj.uid = :uid AND sj.archived = 0",
+      [':uid' => $uid]
+    )->fetchField();
 
     // AC-5: empty state.
     if ($saved_count === 0) {
@@ -2125,7 +2149,14 @@ HTML;
     }
 
     // Stage funnel: group by application_status on joined job_requirements.
-    $funnel_raw = $this->repository->getApplicationFunnel($uid);
+    $funnel_raw = $db->query(
+      "SELECT jr.application_status AS stage, COUNT(*) AS cnt
+       FROM {jobhunter_saved_jobs} sj
+       JOIN {jobhunter_job_requirements} jr ON sj.job_id = jr.id
+       WHERE sj.uid = :uid AND sj.archived = 0
+       GROUP BY jr.application_status",
+      [':uid' => $uid]
+    )->fetchAllKeyed();
 
     // Canonical funnel order (maps DB values to display labels).
     $funnel_stages = [
@@ -2380,30 +2411,46 @@ HTML;
    */
   public function offersPage(): array {
     $uid = (int) $this->currentUser()->id();
+    $db  = \Drupal::database();
 
     $content = [];
 
-    if (!$this->repository->offersTableExists()) {
+    if (!$db->schema()->tableExists('jobhunter_offers')) {
       $content['notice'] = ['#markup' => '<p>Offer tracking is not yet available.</p>'];
       return $this->wrapWithNavigation($content);
     }
 
     // Load all offers for this user, joined with saved_jobs + job_requirements.
-    $rows = $this->repository->getOffersForUser($uid);
+    $rows = $db->select('jobhunter_offers', 'o')
+      ->fields('o')
+      ->condition('o.uid', $uid)
+      ->orderBy('o.response_deadline', 'ASC')
+      ->orderBy('o.created', 'ASC')
+      ->execute()
+      ->fetchAll();
 
-    $company_name_field = $this->repository->companyTableHasNameField() ? 'name' : 'company_name';
+    $company_name_field = \Drupal::database()->schema()->fieldExists('jobhunter_companies', 'name') ? 'name' : 'company_name';
 
     // Enrich each offer row with job/company data.
     $offers = [];
     foreach ($rows as $row) {
-      $job_data = $this->repository->getSavedJobForUser($uid, (int) $row->saved_job_id);
+      $job_data = $db->select('jobhunter_saved_jobs', 'sj')
+        ->fields('sj', ['job_id'])
+        ->condition('sj.uid', $uid)
+        ->condition('sj.id', (int) $row->saved_job_id)
+        ->execute()
+        ->fetchObject();
 
       if (!$job_data) {
         continue;
       }
       $job_id = (int) $job_data->job_id;
 
-      $jr = $this->repository->getJobRequirement($job_id);
+      $jr = $db->select('jobhunter_job_requirements', 'j')
+        ->fields('j', ['id', 'job_title', 'company_id'])
+        ->condition('j.id', $job_id)
+        ->execute()
+        ->fetchObject();
 
       if (!$jr) {
         continue;
@@ -2412,7 +2459,11 @@ HTML;
       // Resolve company name.
       $company_name = '';
       if ($jr->company_id) {
-        $company_row = $this->repository->getCompanyById((int) $jr->company_id, $company_name_field);
+        $company_row = $db->select('jobhunter_companies', 'c')
+          ->fields('c', [$company_name_field])
+          ->condition('c.id', (int) $jr->company_id)
+          ->execute()
+          ->fetchObject();
         if ($company_row) {
           $company_name = (string) ($company_row->{$company_name_field} ?? '');
         }

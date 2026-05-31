@@ -1,9 +1,0 @@
-uuid: b867dd55-695a-4bf0-bf13-5f908dea9d50
-langcode: en
-status: true
-dependencies: {  }
-id: fire_dept_admin
-label: 'Fire Department Administrator'
-weight: 4
-is_admin: false
-permissions: {  }

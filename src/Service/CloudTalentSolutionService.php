@@ -12,8 +12,8 @@ use GuzzleHttp\Exception\RequestException;
 /**
  * Service for Google Cloud Talent Solution API integration.
  * 
- * Google Cloud Project: forseti-483518
- * Service Account: forseti-life@forseti-483518.iam.gserviceaccount.com
+ * Configure your Google Cloud Project ID and Service Account credentials
+ * via the Job Hunter settings form at /admin/config/job_hunter/settings.
  * API: Cloud Talent Solution (jobs.googleapis.com)
  */
 class CloudTalentSolutionService {
@@ -49,9 +49,11 @@ class CloudTalentSolutionService {
   protected $configFactory;
 
   /**
-   * Google Cloud project ID.
+   * Google Cloud project ID - for reference only.
+   * The actual project ID must be configured via settings form.
+   * This is a placeholder; configure YOUR_GOOGLE_CLOUD_PROJECT_ID.
    */
-  const PROJECT_ID = 'forseti-483518';
+  const PROJECT_ID_PLACEHOLDER = 'YOUR_GOOGLE_CLOUD_PROJECT_ID';
 
   /**
    * Cloud Talent Solution API base URL.
@@ -59,9 +61,11 @@ class CloudTalentSolutionService {
   const API_BASE_URL = 'https://jobs.googleapis.com/v4';
 
   /**
-   * Service account email.
+   * Service account email - for reference only.
+   * The actual service account must be configured via settings form.
+   * This is a placeholder; configure YOUR_SERVICE_ACCOUNT@YOUR_PROJECT.iam.gserviceaccount.com.
    */
-  const SERVICE_ACCOUNT = 'forseti-life@forseti-483518.iam.gserviceaccount.com';
+  const SERVICE_ACCOUNT_PLACEHOLDER = 'YOUR_SERVICE_ACCOUNT@YOUR_PROJECT.iam.gserviceaccount.com';
 
   /**
    * Constructs a CloudTalentSolutionService object.
@@ -137,7 +141,7 @@ class CloudTalentSolutionService {
    * Get tenant name from configuration.
    *
    * @return string
-   *   The full tenant resource name (e.g., projects/forseti-483518/tenants/76d39aae-4a00-0000-0000-00527559cb6e).
+   *   The full tenant resource name (e.g., projects/YOUR_PROJECT_ID/tenants/76d39aae-4a00-0000-0000-00527559cb6e).
    *
    * @throws \Exception
    *   If tenant name is not configured.
@@ -172,7 +176,7 @@ class CloudTalentSolutionService {
       'requestMetadata' => [
         'userId' => 'test-user-1',
         'sessionId' => 'test-session-' . time(),
-        'domain' => 'forseti.life',
+        'domain' => 'example.com', // Use generic domain for testing
       ],
       'searchMode' => 'JOB_SEARCH',
     ];

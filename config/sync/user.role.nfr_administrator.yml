@@ -1,9 +1,0 @@
-uuid: 134ea604-8449-4f45-b8ff-266750eae66d
-langcode: en
-status: true
-dependencies: {  }
-id: nfr_administrator
-label: 'NFR Administrator'
-weight: 6
-is_admin: false
-permissions: {  }

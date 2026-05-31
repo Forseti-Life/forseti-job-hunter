@@ -24,14 +24,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SettingsForm extends ConfigFormBase {
 
   /**
-   * Google Cloud project ID.
+   * Google Cloud project ID - for reference only.
+   * The actual project ID must be set during configuration.
+   * This is a placeholder; configure via settings form.
    */
-  const GOOGLE_CLOUD_PROJECT_ID = 'forseti-483518';
+  const GOOGLE_CLOUD_PROJECT_ID_PLACEHOLDER = 'YOUR_GOOGLE_CLOUD_PROJECT_ID';
 
   /**
-   * Google Cloud service account email.
+   * Google Cloud service account email - for reference only.
+   * The actual service account must be set during configuration.
+   * This is a placeholder; configure via settings form.
    */
-  const GOOGLE_CLOUD_SERVICE_ACCOUNT = 'forseti-life@forseti-483518.iam.gserviceaccount.com';
+  const GOOGLE_CLOUD_SERVICE_ACCOUNT_PLACEHOLDER = 'YOUR_SERVICE_ACCOUNT@YOUR_PROJECT.iam.gserviceaccount.com';
 
   /**
    * Google Jobs API base URL.
@@ -229,13 +233,13 @@ class SettingsForm extends ConfigFormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Service Account JSON Key'),
       '#description' => $this->t('Paste the contents of your Google Cloud service account JSON key file here. Get your key from the <a href="@url" target="_blank">Google Cloud Console</a>.<br><br><strong>Note:</strong> You can use the same JSON key for both development and production environments. The key identifies your project and permissions, not the environment.', [
-        '@url' => 'https://console.cloud.google.com/talent-solution/connect-service-accounts?project=' . self::GOOGLE_CLOUD_PROJECT_ID,
+        '@url' => 'https://console.cloud.google.com/talent-solution/connect-service-accounts',
       ]),
       '#default_value' => $config->get('google_cloud_credentials') ?? '',
       '#rows' => 12,
       '#required' => FALSE,
       '#attributes' => [
-        'placeholder' => '{"type": "service_account", "project_id": "forseti-483518", ...}',
+        'placeholder' => '{"type": "service_account", "project_id": "YOUR_PROJECT_ID", ...}',
         'class' => ['job-hunter-credentials-textarea'],
       ],
     ];
@@ -243,11 +247,11 @@ class SettingsForm extends ConfigFormBase {
     $form['google_cloud_settings']['tenant_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Tenant Name'),
-      '#description' => $this->t('The full tenant resource name (e.g., projects/forseti-483518/tenants/76d39aae-4a00-0000-0000-00527559cb6e). Use the "List Tenants" button below to find your tenant name.'),
+      '#description' => $this->t('The full tenant resource name (e.g., projects/YOUR_PROJECT_ID/tenants/76d39aae-4a00-0000-0000-00527559cb6e). Use the "List Tenants" button below to find your tenant name.'),
       '#default_value' => $config->get('tenant_name') ?? '',
       '#required' => FALSE,
       '#attributes' => [
-        'placeholder' => 'projects/' . self::GOOGLE_CLOUD_PROJECT_ID . '/tenants/76d39aae-4a00-0000-0000-00527559cb6e',
+        'placeholder' => 'projects/YOUR_PROJECT_ID/tenants/76d39aae-4a00-0000-0000-00527559cb6e',
       ],
     ];
 
