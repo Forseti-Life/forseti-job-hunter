@@ -7,7 +7,6 @@ use Drupal\job_hunter\Service\UserJobProfileService;
 use Drupal\user\UserInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Unit tests for UserJobProfileService.
@@ -60,14 +59,14 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testGetProfileCompletenessAllFieldsPopulated() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       'field_available_start_date' => '2025-06-01',
       'field_remote_preference' => 'Remote',
       'field_professional_summary' => 'Experienced developer',
-      'field_key_skills' => ['PHP', 'Drupal'],
-      'field_professional_keywords' => 'web development',
-      'field_salary_expectation' => ['min' => 100000, 'max' => 150000],
+      'field_skills_summary' => 'PHP, Drupal',
+      'field_keywords_interested' => 'web development',
+      'field_salary_expectation_min' => 100000,
       'field_target_companies' => [1, 2],
     ]);
 
@@ -82,7 +81,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testGetProfileCompletenessRequiredOnly() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       'field_available_start_date' => '2025-06-01',
       'field_remote_preference' => 'Remote',
@@ -111,7 +110,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testGetProfileCompletenessPartialRequired() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       // Missing start_date and remote_preference
     ]);
@@ -128,7 +127,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testValidateProfileValid() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       'field_available_start_date' => '2025-06-01',
       'field_remote_preference' => 'Remote',
@@ -158,7 +157,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testIsProfileCompleteTrue() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       'field_available_start_date' => '2025-06-01',
       'field_remote_preference' => 'Remote',
@@ -174,7 +173,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testIsProfileCompleteFalse() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
     ]);
 
     $this->assertFalse($this->service->isProfileComplete($user));
@@ -187,7 +186,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
    */
   public function testGetProfileSummary() {
     $user = $this->createMockUser([
-      'field_resume' => 'resume.pdf',
+      'field_resume_file' => 'resume.pdf',
       'field_work_authorization' => 'US Citizen',
       'field_available_start_date' => '2025-06-01',
       'field_remote_preference' => 'Remote',
@@ -208,7 +207,7 @@ class UserJobProfileServiceTest extends UnitTestCase {
     $descriptions = $this->service->getFieldDescriptions();
     $this->assertIsArray($descriptions);
     $this->assertNotEmpty($descriptions);
-    $this->assertArrayHasKey('field_resume', $descriptions);
+    $this->assertArrayHasKey('field_resume_file', $descriptions);
     $this->assertArrayHasKey('field_work_authorization', $descriptions);
   }
 
@@ -225,14 +224,14 @@ class UserJobProfileServiceTest extends UnitTestCase {
     $user = $this->createMock(UserInterface::class);
 
     $field_mapping = [
-      'field_resume' => 'has_field_resume',
+      'field_resume_file' => 'has_field_resume',
       'field_work_authorization' => 'has_field_authorization',
       'field_available_start_date' => 'has_field_start_date',
       'field_remote_preference' => 'has_field_remote',
       'field_professional_summary' => 'has_field_summary',
-      'field_key_skills' => 'has_field_skills',
-      'field_professional_keywords' => 'has_field_keywords',
-      'field_salary_expectation' => 'has_field_salary',
+      'field_skills_summary' => 'has_field_skills',
+      'field_keywords_interested' => 'has_field_keywords',
+      'field_salary_expectation_min' => 'has_field_salary',
       'field_target_companies' => 'has_field_companies',
     ];
 

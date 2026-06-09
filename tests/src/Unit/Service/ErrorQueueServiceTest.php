@@ -8,6 +8,7 @@ use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 
 /**
@@ -40,6 +41,13 @@ class ErrorQueueServiceTest extends UnitTestCase {
   protected $loggerFactory;
 
   /**
+   * Mock logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $loggerChannel;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -47,6 +55,12 @@ class ErrorQueueServiceTest extends UnitTestCase {
 
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->loggerFactory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $this->loggerChannel = $this->createMock(LoggerChannelInterface::class);
+
+    $this->loggerFactory
+      ->method('get')
+      ->with('job_hunter')
+      ->willReturn($this->loggerChannel);
 
     $this->service = new ErrorQueueService(
       $this->entityTypeManager,
@@ -249,10 +263,20 @@ class ErrorQueueServiceTest extends UnitTestCase {
    */
   public function testMarkErrorFixed() {
     $error = $this->createMock(NodeInterface::class);
+    $set_values = [];
+
+    $error->method('set')->willReturnCallback(function ($field, $value) use (&$set_values, $error) {
+      $set_values[$field] = $value;
+      return $error;
+    });
+    $error->expects($this->once())->method('save');
+    $error->method('id')->willReturn(123);
 
     $this->service->markErrorFixed($error, 'resolved');
 
-    $error->method('set')->shouldHaveBeenCalledWith('field_fixed', TRUE);
+    $this->assertArrayHasKey('field_fixed', $set_values);
+    $this->assertTrue($set_values['field_fixed']);
+    $this->assertSame('resolved', $set_values['field_status']);
   }
 
 }

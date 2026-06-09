@@ -82,8 +82,8 @@ class UserJobProfileService {
     }
 
     // Calculate: 70% from required + 30% from optional
-    $required_percentage = (int) ($required_count / count($required_fields)) * 70;
-    $optional_percentage = (int) ($optional_count / count($optional_fields)) * 30;
+    $required_percentage = (int) round(($required_count / count($required_fields)) * 70);
+    $optional_percentage = (int) round(($optional_count / count($optional_fields)) * 30);
 
     return min(100, $required_percentage + $optional_percentage);
   }

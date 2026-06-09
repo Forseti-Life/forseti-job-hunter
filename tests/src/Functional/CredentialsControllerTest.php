@@ -37,7 +37,7 @@ class CredentialsControllerTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $routingFile = __DIR__ . '/../../../../../../../job_hunter.routing.yml';
+    $routingFile = __DIR__ . '/../../../job_hunter.routing.yml';
     $this->assertFileExists($routingFile, 'job_hunter.routing.yml must exist next to the module root.');
     self::$routeYaml = file_get_contents($routingFile);
 
@@ -148,7 +148,7 @@ class CredentialsControllerTest extends TestCase {
    * contains a duplicate-guard pattern (SELECT-before-INSERT or UPSERT).
    */
   public function testDuplicateCredentialGuardExists(): void {
-    $serviceFile = __DIR__ . '/../../../../../../../src/Service/CredentialManagementService.php';
+    $serviceFile = __DIR__ . '/../../../src/Service/CredentialManagementService.php';
     $this->assertFileExists($serviceFile, 'CredentialManagementService.php must exist.');
 
     $source = file_get_contents($serviceFile);
