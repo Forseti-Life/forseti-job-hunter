@@ -1,6 +1,6 @@
 # Job Hunter Routes
 # Complete routing configuration for job hunter module
-# Routes accessible to authenticated users
+# Public entry route plus authenticated/admin feature routes
 
 # Job Hunter Dashboard (Main Landing Page)
 job_hunter.dashboard:
@@ -9,7 +9,7 @@ job_hunter.dashboard:
     _controller: '\Drupal\job_hunter\Controller\ApplicationSubmissionController::dashboard'
     _title: 'Job Hunter Dashboard'
   requirements:
-    _permission: 'access job hunter'
+    _access: 'TRUE'
 
 # Job Hunter Home (alternate entry point)
 job_hunter.home:
