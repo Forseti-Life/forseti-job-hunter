@@ -1113,21 +1113,8 @@ function job_hunter_preprocess_company_research_page(&$variables) {
  *
  * Customize user profile edit form with organized job search sections.
  */
-function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-  // Organize job search fields into collapsible sections
-  $form['job_search_info'] = [
-    '#type' => 'details',
-    '#title' => t('Job Search Information'),
-    '#collapsible' => TRUE,
-    '#open' => TRUE,
-    '#weight' => -5,
-  ];
-
-  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
-  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
-  $field_descriptions = $profile_service->getFieldDescriptions();
-
-  // Core job search fields
+function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Core job search fields.
   $profile_fields = [
     'field_resume_file',
     'field_professional_summary',
@@ -1141,6 +1128,27 @@ function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInte
     'field_keywords_interested',
     'field_target_companies',
   ];
+
+  // Registration form should not include job search profile fields.
+  if ($form_id === 'user_register_form') {
+    foreach ($profile_fields as $field_name) {
+      unset($form[$field_name]);
+    }
+    return;
+  }
+
+  // Organize job search fields into collapsible sections.
+  $form['job_search_info'] = [
+    '#type' => 'details',
+    '#title' => t('Job Search Information'),
+    '#collapsible' => TRUE,
+    '#open' => TRUE,
+    '#weight' => -5,
+  ];
+
+  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
+  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
+  $field_descriptions = $profile_service->getFieldDescriptions();
 
   foreach ($profile_fields as $field_name) {
     if (isset($form[$field_name])) {
