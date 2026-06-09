@@ -179,7 +179,7 @@ class SearchAggregatorService {
     }
 
     if (!$explicit_sources && empty($params['sources'])) {
-      $params['sources'] = ['forseti'];
+      $params['sources'] = $this->getDefaultSources();
     }
 
     $params['remote_preference'] = $this->normalizeRemotePreference((string) ($params['remote_preference'] ?? ''));
@@ -221,7 +221,7 @@ class SearchAggregatorService {
    */
   public function searchJobs(array $params): array {
     $params = $this->normalizeSearchParameters($params);
-    $sources = $params['sources'] ?? ['forseti'];
+    $sources = $params['sources'] ?? $this->getDefaultSources();
     $all_results = [];
     $pagination_metadata = [];
 
@@ -336,7 +336,7 @@ class SearchAggregatorService {
 
     $normalized_sources = $this->normalizeSourceList($decoded_sources);
     if (!empty($decoded_sources) && empty($normalized_sources)) {
-      $normalized_sources = ['forseti'];
+      $normalized_sources = $this->getDefaultSources();
     }
 
     return [
@@ -367,6 +367,29 @@ class SearchAggregatorService {
       }
     }
     return $normalized;
+  }
+
+  /**
+   * Returns default search sources based on configured credentials.
+   *
+   * @return string[]
+   *   Source keys in preferred default order.
+   */
+  protected function getDefaultSources(): array {
+    $sources = ['forseti'];
+    $config = $this->configFactory->get('job_hunter.settings');
+
+    if (!empty($config->get('serpapi_api_key'))) {
+      $sources[] = 'serpapi';
+    }
+    if (!empty($config->get('adzuna_app_id')) && !empty($config->get('adzuna_app_key'))) {
+      $sources[] = 'adzuna';
+    }
+    if (!empty($config->get('usajobs_api_key')) && !empty($config->get('usajobs_email'))) {
+      $sources[] = 'usajobs';
+    }
+
+    return $sources;
   }
 
   /**

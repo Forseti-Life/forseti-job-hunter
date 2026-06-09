@@ -96,7 +96,7 @@ class JobDiscoveryService {
       'salary_max' => '',
       'employment_type' => '',
       'relocation' => '',
-      'sources' => ['forseti'],
+      'sources' => $this->getDefaultSources(),
     ];
 
     try {
@@ -620,7 +620,7 @@ class JobDiscoveryService {
       // No preferences saved — preserve the live discovery default.
       return [
         'has_row'            => FALSE,
-        'sources_enabled'    => ['forseti'],
+        'sources_enabled'    => $this->getDefaultSources(),
         'min_salary'         => NULL,
         'remote_preference'  => '',
         'location_radius_km' => NULL,
@@ -641,7 +641,7 @@ class JobDiscoveryService {
       }
     }
     if (!empty($decoded) && empty($sources)) {
-      $sources = ['forseti'];
+      $sources = $this->getDefaultSources();
     }
 
     $remote_preference = (string) ($row->remote_preference ?? 'any');
@@ -659,6 +659,29 @@ class JobDiscoveryService {
       'remote_preference'  => $remote_preference,
       'location_radius_km' => $row->location_radius_km !== NULL ? (int) $row->location_radius_km : NULL,
     ];
+  }
+
+  /**
+   * Returns default enabled sources based on configured credentials.
+   *
+   * @return string[]
+   *   Source keys in preferred default order.
+   */
+  protected function getDefaultSources(): array {
+    $sources = ['forseti'];
+    $config = $this->configFactory->get('job_hunter.settings');
+
+    if (!empty($config->get('serpapi_api_key'))) {
+      $sources[] = 'serpapi';
+    }
+    if (!empty($config->get('adzuna_app_id')) && !empty($config->get('adzuna_app_key'))) {
+      $sources[] = 'adzuna';
+    }
+    if (!empty($config->get('usajobs_api_key')) && !empty($config->get('usajobs_email'))) {
+      $sources[] = 'usajobs';
+    }
+
+    return $sources;
   }
 
 }
