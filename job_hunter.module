@@ -1109,50 +1109,6 @@ function job_hunter_preprocess_company_research_page(&$variables) {
   $variables['stats'] = $stats;
 }
 /**
- * Implements hook_form_user_register_form_alter().
- *
- * Customize user registration form to include job search profile fields.
- */
-function job_hunter_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-  // Add job search profile section
-  $form['job_search_profile'] = [
-    '#type' => 'details',
-    '#title' => t('Job Search Profile'),
-    '#description' => t('Help us customize your job search experience by providing some basic information.'),
-    '#weight' => -5,
-    '#open' => TRUE,
-  ];
-
-  /** @var \Drupal\job_hunter\Service\UserJobProfileService $profile_service */
-  $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
-  $field_descriptions = $profile_service->getFieldDescriptions();
-
-  // Move job search fields into organized section if they exist
-  $profile_fields = [
-    'field_resume_file',
-    'field_professional_summary',
-    'field_work_authorization',
-    'field_available_start_date',
-    'field_remote_preference',
-  ];
-
-  foreach ($profile_fields as $field_name) {
-    if (isset($form[$field_name])) {
-      $form['job_search_profile'][$field_name] = $form[$field_name];
-      if (isset($field_descriptions[$field_name])) {
-        $form['job_search_profile'][$field_name]['widget'][0]['#description'] = $field_descriptions[$field_name];
-      }
-      unset($form[$field_name]);
-      
-      // Make key fields required
-      if (in_array($field_name, ['field_resume_file', 'field_work_authorization', 'field_available_start_date'])) {
-        $form['job_search_profile'][$field_name]['widget']['#required'] = TRUE;
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_form_user_form_alter().
  *
  * Customize user profile edit form with organized job search sections.
