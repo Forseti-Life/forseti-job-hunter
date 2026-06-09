@@ -119,7 +119,7 @@
                       <tr class="job-row job-row--{{ wf }}{% if job.follow_up_overdue %} job-row--follow-up-overdue{% endif %}">
                         <td class="col-select">
                           <input type="checkbox" name="job_ids[]" value="{{ job.id }}"
-                                 aria-label="{{ 'Select %title'|t({'%title': job_title}) }}" />
+                                 aria-label="{{ 'Select @title'|t({'@title': job_title}) }}" />
                         </td>
                         <td>
                           <a href="{{ path('job_hunter.job_view', {'job_id': job.id}) }}">{{ job_title }}</a>
