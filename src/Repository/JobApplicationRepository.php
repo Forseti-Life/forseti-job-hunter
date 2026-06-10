@@ -119,6 +119,22 @@ class JobApplicationRepository {
   }
 
   /**
+   * Count active saved-job mappings for a single user.
+   */
+  public function countActiveSavedJobsByUser(int $uid): int {
+    if ($uid <= 0) {
+      return 0;
+    }
+
+    return (int) $this->database->select('jobhunter_saved_jobs', 'sj')
+      ->condition('sj.uid', $uid)
+      ->condition('sj.archived', 0)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+  }
+
+  /**
    * Insert a new saved-job mapping row.
    */
   public function insertSavedJob(int $uid, int $job_id): void {

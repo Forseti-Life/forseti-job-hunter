@@ -415,19 +415,17 @@ class ApplicationSubmissionController extends ControllerBase {
   /**
    * Get count of saved job postings.
    *
-   * Counts the total number of job requirements in the database.
+   * Counts active saved jobs for the current user.
    *
    * @param \Drupal\Core\Session\AccountInterface $user
-   *   The current user account. Kept for future use when implementing
-   *   user-specific saved jobs. Currently unused.
+   *   The current user account.
    *
    * @return int
    *   The number of saved job postings.
    *
-   * @todo Implement user-specific saved jobs filtering in the query.
    */
   private function getSavedJobsCount(AccountInterface $user) {
-    return $this->repository->countJobRequirements();
+    return $this->repository->countActiveSavedJobsByUser((int) $user->id());
   }
 
   /**
