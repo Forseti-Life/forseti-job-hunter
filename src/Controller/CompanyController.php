@@ -727,7 +727,6 @@ class CompanyController extends ControllerBase {
     // Parse JSON data using helper method
     $extracted = $this->safeJsonDecode($jobValue($job, 'extracted_json'), 'job extracted data', $job_id);
     $skills = $this->safeJsonDecode($jobValue($job, 'skills_required_json'), 'job skills', $job_id);
-    $keywords = $this->safeJsonDecode($jobValue($job, 'keywords_json'), 'job keywords', $job_id);
     $duplicates = $this->safeJsonDecode($jobValue($job, 'potential_duplicates_json'), 'potential duplicates', $job_id) ?? [];
     
     // Build the content
@@ -939,7 +938,7 @@ class CompanyController extends ControllerBase {
       $content['source_info'] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['job-source-info']],
-        '#markup' => '<div class="job-info-box">' . implode('<br>', $source_info) . '</div>',
+        '#markup' => '<div class="job-info-box"><ul class="job-meta-list"><li>' . implode('</li><li>', $source_info) . '</li></ul></div>',
       ];
     }
 
@@ -1092,7 +1091,7 @@ class CompanyController extends ControllerBase {
       $content['skills'] = [
         '#type' => 'details',
         '#title' => $this->t('Required Skills'),
-        '#open' => TRUE,
+        '#open' => FALSE,
         '#attributes' => ['class' => ['job-section']],
       ];
       
@@ -1147,49 +1146,6 @@ class CompanyController extends ControllerBase {
       }
     }
     
-    // Keywords section
-    if ($keywords) {
-      $content['keywords'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Keywords for Resume Tailoring'),
-        '#open' => FALSE,
-        '#attributes' => ['class' => ['job-section']],
-      ];
-      
-      if (!empty($keywords['high_frequency'])) {
-        $content['keywords']['high_freq'] = [
-          '#markup' => '<p><strong>High Frequency:</strong> ' . implode(', ', $keywords['high_frequency']) . '</p>',
-        ];
-      }
-      if (!empty($keywords['action_verbs'])) {
-        $content['keywords']['verbs'] = [
-          '#markup' => '<p><strong>Action Verbs:</strong> ' . implode(', ', $keywords['action_verbs']) . '</p>',
-        ];
-      }
-      if (!empty($keywords['key_phrases'])) {
-        $content['keywords']['phrases'] = [
-          '#markup' => '<p><strong>Key Phrases:</strong> ' . implode(', ', $keywords['key_phrases']) . '</p>',
-        ];
-      }
-      if (!empty($keywords['domain_terms'])) {
-        $content['keywords']['domain'] = [
-          '#markup' => '<p><strong>Domain Terms:</strong> ' . implode(', ', $keywords['domain_terms']) . '</p>',
-        ];
-      }
-    }
-    
-    // Raw posting (collapsed)
-    if ($job->raw_posting_text) {
-      $content['raw'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Original Posting Text'),
-        '#open' => FALSE,
-        'text' => [
-          '#markup' => '<pre style="white-space: pre-wrap; font-size: 12px; background: #f5f5f5; padding: 15px; border-radius: 4px;">' . htmlspecialchars($job->raw_posting_text) . '</pre>',
-        ],
-      ];
-    }
-    
     // Add some basic styling
     $content['#attached']['html_head'][] = [
       [
@@ -1207,6 +1163,9 @@ class CompanyController extends ControllerBase {
           .job-info-box strong { color: #333; }
           .job-info-box a { color: #667eea; text-decoration: none; }
           .job-info-box a:hover { text-decoration: underline; }
+          .job-meta-list { margin: 0; padding-left: 18px; }
+          .job-meta-list li { margin: 0 0 6px 0; }
+          .job-meta-list li:last-child { margin-bottom: 0; }
           .status-completed, .status-neutral { color: #10b981; font-weight: 600; }
           .status-pending { color: #f59e0b; font-weight: 600; }
           .status-queued { color: #3b82f6; font-weight: 600; }
