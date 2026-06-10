@@ -347,6 +347,7 @@ class UserProfileService {
     $preferences = is_array($consolidated['job_search_preferences'] ?? NULL) ? $consolidated['job_search_preferences'] : [];
     $education = is_array($consolidated['education'] ?? NULL) ? $consolidated['education'] : [];
     $technical_expertise = $consolidated['technical_expertise'] ?? [];
+    $executive_profile_text = $this->valueToSearchableText($consolidated['executive_profile'] ?? '');
 
     $website_urls = [
       'linkedin' => '',
@@ -412,7 +413,7 @@ class UserProfileService {
 
       case 'field_experience_years':
         return !empty($jobSeekerData->experience_years)
-          || preg_match('/\b\d+\+?\s*years\b/i', (string) ($consolidated['executive_profile'] ?? '')) === 1
+          || preg_match('/\b\d+\+?\s*years\b/i', $executive_profile_text) === 1
           || !empty($consolidated['professional_experience'])
           || !empty($consolidated['early_career']['positions']);
 
@@ -455,6 +456,47 @@ class UserProfileService {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Convert a mixed profile value into searchable plain text.
+   */
+  protected function valueToSearchableText($value): string {
+    if (is_string($value)) {
+      return trim($value);
+    }
+
+    if (is_numeric($value) || is_bool($value)) {
+      return (string) $value;
+    }
+
+    if (is_object($value)) {
+      if (method_exists($value, '__toString')) {
+        return trim((string) $value);
+      }
+      $value = get_object_vars($value);
+    }
+
+    if (!is_array($value)) {
+      return '';
+    }
+
+    $parts = [];
+    array_walk_recursive($value, static function ($item) use (&$parts): void {
+      if (is_string($item)) {
+        $item = trim($item);
+        if ($item !== '') {
+          $parts[] = $item;
+        }
+        return;
+      }
+
+      if (is_numeric($item) || is_bool($item)) {
+        $parts[] = (string) $item;
+      }
+    });
+
+    return implode(' ', $parts);
   }
 
   /**
