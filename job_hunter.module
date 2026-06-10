@@ -1137,7 +1137,19 @@ function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInte
     return;
   }
 
-  // Organize job search fields into collapsible sections.
+  $available_profile_fields = [];
+  foreach ($profile_fields as $field_name) {
+    if (isset($form[$field_name])) {
+      $available_profile_fields[] = $field_name;
+    }
+  }
+
+  // Do not inject a dead accordion when this user form has no job fields.
+  if ($available_profile_fields === []) {
+    return;
+  }
+
+  // Organize available job search fields into collapsible sections.
   $form['job_search_info'] = [
     '#type' => 'details',
     '#title' => t('Job Search Information'),
@@ -1150,7 +1162,7 @@ function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInte
   $profile_service = \Drupal::service('job_hunter.user_job_profile_service');
   $field_descriptions = $profile_service->getFieldDescriptions();
 
-  foreach ($profile_fields as $field_name) {
+  foreach ($available_profile_fields as $field_name) {
     if (isset($form[$field_name])) {
       $form['job_search_info'][$field_name] = $form[$field_name];
       if (isset($field_descriptions[$field_name])) {
@@ -1163,7 +1175,9 @@ function job_hunter_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInte
   }
 
   // Add custom submit handler to update profile completeness
-  $form['#submit'][] = 'job_hunter_user_form_submit';
+  if (!in_array('job_hunter_user_form_submit', $form['#submit'] ?? [], TRUE)) {
+    $form['#submit'][] = 'job_hunter_user_form_submit';
+  }
 }
 
 /**
