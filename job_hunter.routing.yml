@@ -49,6 +49,14 @@ job_hunter.queue_status:
   requirements:
     _permission: 'access job hunter'
 
+job_hunter.queue_user_status:
+  path: '/jobhunter/queue/user-status'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\JobHunterHomeController::getCurrentUserQueueStatusAjax'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+
 job_hunter.queue_logs:
   path: '/jobhunter/queue/logs'
   defaults:

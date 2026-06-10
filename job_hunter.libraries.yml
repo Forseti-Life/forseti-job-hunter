@@ -30,8 +30,11 @@ job-hunter-navigation:
   css:
     theme:
       css/job-hunter-navigation.css: {}
+  js:
+    js/job-hunter-navigation-queue.js: {}
   dependencies:
     - core/drupal
+    - core/once
 
 documentation:
   css:

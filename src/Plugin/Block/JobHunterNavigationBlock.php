@@ -161,6 +161,7 @@ class JobHunterNavigationBlock extends BlockBase implements ContainerFactoryPlug
     return [
       '#theme' => 'job_hunter_navigation',
       '#navigation' => $navigation,
+      '#queue_status_url' => Url::fromRoute('job_hunter.queue_user_status')->toString(),
       '#attached' => [
         'library' => [
           'job_hunter/job-hunter-navigation',

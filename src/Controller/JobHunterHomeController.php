@@ -455,6 +455,118 @@ class JobHunterHomeController extends ControllerBase {
   }
 
   /**
+   * AJAX endpoint to get queue status scoped to the current user.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response with the user's queue counts and check timestamp.
+   */
+  public function getCurrentUserQueueStatusAjax(): JsonResponse {
+    if (!$this->currentUser()->isAuthenticated()) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => 'Access denied',
+      ], 403);
+    }
+
+    $user_id = (int) $this->currentUser()->id();
+    $status = $this->getCurrentUserQueueStatus($user_id);
+
+    return new JsonResponse([
+      'success' => TRUE,
+      'total_items' => $status['total_items'],
+      'queues' => $status['queues'],
+      'checked_at' => \Drupal::time()->getRequestTime(),
+    ]);
+  }
+
+  /**
+   * Computes queue item counts owned by a specific user.
+   *
+   * @param int $user_id
+   *   The user ID.
+   *
+   * @return array
+   *   Queue counts keyed by queue and total.
+   */
+  protected function getCurrentUserQueueStatus(int $user_id): array {
+    $queue_ids = array_keys(self::QUEUE_DEFINITIONS);
+    $queues = [];
+    foreach (self::QUEUE_DEFINITIONS as $queue_id => $definition) {
+      $queues[$queue_id] = [
+        'id' => $queue_id,
+        'name' => $definition['name'],
+        'icon' => $definition['icon'],
+        'items' => 0,
+      ];
+    }
+
+    $saved_job_ids = $this->database->select('jobhunter_saved_jobs', 's')
+      ->fields('s', ['job_id'])
+      ->condition('s.uid', $user_id)
+      ->execute()
+      ->fetchCol();
+    $saved_job_lookup = [];
+    foreach ($saved_job_ids as $saved_job_id) {
+      $saved_job_lookup[(int) $saved_job_id] = TRUE;
+    }
+
+    $rows = $this->database->select('queue', 'q')
+      ->fields('q', ['name', 'data'])
+      ->condition('q.name', $queue_ids, 'IN')
+      ->execute()
+      ->fetchAll();
+
+    $total_items = 0;
+    foreach ($rows as $row) {
+      $item_data = @unserialize($row->data, ['allowed_classes' => FALSE]);
+      if ($item_data === FALSE && $row->data !== 'b:0;') {
+        continue;
+      }
+
+      if (!is_array($item_data) || !isset($queues[$row->name])) {
+        continue;
+      }
+
+      if ($this->queueItemBelongsToUser($item_data, $user_id, $saved_job_lookup)) {
+        $queues[$row->name]['items']++;
+        $total_items++;
+      }
+    }
+
+    return [
+      'total_items' => $total_items,
+      'queues' => $queues,
+    ];
+  }
+
+  /**
+   * Determines whether a queue payload belongs to the current user.
+   *
+   * @param array $item_data
+   *   Queue payload data.
+   * @param int $user_id
+   *   Current user ID.
+   * @param array<int, bool> $saved_job_lookup
+   *   Lookup of saved job IDs owned by the user.
+   *
+   * @return bool
+   *   TRUE if the queue item belongs to the user.
+   */
+  private function queueItemBelongsToUser(array $item_data, int $user_id, array $saved_job_lookup): bool {
+    foreach (['uid', 'user_id'] as $user_key) {
+      if (isset($item_data[$user_key]) && is_numeric((string) $item_data[$user_key])) {
+        return (int) $item_data[$user_key] === $user_id;
+      }
+    }
+
+    if (isset($item_data['job_id']) && is_numeric((string) $item_data['job_id'])) {
+      return !empty($saved_job_lookup[(int) $item_data['job_id']]);
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Get recent queue activity logs (AJAX endpoint).
    *
    * Returns the last 20 queue-related log entries from the watchdog table.

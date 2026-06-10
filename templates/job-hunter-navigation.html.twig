@@ -11,6 +11,7 @@
  *   - icon: Icon identifier
  *   - weight: Sort weight
  *   - classes: Optional additional CSS classes
+ * - queue_status_url: JSON endpoint for current user queue status
  */
 #}
 <nav class="job-hunter-navigation">
@@ -30,4 +31,13 @@
       </li>
     {% endfor %}
   </ul>
+
+  <div class="job-hunter-queue-status" data-status-url="{{ queue_status_url }}">
+    <h3 class="queue-status-title">{{ 'My Processing Queue'|t }}</h3>
+    <p class="queue-status-count">
+      <strong class="queue-count-value">--</strong>
+      <span class="queue-count-label">{{ 'items in queue'|t }}</span>
+    </p>
+    <p class="queue-last-checked">{{ 'Last status checked: --'|t }}</p>
+  </div>
 </nav>

@@ -126,6 +126,38 @@
   color: #667eea;
 }
 
+.job-hunter-queue-status {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.queue-status-title {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.queue-status-count {
+  margin: 0 0 0.25rem 0;
+  color: #111827;
+}
+
+.queue-count-value {
+  font-size: 1.05rem;
+}
+
+.queue-count-label,
+.queue-last-checked {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.queue-last-checked {
+  margin: 0;
+}
+
 /* Responsive - Horizontal layout for mobile */
 @media (max-width: 768px) {
   .job-hunter-navigation {
@@ -179,6 +211,10 @@
   /* Hide settings on mobile nav */
   .nav-item--settings,
   .report-problem-beta {
+    display: none;
+  }
+
+  .job-hunter-queue-status {
     display: none;
   }
 }
