@@ -204,6 +204,50 @@ class ResumeUploadSubform {
               $parsing_error = $parsed_record['error_message'];
               $parsed_data = json_decode($parsed_record['parsed_data'], TRUE);
             }
+            elseif (!empty($extracted_text)) {
+              // Self-heal: ensure extracted resumes are always represented in the
+              // parsing queue/status pipeline.
+              if (!$file->isPermanent()) {
+                $file->setPermanent();
+                $file->save();
+              }
+
+              $timestamp = \Drupal::time()->getRequestTime();
+              $database->insert('jobhunter_resume_parsed_data')
+                ->fields([
+                  'uid' => $uid,
+                  'resume_file_id' => $file_id,
+                  'resume_path' => $file_uri,
+                  'parsed_data' => json_encode(['status' => 'queued']),
+                  'status' => 'queued',
+                  'error_message' => NULL,
+                  'created' => $timestamp,
+                  'changed' => $timestamp,
+                ])
+                ->execute();
+
+              $already_queued = (bool) $database->select('queue', 'q')
+                ->fields('q', ['item_id'])
+                ->condition('name', 'job_hunter_genai_parsing')
+                ->condition('data', '%"file_id":' . $file_id . '%', 'LIKE')
+                ->range(0, 1)
+                ->execute()
+                ->fetchField();
+
+              if (!$already_queued) {
+                \Drupal::queue('job_hunter_genai_parsing')->createItem([
+                  'uid' => $uid,
+                  'resume_id' => $resume_record_id,
+                  'file_id' => $file_id,
+                  'extracted_text' => $extracted_text,
+                  'filename' => $filename,
+                ]);
+              }
+
+              $parsing_status = 'queued';
+              $parsing_error = NULL;
+              $parsed_data = ['status' => 'queued'];
+            }
           }
 
           $size_kb = round($file_size / 1024, 2);
