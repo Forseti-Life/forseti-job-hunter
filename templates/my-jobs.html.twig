@@ -22,12 +22,17 @@
   <p>{{ 'Track your saved jobs through the application pipeline.'|t }}</p>
 
   <div class="page-actions">
-    <a href="/jobhunter/job/paste" class="button button--primary">
-      {{ '+ Add Job Posting'|t }}
-    </a>
-    <a href="/jobhunter/my-jobs/archive" class="button button--secondary">
-      {{ 'Archived Jobs'|t }}
-    </a>
+    <div class="page-actions__line">
+      <a href="/jobhunter/job/paste" class="button button--primary">
+        {{ '+ Add Job Posting'|t }}
+      </a>
+      <span class="page-actions__note">{{ 'This is the path for a tailored resume for one job req.'|t }}</span>
+    </div>
+    <div class="page-actions__line">
+      <a href="/jobhunter/my-jobs/archive" class="button button--secondary">
+        {{ 'Archived Jobs'|t }}
+      </a>
+    </div>
   </div>
 
   {# Filter Form #}
@@ -280,6 +285,9 @@
 .match-score-badge--no-skills { background: #f3f4f6; color: #6b7280; font-weight: 400; }
 .match-score-badge--no-skills a { color: #4b5563; text-decoration: underline; font-size: 0.85em; }
 .follow-up-overdue { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 12px; font-size: 0.78em; font-weight: 600; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; white-space: nowrap; }
+.page-actions__line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.page-actions__line:last-child { margin-bottom: 0; }
+.page-actions__note { color: #4b5563; font-size: 0.92em; }
 </style>
 
 <script>
