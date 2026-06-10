@@ -303,7 +303,7 @@ class ResumeUploadSubform {
 
           if ($is_queued || $is_processing) {
             $resume_table .= '<div class="jh-profile__status-banner jh-profile__status-banner--info">';
-            $resume_table .= '🔄 <em>' . $this->t('Processing automatically - check back in 2-3 minutes') . '</em>';
+            $resume_table .= '🔄 <em>' . $this->t('Processing automatically in the queue/cron pipeline - this usually takes 5-10 minutes.') . '</em>';
             $resume_table .= '</div>';
           }
           elseif ($is_error) {
@@ -409,7 +409,7 @@ class ResumeUploadSubform {
 
       if ($json_index == 0) {
         $form['resume_workflow']['individual_json_editors']['no_json'] = [
-          '#markup' => '<p><em>' . $this->t('No parsed JSON data available yet. Use "Parse JSON" buttons above to extract data from your resumes.') . '</em></p>',
+          '#markup' => '<p><em>' . $this->t('No parsed JSON data is available yet. Your resume is processed automatically by the queue/cron pipeline after upload, and this usually takes 5-10 minutes. Refresh this page shortly to see results.') . '</em></p>',
         ];
       }
 
@@ -598,7 +598,7 @@ class ResumeUploadSubform {
     }
 
     if ($processed_count > 0) {
-      \Drupal::messenger()->addStatus($this->t('@count resume(s) queued for AI processing. Existing processed files were re-queued when selected. Check back in 2-3 minutes for results.', ['@count' => $processed_count]));
+      \Drupal::messenger()->addStatus($this->t('@count resume(s) queued for AI processing. Existing processed files were re-queued when selected. Processing runs automatically and usually completes in 5-10 minutes.', ['@count' => $processed_count]));
     }
 
     $form_state->setRedirect('job_hunter.user_profile_edit');
