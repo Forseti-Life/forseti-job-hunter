@@ -580,11 +580,55 @@ class ResumePdfService {
    */
   protected function renderProfessionalExperience(array $experiences): void {
     foreach ($experiences as $index => $exp) {
+      // New tailored schema: one company entry with nested positions.
+      if (!empty($exp['positions']) && is_array($exp['positions'])) {
+        foreach ($exp['positions'] as $position_index => $position) {
+          if ($index > 0 || $position_index > 0) {
+            $this->pdf->Ln(8);
+          }
+
+          $title = $position['title'] ?? ($exp['title'] ?? '');
+          $start_date = $position['start_date'] ?? ($exp['start_date'] ?? '');
+          $end_date = $position['end_date'] ?? ($exp['end_date'] ?? '');
+          $this->renderTwoColumnLine(
+            $title,
+            $this->formatDateRange($start_date, $end_date),
+            'job_title',
+            'date_range'
+          );
+
+          $this->applyFontStyle('company_name');
+          $companyLine = $exp['company'] ?? ($position['company'] ?? '');
+          $location = $position['location'] ?? ($exp['location'] ?? '');
+          if (!empty($location)) {
+            $companyLine .= ' | ' . $location;
+          }
+          $this->pdf->Cell(0, 0, $companyLine, 0, 1, 'L');
+          $this->pdf->Ln(2);
+
+          $company_context = $position['company_context'] ?? ($exp['company_context'] ?? '');
+          if (!empty($company_context)) {
+            $this->applyFontStyle('company_context');
+            $this->pdf->MultiCell(0, 0, $company_context, 0, 'L', FALSE, 1);
+            $this->pdf->Ln(4);
+          }
+
+          $achievements = $position['achievements'] ?? [];
+          foreach ($achievements as $achievement) {
+            $text = is_array($achievement) ? ($achievement['text'] ?? '') : $achievement;
+            if (!empty($text)) {
+              $this->renderBulletItem($text, 'achievement_bullet');
+            }
+          }
+        }
+        continue;
+      }
+
       if ($index > 0) {
         $this->pdf->Ln(8);
       }
 
-      // Title and dates on same line.
+      // Legacy schema fallback.
       $this->renderTwoColumnLine(
         $exp['title'] ?? '',
         $this->formatDateRange($exp['start_date'] ?? '', $exp['end_date'] ?? ''),
@@ -592,7 +636,6 @@ class ResumePdfService {
         'date_range'
       );
 
-      // Company and location.
       $this->applyFontStyle('company_name');
       $companyLine = $exp['company'] ?? '';
       if (!empty($exp['location'])) {
@@ -601,14 +644,12 @@ class ResumePdfService {
       $this->pdf->Cell(0, 0, $companyLine, 0, 1, 'L');
       $this->pdf->Ln(2);
 
-      // Company context.
       if (!empty($exp['company_context'])) {
         $this->applyFontStyle('company_context');
         $this->pdf->MultiCell(0, 0, $exp['company_context'], 0, 'L', FALSE, 1);
         $this->pdf->Ln(4);
       }
 
-      // Responsibility categories.
       $categories = $exp['responsibility_categories'] ?? [];
       foreach ($categories as $category) {
         if (!empty($category['category'])) {
@@ -617,7 +658,6 @@ class ResumePdfService {
           $this->pdf->Ln(2);
         }
 
-        // Achievements.
         $achievements = $category['achievements'] ?? [];
         foreach ($achievements as $achievement) {
           $text = is_array($achievement) ? ($achievement['text'] ?? '') : $achievement;
