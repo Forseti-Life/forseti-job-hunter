@@ -840,14 +840,13 @@ The User Profile Forms provide the foundation for:
 The following cron jobs are required for background queue processing on the production server:
 
 ```bash
-# Resume GenAI parsing queue (text extraction and JSON parsing)
-*/5 * * * * /var/www/html/forseti/scripts/run_job_hunter_queue.sh
+# Run Drupal cron frequently so queue workers process pending items automatically.
+* * * * * cd /var/www/html/forseti && vendor/bin/drush cron >/dev/null 2>&1
 
-# Job posting parsing queue (extracts job details, skills, keywords via AI)
-*/5 * * * * cd /var/www/html/forseti && vendor/bin/drush queue:run job_hunter_job_posting_parsing --time-limit=240 2>&1 | logger -t job_hunter_queue
-
-# Resume tailoring queue (generates tailored resumes via AI)
-*/5 * * * * cd /var/www/html/forseti && flock -n /tmp/jh_tailoring.lock vendor/bin/drush queue:run job_hunter_resume_tailoring --time-limit=240 >> /var/log/drupal/tailoring_queue.log 2>&1
+# Optional: explicit queue runners for higher throughput (all protected with non-blocking locks).
+*/5 * * * * cd /var/www/html/forseti && flock -n /tmp/jh_genai_parsing.lock vendor/bin/drush queue:run job_hunter_genai_parsing --time-limit=240 2>&1 | logger -t job_hunter_queue
+*/5 * * * * cd /var/www/html/forseti && flock -n /tmp/jh_job_posting_parsing.lock vendor/bin/drush queue:run job_hunter_job_posting_parsing --time-limit=240 2>&1 | logger -t job_hunter_queue
+*/5 * * * * cd /var/www/html/forseti && flock -n /tmp/jh_resume_tailoring.lock vendor/bin/drush queue:run job_hunter_resume_tailoring --time-limit=240 >> /var/log/drupal/tailoring_queue.log 2>&1
 ```
 
 **Queue Workers:**

@@ -4,6 +4,7 @@ namespace Drupal\job_hunter\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
@@ -83,6 +84,13 @@ class JobHunterHomeController extends ControllerBase {
   protected $logger;
 
   /**
+   * The lock backend service.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  protected $lockBackend;
+
+  /**
    * Constructs a JobHunterHomeController object.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -93,12 +101,15 @@ class JobHunterHomeController extends ControllerBase {
    *   The state service.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
+   * @param \Drupal\Core\Lock\LockBackendInterface $lock_backend
+   *   The lock backend service.
    */
-  public function __construct(Connection $database, QueueFactory $queue_factory, StateInterface $state, LoggerInterface $logger) {
+  public function __construct(Connection $database, QueueFactory $queue_factory, StateInterface $state, LoggerInterface $logger, LockBackendInterface $lock_backend) {
     $this->database = $database;
     $this->queueFactory = $queue_factory;
     $this->state = $state;
     $this->logger = $logger;
+    $this->lockBackend = $lock_backend;
   }
 
   /**
@@ -109,7 +120,8 @@ class JobHunterHomeController extends ControllerBase {
       $container->get('database'),
       $container->get('queue'),
       $container->get('state'),
-      $container->get('logger.factory')->get('job_hunter')
+      $container->get('logger.factory')->get('job_hunter'),
+      $container->get('lock')
     );
   }
 
@@ -339,6 +351,12 @@ class JobHunterHomeController extends ControllerBase {
         'message' => $e->getMessage(),
       ], 400);
     }
+    catch (\RuntimeException $e) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => $e->getMessage(),
+      ], 409);
+    }
     catch (\Exception $e) {
       $this->logger->error('Queue processing error: @error', ['@error' => $e->getMessage()]);
       return new JsonResponse([
@@ -513,6 +531,11 @@ class JobHunterHomeController extends ControllerBase {
       return 0;
     }
 
+    $lock_name = "job_hunter.queue_run.{$queue_id}";
+    if (!$this->lockBackend->acquire($lock_name, $timeout)) {
+      throw new \RuntimeException("Queue {$queue_id} is already running. Please wait for it to finish.");
+    }
+
     $start_time = microtime(TRUE);
     $queue_worker_manager = \Drupal::service('plugin.manager.queue_worker');
     
@@ -520,65 +543,69 @@ class JobHunterHomeController extends ControllerBase {
     $worker = $queue_worker_manager->createInstance($queue_id);
     
     $processed = 0;
-    
-    while ($processed < $max_items && ($item = $queue->claimItem())) {
-      // Check timeout
-      $elapsed = microtime(TRUE) - $start_time;
-      if ($elapsed > $timeout) {
-        $this->logger->notice(
-          'Queue @queue processing timeout after @elapsed seconds. Processed @count items.',
-          [
-            '@queue' => $queue_id,
-            '@elapsed' => round($elapsed, 2),
-            '@count' => $processed,
-          ]
-        );
-        break;
-      }
+    try {
+      while ($processed < $max_items && ($item = $queue->claimItem())) {
+        // Check timeout
+        $elapsed = microtime(TRUE) - $start_time;
+        if ($elapsed > $timeout) {
+          $this->logger->notice(
+            'Queue @queue processing timeout after @elapsed seconds. Processed @count items.',
+            [
+              '@queue' => $queue_id,
+              '@elapsed' => round($elapsed, 2),
+              '@count' => $processed,
+            ]
+          );
+          break;
+        }
 
-      $item_key = md5(serialize($item->data));
-      
-      // Get retry count for this item
-      $retry_count = $this->state->get("job_hunter.queue_retry.{$queue_id}.{$item_key}", 0);
-      
-      // Check if item has exceeded retry limit
-      if ($retry_count >= self::MAX_RETRY_ATTEMPTS) {
-        // Suspend this item
-        $this->suspendQueueItemInternal($queue_id, $item, $retry_count);
-        $queue->deleteItem($item);
-        $this->state->delete("job_hunter.queue_retry.{$queue_id}.{$item_key}");
-        $this->logger->warning('Queue item suspended after @max failed attempts in @queue', [
-          '@max' => self::MAX_RETRY_ATTEMPTS,
-          '@queue' => $queue_id,
-        ]);
-        continue;
-      }
-      
-      try {
-        $worker->processItem($item->data);
-        $queue->deleteItem($item);
-        // Clear retry count on success
-        $this->state->delete("job_hunter.queue_retry.{$queue_id}.{$item_key}");
-        $processed++;
-      }
-      catch (\Exception $e) {
-        // Increment retry count
-        $retry_count++;
-        $this->state->set("job_hunter.queue_retry.{$queue_id}.{$item_key}", $retry_count);
+        $item_key = md5(serialize($item->data));
         
-        // Release item back to queue on failure
-        $queue->releaseItem($item);
-        $this->logger->error('Queue @queue item failed (attempt @attempt/@max): @error', [
-          '@queue' => $queue_id,
-          '@attempt' => $retry_count,
-          '@max' => self::MAX_RETRY_ATTEMPTS,
-          '@error' => $e->getMessage(),
-        ]);
-        // Continue to next item
+        // Get retry count for this item
+        $retry_count = $this->state->get("job_hunter.queue_retry.{$queue_id}.{$item_key}", 0);
+        
+        // Check if item has exceeded retry limit
+        if ($retry_count >= self::MAX_RETRY_ATTEMPTS) {
+          // Suspend this item
+          $this->suspendQueueItemInternal($queue_id, $item, $retry_count);
+          $queue->deleteItem($item);
+          $this->state->delete("job_hunter.queue_retry.{$queue_id}.{$item_key}");
+          $this->logger->warning('Queue item suspended after @max failed attempts in @queue', [
+            '@max' => self::MAX_RETRY_ATTEMPTS,
+            '@queue' => $queue_id,
+          ]);
+          continue;
+        }
+        
+        try {
+          $worker->processItem($item->data);
+          $queue->deleteItem($item);
+          // Clear retry count on success
+          $this->state->delete("job_hunter.queue_retry.{$queue_id}.{$item_key}");
+          $processed++;
+        }
+        catch (\Exception $e) {
+          // Increment retry count
+          $retry_count++;
+          $this->state->set("job_hunter.queue_retry.{$queue_id}.{$item_key}", $retry_count);
+          
+          // Release item back to queue on failure
+          $queue->releaseItem($item);
+          $this->logger->error('Queue @queue item failed (attempt @attempt/@max): @error', [
+            '@queue' => $queue_id,
+            '@attempt' => $retry_count,
+            '@max' => self::MAX_RETRY_ATTEMPTS,
+            '@error' => $e->getMessage(),
+          ]);
+          // Continue to next item
+        }
       }
+      
+      return $processed;
     }
-    
-    return $processed;
+    finally {
+      $this->lockBackend->release($lock_name);
+    }
   }
 
   /**
