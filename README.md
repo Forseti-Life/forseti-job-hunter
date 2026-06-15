@@ -67,14 +67,14 @@ To remove content types/fields after uninstall: Structure > Content types > Dele
 1. **Set Original Resume Node** - Navigate to `/jobhunter/settings` (Admin > Job Hunter > Settings)
 2. **Select Resume Node** - Use autocomplete to select your master resume node
 3. **Enable Automatic Tailoring** - Check the box to enable automatic resume generation when job postings are created
-4. **Configure AI Settings** (optional) - AWS Bedrock region, model ID, and max tokens are preset but customizable
+4. **Configure AI Settings** (optional) - Shared AI provider defaults are configured centrally, with DeepSeek now used for jobhunter parsing and tailoring
 5. **Configure External Job APIs** - Add API credentials for job search aggregators:
    - **SerpAPI** - Google Jobs scraper (100 free searches/month) - [Get API key](https://serpapi.com/users/sign_up)
    - **Google Cloud Talent Solution** - Add service account JSON key
    - **Adzuna API** - Job search API (App ID + Key required)
    - **USAJobs API** - US Government jobs (API Key + Email required)
 
-The module uses AWS Bedrock with Claude 3.5 Sonnet by default. Ensure your environment has proper AWS credentials configured.
+The module now uses the shared `ai_conversation` DeepSeek backend by default for parsing and tailoring flows.
 
 ### Original Resume Selection
 
@@ -107,7 +107,7 @@ The module provides a streamlined 4-step workflow focused on JSON storage of res
 #### **Step 3: Parse JSON** **[✅ WORKING]**
 - **Button Location**: Inline next to "Individual JSON Stored" status line
 - **Prerequisites**: Text must be extracted first
-- **AI Processing**: Calls AWS Bedrock (Claude 3.5 Sonnet) to analyze resume structure
+- **AI Processing**: Calls the shared DeepSeek backend to analyze resume structure
 - **Fallback**: Mock data if AWS credentials not configured or timeout occurs
 - **JSON Schema**: Structured data with arrays for job_history and education_history
 - **Storage**: Stores parsed JSON in `jobhunter_resume_parsed_data.parsed_data` JSON field
@@ -229,7 +229,7 @@ These features exist in the codebase but are commented out per development prior
 1. **Create Job Posting** - Add new job_posting node with company, title, and description **[✅ WORKING]**
 2. **Automatic AI Tailoring** - System automatically generates tailored resume on save **[✅ WORKING]**
 3. **Configuration Check** - Uses configured Original Resume node ID (or title fallback) **[✅ WORKING]**
-4. **AI Processing** - AWS Bedrock Claude 3.5 Sonnet analyzes job and tailors resume **[✅ WORKING]**
+4. **AI Processing** - Shared DeepSeek chat completion analyzes the job and tailors the resume **[✅ WORKING]**
 5. **Resume Saved** - Tailored content saved to field_tailored_resume on job posting **[✅ WORKING]**
 6. **Logging & Monitoring** - Full logging for debugging and monitoring **[✅ WORKING]**
 
@@ -239,7 +239,7 @@ These features exist in the codebase but are commented out per development prior
 - **Error Handling** - Comprehensive error handling with detailed logging **[✅ WORKING]**
 - **Cache Management** - Drupal cache integration with library loading **[✅ WORKING]**
 - **Database Integration** - Proper node creation and entity references **[✅ WORKING]**
-- **AI Service Integration** - AWS Bedrock Runtime with configurable settings **[✅ WORKING]**
+- **AI Service Integration** - Shared DeepSeek-backed `ai_conversation` runtime with configurable provider settings **[✅ WORKING]**
 
 ## Planned System Workflow (Future Development)
 
@@ -263,7 +263,7 @@ These features exist in the codebase but are commented out per development prior
 - **AJAX-Based Manual Tailoring** - Complete frontend/backend integration at `/user/{user}/tailor-resume/{job}`
 - **Automatic Tailoring on Job Creation** - Generates tailored resume when job_posting node is created
 - **Unified AI Service** - Single ResumeTailoringService handles all tailoring operations
-- **Environment-Aware Processing** - Mock responses in development, AWS Bedrock Claude in production
+- **Environment-Aware Processing** - Mock responses in development, shared DeepSeek provider in production
 - **Dynamic Content Generation** - Creates tailored_resume nodes with personalized content
 - **Real-Time User Feedback** - JavaScript messaging system with success/error handling
 - **Professional UI/UX** - Bootstrap-styled interface with loading states and content preview
@@ -410,7 +410,7 @@ All external APIs are accessible through a single search interface at `/jobhunte
 - **Resume Management:** `/job-application/profile` - **[✅ WORKING]** - Upload, extract, parse, and consolidate resume data
   - Step 1: Upload .docx files to private directory
   - Step 2: Extract text from uploaded files
-  - Step 3: Parse JSON with AWS Bedrock AI (or mock fallback)
+  - Step 3: Parse JSON with the shared DeepSeek AI backend (or mock fallback)
   - Step 4: Consolidate multiple resumes into unified JSON profile
   - Auto-registration of files upon upload
   - Inline action buttons with real-time status indicators
@@ -501,7 +501,7 @@ User clicks "Generate" → tailorResumeAjax()
                     Set status = 'processing'
                               │
                               ▼
-                    Call AWS Bedrock AI
+                    Call shared DeepSeek AI
                               │
               ┌───────────────┼───────────────┐
               ▼                               ▼
