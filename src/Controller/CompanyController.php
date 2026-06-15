@@ -808,6 +808,15 @@ class CompanyController extends ControllerBase {
       ? (($extracted['company_name'] ?? '') . (!empty($extracted['industry']) ? ' — ' . $extracted['industry'] : ''))
       : $raw_company;
 
+    $saved_job = $this->database->select('jobhunter_saved_jobs', 'sj')
+      ->fields('sj', ['id', 'archived'])
+      ->condition('sj.uid', $current_user->id())
+      ->condition('sj.job_id', $job_id)
+      ->execute()
+      ->fetchObject();
+    $saved_job_is_archived = $saved_job ? (int) ($saved_job->archived ?? 0) === 1 : FALSE;
+    $job_detail_return_to = Url::fromRoute('job_hunter.job_view', ['job_id' => $job_id])->toString();
+
     // Build Apply button HTML — AJAX-powered, no page refresh.
     $apply_url_route = Url::fromRoute('job_hunter.job_apply', ['job_id' => $job_id])->toString();
     $status_url_route = Url::fromRoute('job_hunter.application_status', ['job_id' => $job_id])->toString();
@@ -857,6 +866,19 @@ class CompanyController extends ControllerBase {
         ],
       ],
     ];
+
+    if ($saved_job) {
+      $content['header']['actions']['archive'] = [
+        '#type' => 'link',
+        '#title' => $saved_job_is_archived ? $this->t('Restore') : $this->t('Archive'),
+        '#url' => Url::fromRoute($saved_job_is_archived ? 'job_hunter.job_unarchive' : 'job_hunter.job_archive', ['job_id' => $job_id], [
+          'query' => ['return_to' => $job_detail_return_to],
+        ]),
+        '#attributes' => [
+          'class' => $saved_job_is_archived ? ['button', 'button--secondary'] : ['button', 'button--danger'],
+        ],
+      ];
+    }
 
     // Application status panel (shown when application exists).
     if ($existing_application) {
