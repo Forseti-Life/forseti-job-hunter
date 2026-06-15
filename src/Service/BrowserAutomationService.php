@@ -232,10 +232,8 @@ class BrowserAutomationService {
     $has_credentials = FALSE;
 
     if ($requires_credentials) {
-      $company_id = $this->resolveCompanyId($job_id);
-      if ($company_id) {
-        $has_credentials = $this->checkCredentials($uid, $company_id);
-      }
+      $company_id = $this->resolveCompanyId($job_id) ?? 0;
+      $has_credentials = $this->checkCredentials($uid, $company_id);
     }
 
     // Phase 2: Automatable platforms — run Playwright bridge.

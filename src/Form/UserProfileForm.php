@@ -633,15 +633,9 @@ class UserProfileForm extends FormBase {
     if ($default_automation_userid === '') {
       $default_automation_userid = (string) ($this->getConsolidatedValue($job_seeker_profile, 'field_automation_default_userid') ?: '');
     }
-    if ($default_automation_userid === '') {
-      $default_automation_userid = (string) ($contact_info['email'] ?? '');
-    }
     $default_automation_email = (string) ($default_automation_credential['default_email'] ?? '');
     if ($default_automation_email === '') {
       $default_automation_email = (string) ($this->getConsolidatedValue($job_seeker_profile, 'field_automation_default_email') ?: '');
-    }
-    if ($default_automation_email === '') {
-      $default_automation_email = (string) ($contact_info['email'] ?? '');
     }
     $has_default_automation_password = !empty($default_automation_credential['password']);
     $form['core_info']['field_full_name'] = [
