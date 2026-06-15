@@ -182,6 +182,7 @@ class JobDiscoveryService {
    *   - adzuna: boolean
    *   - usajobs: boolean
    *   - serpapi: boolean
+   *   - gartner: boolean
    */
   public function getApiCredentialsStatus(): array {
     $status = [
@@ -189,6 +190,7 @@ class JobDiscoveryService {
       'adzuna' => FALSE,
       'usajobs' => FALSE,
       'serpapi' => FALSE,
+      'gartner' => TRUE,
     ];
 
     try {
@@ -634,7 +636,7 @@ class JobDiscoveryService {
       if (is_array($decoded)) {
         foreach ($decoded as $source) {
           $source = strtolower(trim((string) $source));
-          if (in_array($source, ['forseti', 'serpapi', 'adzuna', 'usajobs'], TRUE) && !in_array($source, $sources, TRUE)) {
+          if (in_array($source, ['forseti', 'serpapi', 'adzuna', 'usajobs', 'gartner'], TRUE) && !in_array($source, $sources, TRUE)) {
             $sources[] = $source;
           }
         }
@@ -680,6 +682,7 @@ class JobDiscoveryService {
     if (!empty($config->get('usajobs_api_key')) && !empty($config->get('usajobs_email'))) {
       $sources[] = 'usajobs';
     }
+    $sources[] = 'gartner';
 
     return $sources;
   }

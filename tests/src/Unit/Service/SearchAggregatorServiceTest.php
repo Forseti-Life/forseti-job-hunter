@@ -9,6 +9,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\job_hunter\Service\AdzunaApiService;
 use Drupal\job_hunter\Service\CloudTalentSolutionService;
+use Drupal\job_hunter\Service\GartnerJobsService;
 use Drupal\job_hunter\Service\SearchAggregatorService;
 use Drupal\job_hunter\Service\SerpApiService;
 use Drupal\job_hunter\Service\UsaJobsApiService;
@@ -91,8 +92,26 @@ class SearchAggregatorServiceTest extends UnitTestCase {
       '_explicit_remote_preference' => FALSE,
     ]);
 
-    $this->assertSame(['forseti'], $normalized['sources']);
+    $this->assertSame(['forseti', 'gartner'], $normalized['sources']);
     $this->assertSame('', $normalized['remote_preference']);
+  }
+
+  /**
+   * Tests default sources include Gartner.
+   */
+  public function testNormalizeSearchParametersIncludesGartnerByDefault(): void {
+    $service = $this->createServiceWithPreferenceRow(NULL);
+
+    $normalized = $service->normalizeSearchParameters([
+      'sources' => [],
+      'salary_min' => '',
+      'remote_preference' => '',
+      '_explicit_sources' => FALSE,
+      '_explicit_salary_min' => FALSE,
+      '_explicit_remote_preference' => FALSE,
+    ]);
+
+    $this->assertSame(['forseti', 'gartner'], $normalized['sources']);
   }
 
   /**
@@ -236,6 +255,7 @@ class SearchAggregatorServiceTest extends UnitTestCase {
       $this->createMock(CloudTalentSolutionService::class),
       $this->createMock(AdzunaApiService::class),
       $this->createMock(UsaJobsApiService::class),
+      $this->createMock(GartnerJobsService::class),
       $this->createMock(SerpApiService::class)
     );
   }
@@ -266,6 +286,7 @@ class SearchAggregatorServiceTest extends UnitTestCase {
       $this->createMock(CloudTalentSolutionService::class),
       $this->createMock(AdzunaApiService::class),
       $this->createMock(UsaJobsApiService::class),
+      $this->createMock(GartnerJobsService::class),
       $this->createMock(SerpApiService::class)
     );
   }
@@ -292,6 +313,7 @@ class SearchAggregatorServiceTest extends UnitTestCase {
       $this->createMock(CloudTalentSolutionService::class),
       $this->createMock(AdzunaApiService::class),
       $this->createMock(UsaJobsApiService::class),
+      $this->createMock(GartnerJobsService::class),
       $this->createMock(SerpApiService::class)
     );
     $service->setSourceResults($source_results);

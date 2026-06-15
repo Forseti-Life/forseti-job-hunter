@@ -50,14 +50,18 @@ services:
   job_hunter.usajobs_api:
     class: Drupal\job_hunter\Service\UsaJobsApiService
     arguments: ['@http_client', '@logger.factory', '@config.factory']
-  
+
+  job_hunter.gartner_jobs:
+    class: Drupal\job_hunter\Service\GartnerJobsService
+    arguments: ['@http_client', '@logger.factory']
+
   job_hunter.serpapi:
     class: Drupal\job_hunter\Service\SerpApiService
     arguments: ['@http_client', '@logger.factory', '@config.factory']
-  
+
   job_hunter.search_aggregator:
     class: Drupal\job_hunter\Service\SearchAggregatorService
-    arguments: ['@database', '@config.factory', '@current_user', '@logger.factory', '@job_hunter.cloud_talent_solution', '@job_hunter.adzuna_api', '@job_hunter.usajobs_api', '@job_hunter.serpapi']
+    arguments: ['@database', '@config.factory', '@current_user', '@logger.factory', '@job_hunter.cloud_talent_solution', '@job_hunter.adzuna_api', '@job_hunter.usajobs_api', '@job_hunter.gartner_jobs', '@job_hunter.serpapi']
   
   job_hunter.opportunity_management_service:
     class: Drupal\job_hunter\Service\OpportunityManagementService

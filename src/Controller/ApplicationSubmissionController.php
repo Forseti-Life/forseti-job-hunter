@@ -691,6 +691,7 @@ class ApplicationSubmissionController extends ControllerBase {
       '#has_adzuna' => $api_status['adzuna'],
       '#has_usajobs' => $api_status['usajobs'],
       '#has_serpapi' => $api_status['serpapi'],
+      '#has_gartner' => $api_status['gartner'],
       '#cache' => [
         'contexts' => ['user'],
         'tags' => ['job_hunter:settings'],

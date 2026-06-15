@@ -126,6 +126,10 @@
                 <input type="checkbox" name="sources[]" value="usajobs" {{ 'usajobs' in default_sources ? 'checked' : '' }} {{ has_usajobs ? '' : 'disabled' }}>
                 <span>{{ has_usajobs ? 'USAJobs (Government)'|t : 'USAJobs (Configure API)'|t }}</span>
               </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="sources[]" value="gartner" {{ 'gartner' in default_sources ? 'checked' : '' }}>
+                <span>{{ 'Gartner Careers (RSS Feed)'|t }}</span>
+              </label>
             </div>
           </div>
         </div>

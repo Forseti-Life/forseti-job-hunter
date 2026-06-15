@@ -24,6 +24,7 @@ class SearchAggregatorService {
     'Google Jobs',
     'Adzuna',
     'USAJobs',
+    'Gartner Careers',
     'Google Jobs (SerpAPI)',
   ];
 
@@ -34,6 +35,7 @@ class SearchAggregatorService {
    */
   protected const SUPPORTED_SEARCH_SOURCES = [
     'forseti',
+    'gartner',
     'serpapi',
     'adzuna',
     'usajobs',
@@ -89,6 +91,13 @@ class SearchAggregatorService {
   protected $usaJobsService;
 
   /**
+   * The Gartner jobs service.
+   *
+   * @var \Drupal\job_hunter\Service\GartnerJobsService
+   */
+  protected $gartnerService;
+
+  /**
    * The SerpAPI service.
    *
    * @var \Drupal\job_hunter\Service\SerpApiService
@@ -112,6 +121,8 @@ class SearchAggregatorService {
    *   The Adzuna API service.
    * @param \Drupal\job_hunter\Service\UsaJobsApiService $usajobs_service
    *   The USAJobs API service.
+   * @param \Drupal\job_hunter\Service\GartnerJobsService $gartner_service
+   *   The Gartner jobs service.
    * @param \Drupal\job_hunter\Service\SerpApiService $serpapi_service
    *   The SerpAPI service.
    */
@@ -123,6 +134,7 @@ class SearchAggregatorService {
     CloudTalentSolutionService $google_cloud_service,
     AdzunaApiService $adzuna_service,
     UsaJobsApiService $usajobs_service,
+    GartnerJobsService $gartner_service,
     SerpApiService $serpapi_service
   ) {
     $this->database = $database;
@@ -132,6 +144,7 @@ class SearchAggregatorService {
     $this->googleCloudService = $google_cloud_service;
     $this->adzunaService = $adzuna_service;
     $this->usaJobsService = $usajobs_service;
+    $this->gartnerService = $gartner_service;
     $this->serpApiService = $serpapi_service;
   }
 
@@ -249,6 +262,11 @@ class SearchAggregatorService {
 
         case 'usajobs':
           $results = $this->searchUsaJobs($params);
+          $all_results = array_merge($all_results, $results);
+          break;
+
+        case 'gartner':
+          $results = $this->searchGartner($params);
           $all_results = array_merge($all_results, $results);
           break;
 
@@ -400,6 +418,7 @@ class SearchAggregatorService {
     if (!empty($config->get('usajobs_api_key')) && !empty($config->get('usajobs_email'))) {
       $sources[] = 'usajobs';
     }
+    $sources[] = 'gartner';
 
     return $sources;
   }
@@ -777,6 +796,56 @@ class SearchAggregatorService {
     }
     catch (\Exception $e) {
       $this->logger->error('❌ USAJobs API search failed: @error', [
+        '@error' => $e->getMessage(),
+      ]);
+    }
+
+    return $results;
+  }
+
+  /**
+   * Search Gartner jobs.
+   *
+   * @param array $params
+   *   Search parameters.
+   *
+   * @return array
+   *   Array of normalized job results.
+   */
+  protected function searchGartner(array $params): array {
+    $results = [];
+
+    try {
+      $gartner_results = $this->gartnerService->searchJobs([
+        'query' => $params['query'] ?? '',
+        'location' => $params['location'] ?? '',
+        'page' => $params['page'] ?? 1,
+        'results_per_page' => 10,
+      ]);
+
+      $this->logger->info('📥 Gartner returned @count jobs', [
+        '@count' => $gartner_results['total'] ?? 0,
+      ]);
+
+      foreach ($gartner_results['jobs'] ?? [] as $job_data) {
+        $results[] = [
+          'id' => $job_data['id'] ?? uniqid('gartner_'),
+          'title' => $job_data['title'] ?? 'Unknown',
+          'company' => $job_data['company'] ?? 'Gartner',
+          'location' => $job_data['location'] ?? 'Not specified',
+          'employment_type' => $job_data['employment_type'] ?? 'Not specified',
+          'salary_range' => $job_data['salary_range'] ?? 'Not specified',
+          'description' => $job_data['description'] ?? '',
+          'source' => 'Gartner Careers',
+          'posted_date' => $job_data['posted_date'] ?? 'Unknown',
+          'url' => $job_data['url'] ?? '',
+          'job_hash' => $job_data['job_hash'] ?? $this->generateJobHash($job_data['company'] ?? 'Gartner', $job_data['title'] ?? '', $job_data['location'] ?? ''),
+          'raw_data' => $job_data['raw_data'] ?? [],
+        ];
+      }
+    }
+    catch (\Exception $e) {
+      $this->logger->error('❌ Gartner search failed: @error', [
         '@error' => $e->getMessage(),
       ]);
     }
@@ -1390,6 +1459,7 @@ class SearchAggregatorService {
           'Google Jobs' => 'google_cloud',
           'Adzuna' => 'adzuna',
           'USAJobs' => 'usajobs',
+          'Gartner Careers' => 'gartner',
           'Google Jobs (SerpAPI)' => 'serpapi',
         ];
         $external_source = $source_map[$job_data['source'] ?? ''] ?? 'external_api';
