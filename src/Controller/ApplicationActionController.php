@@ -1065,12 +1065,13 @@ class ApplicationActionController extends ControllerBase {
     $stored_credential = NULL;
     $has_stored_credential = FALSE;
     $stored_username = '';
-    if ($company_id > 0) {
-      $stored_credential = $cred_service->retrieveCredential($uid, $company_id, 'basic');
-      if ($stored_credential) {
-        $has_stored_credential = TRUE;
-        $stored_username = (string) ($stored_credential['username'] ?? '');
-      }
+    $stored_default_email = '';
+    $credential_company_id = $company_id > 0 ? $company_id : 0;
+    $stored_credential = $cred_service->retrieveCredential($uid, $credential_company_id, 'basic');
+    if ($stored_credential) {
+      $has_stored_credential = TRUE;
+      $stored_username = (string) ($stored_credential['username'] ?? '');
+      $stored_default_email = (string) ($stored_credential['default_email'] ?? '');
     }
 
     // ── Read cached Step 4 result ─────────────────────────────────────────
@@ -1087,7 +1088,7 @@ class ApplicationActionController extends ControllerBase {
     // If credentials are already stored, set status accordingly.
     if ($has_stored_credential && $account_status === 'unknown') {
       $account_status = 'verified';
-      $account_evidence = 'Stored credentials found for ' . $company_name . '.';
+      $account_evidence = 'Default automation credentials found in user profile.';
     }
 
     // ── Check for POST actions ────────────────────────────────────────────
@@ -1109,39 +1110,9 @@ class ApplicationActionController extends ControllerBase {
       $action = (string) $request->request->get('step4_action', '');
       $verification_result_data = [];
 
-      // ── ACTION: Store new credentials ─────────────────────────────────
+      // ── ACTION: Legacy in-flow credential storage (moved to profile) ──
       if ($action === 'store_credentials') {
-        $input_username = trim((string) $request->request->get('credential_username', ''));
-        $input_password = trim((string) $request->request->get('credential_password', ''));
-
-        if ($input_username === '' || $input_password === '') {
-          $this->messenger()->addError($this->t('Username and password are both required.'));
-        }
-        elseif ($company_id <= 0) {
-          $this->messenger()->addError($this->t('Cannot store credentials — no company linked to this job.'));
-        }
-        else {
-          $result = $cred_service->storeCredential(
-            $uid,
-            $company_id,
-            'basic',
-            ['username' => $input_username, 'password' => $input_password],
-            $auth_url
-          );
-
-          if (!empty($result['success'])) {
-            $has_stored_credential = TRUE;
-            $stored_username = $input_username;
-            $account_status = 'verified';
-            $email_verified = TRUE;
-            $account_created_at = $now;
-            $account_evidence = 'Credentials stored for ' . $company_name . ' (username: ' . $input_username . ') at ' . $now . '.';
-            $this->messenger()->addStatus($this->t('Credentials securely stored. Account marked as ready.'));
-          }
-          else {
-            $this->messenger()->addError($this->t('Failed to store credentials: @error', ['@error' => $result['error'] ?? 'Unknown error']));
-          }
-        }
+        $this->messenger()->addWarning($this->t('Credentials are now managed in your profile. Update your default automation user ID, password, and email on the profile page, then re-run verification.'));
       }
 
       // ── ACTION: Confirm existing account ──────────────────────────────
@@ -1283,10 +1254,6 @@ class ApplicationActionController extends ControllerBase {
 
     $account_ready = in_array($account_status, ['verified', 'not_required'], TRUE);
 
-    // Default credential values for the "create new account" form.
-    $default_username = $user_email !== '' ? $user_email : 'keith.aumiller';
-    $default_password = 'Unsecure01!abc';
-
     $content = [
       '#theme'                   => 'application_submission_step4',
       '#job_id'                  => (int) $selected_job->id,
@@ -1310,8 +1277,8 @@ class ApplicationActionController extends ControllerBase {
       '#account_created_at'      => $account_created_at,
       '#has_stored_credential'   => $has_stored_credential,
       '#stored_username'         => $stored_username,
-      '#default_username'        => $default_username,
-      '#default_password'        => $default_password,
+      '#stored_default_email'    => $stored_default_email,
+      '#profile_edit_url'        => Url::fromRoute('job_hunter.user_profile_edit')->toString(),
       '#step4_cache_exists'      => $has_cached_step4,
       '#step4_last_run_at'       => (string) ($step4_cache['ran_at'] ?? ''),
       '#step4_ran_this_request'  => $run_step4_requested,
@@ -1448,10 +1415,8 @@ class ApplicationActionController extends ControllerBase {
     /** @var \Drupal\job_hunter\Service\CredentialManagementService $cred_service */
     $cred_service = \Drupal::service('job_hunter.credential_management_service');
     $has_stored_credential = FALSE;
-    if ($company_id > 0) {
-      $stored_credential = $cred_service->retrieveCredential($uid, $company_id, 'basic');
-      $has_stored_credential = !empty($stored_credential);
-    }
+    $stored_credential = $cred_service->retrieveCredential($uid, $company_id > 0 ? $company_id : 0, 'basic');
+    $has_stored_credential = !empty($stored_credential);
 
     // ── Upstream gate checks ──────────────────────────────────────────────
     $step4_cache = is_array($metadata_base['step4_cache'] ?? NULL) ? $metadata_base['step4_cache'] : [];

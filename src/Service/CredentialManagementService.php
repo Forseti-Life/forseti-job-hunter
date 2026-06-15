@@ -27,6 +27,11 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 class CredentialManagementService {
 
   /**
+   * Company ID used for profile-level default automation credentials.
+   */
+  private const DEFAULT_AUTOMATION_COMPANY_ID = 0;
+
+  /**
    * The database connection.
    *
    * @var \Drupal\Core\Database\Connection
@@ -217,22 +222,31 @@ class CredentialManagementService {
     try {
       // Verify user permission (user can only access their own credentials)
       $current_user = \Drupal::currentUser();
-      if ($current_user->id() !== $uid && !$current_user->hasPermission('administer job application automation')) {
+      $current_user_id = (int) $current_user->id();
+      if (
+        $current_user_id > 0 &&
+        $current_user_id !== $uid &&
+        !$current_user->hasPermission('administer job application automation')
+      ) {
         $logger->warning('Unauthorized credential access attempt by user @current_uid for user @target_uid', [
-          '@current_uid' => $current_user->id(),
+          '@current_uid' => $current_user_id,
           '@target_uid' => $uid,
         ]);
         return NULL;
       }
 
-      // Retrieve encrypted credential
-      $record = $this->database->select('jobhunter_employer_credentials', 'c')
-        ->fields('c')
-        ->condition('uid', $uid)
-        ->condition('company_id', $company_id)
-        ->condition('credential_type', $credential_type)
-        ->execute()
-        ->fetchAssoc();
+      // Retrieve encrypted credential for the requested company first.
+      $record = $this->loadCredentialRecord($uid, $company_id, $credential_type);
+
+      // Fallback to profile-level defaults when company-specific credentials
+      // do not exist.
+      if (
+        !$record &&
+        $credential_type === 'basic' &&
+        $company_id !== self::DEFAULT_AUTOMATION_COMPANY_ID
+      ) {
+        $record = $this->loadCredentialRecord($uid, self::DEFAULT_AUTOMATION_COMPANY_ID, $credential_type);
+      }
 
       if (!$record) {
         return NULL;
@@ -252,8 +266,10 @@ class CredentialManagementService {
         'type' => $credential_type,
         'username' => $decrypted_data['username'] ?? NULL,
         'password' => $decrypted_data['password'] ?? NULL,
+        'default_email' => $decrypted_data['default_email'] ?? NULL,
         'token' => $decrypted_data['token'] ?? NULL,
         'token_type' => $decrypted_data['token_type'] ?? NULL,
+        'company_id' => (int) ($record['company_id'] ?? 0),
         'submission_url' => $record['submission_url'] ?? '',
       ];
     } catch (\Exception $e) {
@@ -262,6 +278,60 @@ class CredentialManagementService {
       ]);
       return NULL;
     }
+  }
+
+  /**
+   * Stores default automation credentials from the user profile.
+   */
+  public function storeDefaultAutomationCredential(int $uid, string $username, string $password, string $default_email): array {
+    return $this->storeCredential(
+      $uid,
+      self::DEFAULT_AUTOMATION_COMPANY_ID,
+      'basic',
+      [
+        'username' => trim($username),
+        'password' => $password,
+        'default_email' => trim($default_email),
+      ]
+    );
+  }
+
+  /**
+   * Retrieves profile-level default automation credentials.
+   */
+  public function retrieveDefaultAutomationCredential(int $uid): ?array {
+    return $this->retrieveCredential($uid, self::DEFAULT_AUTOMATION_COMPANY_ID, 'basic');
+  }
+
+  /**
+   * Indicates whether company-specific or default credentials exist.
+   */
+  public function hasCredentialForCompanyOrDefault(int $uid, int $company_id, string $credential_type = 'basic'): bool {
+    $requested = $this->database->select('jobhunter_employer_credentials', 'c')
+      ->fields('c', ['id'])
+      ->condition('uid', $uid)
+      ->condition('company_id', $company_id)
+      ->condition('credential_type', $credential_type)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+
+    if ($requested) {
+      return TRUE;
+    }
+
+    if ($credential_type !== 'basic' || $company_id === self::DEFAULT_AUTOMATION_COMPANY_ID) {
+      return FALSE;
+    }
+
+    return (bool) $this->database->select('jobhunter_employer_credentials', 'c')
+      ->fields('c', ['id'])
+      ->condition('uid', $uid)
+      ->condition('company_id', self::DEFAULT_AUTOMATION_COMPANY_ID)
+      ->condition('credential_type', $credential_type)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
   }
 
   /**
@@ -562,6 +632,21 @@ class CredentialManagementService {
       ]);
       throw $e;
     }
+  }
+
+  /**
+   * Loads one encrypted credential row without decrypting it.
+   */
+  protected function loadCredentialRecord(int $uid, int $company_id, string $credential_type): ?array {
+    $record = $this->database->select('jobhunter_employer_credentials', 'c')
+      ->fields('c')
+      ->condition('uid', $uid)
+      ->condition('company_id', $company_id)
+      ->condition('credential_type', $credential_type)
+      ->execute()
+      ->fetchAssoc();
+
+    return $record ?: NULL;
   }
 
 }

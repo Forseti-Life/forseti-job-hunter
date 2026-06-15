@@ -90,16 +90,12 @@ class AccountVerificationService {
 
     // ── Load stored credentials ───────────────────────────────────────────
     $company_id = $this->getCompanyIdForJob($job_id);
-    if ($company_id <= 0) {
-      return array_merge($blank, ['error' => 'No company linked to this job.']);
-    }
-
     /** @var \Drupal\job_hunter\Service\CredentialManagementService $cred_service */
     $cred_service = \Drupal::service('job_hunter.credential_management_service');
-    $credential = $cred_service->retrieveCredential($uid, $company_id, 'basic');
+    $credential = $cred_service->retrieveCredential($uid, max(0, $company_id), 'basic');
 
     if (!$credential || empty($credential['username']) || empty($credential['password'])) {
-      return array_merge($blank, ['error' => 'No stored credentials found. Store credentials first.']);
+      return array_merge($blank, ['error' => 'No stored default automation credentials found. Update your profile credentials first.']);
     }
 
     // ── Build payload file ────────────────────────────────────────────────
@@ -108,7 +104,7 @@ class AccountVerificationService {
       'password'       => (string) $credential['password'],
       'auth_url'       => $auth_url,
       'ats_platform'   => $ats_platform,
-      'expected_email' => (string) $credential['username'],
+      'expected_email' => (string) ($credential['default_email'] ?? $credential['username']),
     ];
 
     $payload_file = tempnam(sys_get_temp_dir(), 'jh_vacct_');

@@ -4,10 +4,10 @@
  * Dedicated Step 4 page: Create / Manage Account on the ATS platform.
  *
  * Two-path workflow:
- *   Path A — Stored credentials exist for this company → show them, confirm.
- *   Path B — No stored credentials → show ATS URL, form to store credentials.
+ *   Path A — Default profile credentials exist → show them, confirm.
+ *   Path B — No default credentials → direct user to profile page.
  *
- * After credentials are stored, a "Verify Authentication" button launches a
+ * After defaults are saved on profile, a "Verify Authentication" button launches a
  * stealth browser to log in and confirm the identity (email in account menu).
  *
  * Variables:
@@ -32,8 +32,8 @@
  *   account_created_at    - string
  *   has_stored_credential - bool
  *   stored_username       - string
- *   default_username      - string  (email or "keith.aumiller")
- *   default_password      - string  ("Unsecure01!abc")
+ *   stored_default_email  - string
+ *   profile_edit_url      - string
  *   step4_cache_exists    - bool
  *   step4_last_run_at     - string
  *   step4_ran_this_request - bool
@@ -68,7 +68,7 @@
 
 <div class="application-submission-page">
   <h1>{{ 'Step 4: Account Management'|t }}</h1>
-  <p>{{ 'Ensure you have a valid account on the destination ATS platform with stored credentials.'|t }}</p>
+  <p>{{ 'Ensure your default automation credentials are set on your profile page, then verify ATS authentication.'|t }}</p>
 
   {# ── Requisition context ─────────────────────────────────────────────────── #}
   <div class="job-info-box">
@@ -96,8 +96,8 @@
   {% if has_stored_credential %}
 
     <div class="job-info-box" style="border-left: 4px solid #28a745;">
-      <h3>✅ {{ 'Stored Credentials Found'|t }}</h3>
-      <p>{{ 'An account already exists for'|t }} <strong>{{ company_name }}</strong>. {{ 'Your credentials are encrypted and stored securely.'|t }}</p>
+      <h3>✅ {{ 'Default Automation Credentials Found'|t }}</h3>
+      <p>{{ 'Default automation credentials are configured on your profile. They are encrypted and stored securely.'|t }}</p>
 
       <table class="queue-status-table">
         <thead>
@@ -116,8 +116,8 @@
             <td><code>••••••••••</code> <small>({{ 'encrypted in database'|t }})</small></td>
           </tr>
           <tr>
-            <td>{{ 'Company'|t }}</td>
-            <td>{{ company_name }}</td>
+            <td>{{ 'Default Email'|t }}</td>
+            <td>{{ stored_default_email ?: '—' }}</td>
           </tr>
           <tr>
             <td>{{ 'ATS Platform'|t }}</td>
@@ -156,30 +156,11 @@
       {% endif %}
     </div>
 
-    {# Option to update credentials #}
+    {# Option to update defaults on profile page #}
     <div class="job-info-box">
-      <h3>{{ 'Update Credentials'|t }}</h3>
-      <p>{{ 'If your credentials have changed, you can store updated ones below. This will overwrite the existing entry.'|t }}</p>
-      <details>
-        <summary>{{ 'Show credential update form'|t }}</summary>
-        <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}" style="margin-top: 12px;">
-          <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
-          <input type="hidden" name="step4_action" value="store_credentials" />
-          <div style="margin-bottom: 8px;">
-            <label for="credential_username"><strong>{{ 'Username / Email'|t }}:</strong></label><br />
-            <input type="text" id="credential_username" name="credential_username"
-                   value="{{ stored_username }}" style="width: 350px; padding: 4px 8px;" />
-          </div>
-          <div style="margin-bottom: 8px;">
-            <label for="credential_password"><strong>{{ 'Password'|t }}:</strong></label><br />
-            <input type="text" id="credential_password" name="credential_password"
-                   value="{{ default_password }}" style="width: 350px; padding: 4px 8px;" />
-          </div>
-          <button type="submit" class="button button--secondary">
-            {{ 'Update Stored Credentials'|t }}
-          </button>
-        </form>
-      </details>
+      <h3>{{ 'Update Automation Defaults'|t }}</h3>
+      <p>{{ 'To change automation credentials, update your default user ID, password, and email on your profile page.'|t }}</p>
+      <a class="button button--secondary" href="{{ profile_edit_url }}">{{ 'Open Profile Settings'|t }}</a>
     </div>
 
     {# ── Browser Verification Result ────────────────────────────────────── #}
@@ -267,8 +248,8 @@
   {% else %}
 
     <div class="job-info-box" style="border-left: 4px solid #ffc107;">
-      <h3>⚠️ {{ 'No Stored Credentials'|t }}</h3>
-      <p>{{ 'No account credentials were found for'|t }} <strong>{{ company_name }}</strong>. {{ 'You need to create an account on the ATS platform and store your credentials below.'|t }}</p>
+      <h3>⚠️ {{ 'No Default Automation Credentials'|t }}</h3>
+      <p>{{ 'No default automation credentials were found on your profile.'|t }}</p>
 
       {# ── Step 1: Open ATS URL ─────────────────────────────────────────── #}
       <h4>{{ '1. Create Your Account'|t }}</h4>
@@ -297,29 +278,9 @@
         <p>{{ 'Complete Step 3 to identify the auth type, then create your account on the ATS.'|t }}</p>
       {% endif %}
 
-      {# ── Step 2: Store credentials ──────────────────────────────────── #}
-      <h4 style="margin-top: 16px;">{{ '2. Store Your Credentials'|t }}</h4>
-      <p>{{ 'After creating your account, enter the username and password you used. These will be encrypted and stored securely.'|t }}</p>
-
-      <form method="post" action="{{ path('job_hunter.application_submission_step4_post', {'job_id': job_id}) }}">
-        <input type="hidden" name="csrf_token" value="{{ run_step4_csrf_token }}" />
-        <input type="hidden" name="step4_action" value="store_credentials" />
-        <div style="margin-bottom: 8px;">
-          <label for="credential_username"><strong>{{ 'Username / Email'|t }}:</strong></label><br />
-          <input type="text" id="credential_username" name="credential_username"
-                 value="{{ default_username }}" style="width: 350px; padding: 4px 8px;" />
-          <br /><small>{{ 'Default: your email or "keith.aumiller"'|t }}</small>
-        </div>
-        <div style="margin-bottom: 8px;">
-          <label for="credential_password"><strong>{{ 'Password'|t }}:</strong></label><br />
-          <input type="text" id="credential_password" name="credential_password"
-                 value="{{ default_password }}" style="width: 350px; padding: 4px 8px;" />
-          <br /><small>{{ 'Default: Unsecure01!abc'|t }}</small>
-        </div>
-        <button type="submit" class="button button--primary">
-          {{ 'Store Credentials & Mark Account Ready'|t }}
-        </button>
-      </form>
+      <h4 style="margin-top: 16px;">{{ '2. Save Profile Automation Defaults'|t }}</h4>
+      <p>{{ 'On your profile page, fill in only these three values: default user ID, default password, and default email. These values are encrypted and reused by automation for ATS logins.'|t }}</p>
+      <a class="button button--primary" href="{{ profile_edit_url }}">{{ 'Open Profile Settings'|t }}</a>
     </div>
 
   {% endif %}

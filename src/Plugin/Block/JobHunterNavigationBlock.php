@@ -125,8 +125,8 @@ class JobHunterNavigationBlock extends BlockBase implements ContainerFactoryPlug
       ];
 
       $navigation['credentials'] = [
-        'title' => $this->t('ATS Credentials'),
-        'url' => Url::fromRoute('job_hunter.credentials'),
+        'title' => $this->t('Profile Automation Defaults'),
+        'url' => Url::fromRoute('job_hunter.user_profile_edit'),
         'icon' => 'key',
         'weight' => 82,
       ];

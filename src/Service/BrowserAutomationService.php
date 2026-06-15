@@ -283,7 +283,7 @@ class BrowserAutomationService {
         'confirmation'         => '',
         'error'                => 'No credentials stored for ' . $ats_label,
         'reason'               => 'no_credentials',
-        'instructions'         => 'To enable auto-submission on ' . $ats_label . ', store your credentials via Job Hunter → Settings → Credentials. Then re-queue this application.',
+        'instructions'         => 'To enable auto-submission on ' . $ats_label . ', set your default automation user ID, password, and email on Job Hunter → Profile. Then re-queue this application.',
         'field_map'            => [],
         'requires_credentials' => TRUE,
         'has_credentials'      => FALSE,
@@ -387,9 +387,22 @@ class BrowserAutomationService {
    * Check if the user has credentials stored for a company.
    */
   protected function checkCredentials(int $uid, int $company_id): bool {
-    return (bool) $this->database->select('jobhunter_employer_credentials', 'c')
+    $company_credential = (bool) $this->database->select('jobhunter_employer_credentials', 'c')
       ->condition('uid', $uid)
       ->condition('company_id', $company_id)
+      ->condition('credential_type', 'basic')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+
+    if ($company_credential || $company_id === 0) {
+      return $company_credential;
+    }
+
+    return (bool) $this->database->select('jobhunter_employer_credentials', 'c')
+      ->condition('uid', $uid)
+      ->condition('company_id', 0)
+      ->condition('credential_type', 'basic')
       ->countQuery()
       ->execute()
       ->fetchField();
@@ -492,11 +505,10 @@ class BrowserAutomationService {
     if (in_array($ats_platform, self::LOGIN_REQUIRED_PLATFORMS)) {
       $cred_service = \Drupal::service('job_hunter.credential_management_service');
       $company_id   = $this->resolveCompanyId($app_data['job_id'] ?? 0);
-      if ($company_id) {
-        $cred_row = $cred_service->getCredential($app_data['uid'], $company_id, $ats_platform);
-        if ($cred_row) {
-          $credentials = $cred_row;
-        }
+      $credential_company_id = $company_id ?: 0;
+      $cred_row = $cred_service->retrieveCredential((int) $app_data['uid'], (int) $credential_company_id, 'basic');
+      if ($cred_row) {
+        $credentials = $cred_row;
       }
     }
 

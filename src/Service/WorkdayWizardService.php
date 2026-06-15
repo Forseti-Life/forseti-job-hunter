@@ -291,7 +291,7 @@ class WorkdayWizardService {
 
     $credential_context = $this->resolveBasicCredential($uid, $job_id);
     if (empty($credential_context['ok'])) {
-      return ['ok' => FALSE, 'error' => (string) ($credential_context['error'] ?? 'No stored credentials found.')];
+      return ['ok' => FALSE, 'error' => (string) ($credential_context['error'] ?? 'No stored default automation credentials found.')];
     }
 
     return [
@@ -360,16 +360,13 @@ class WorkdayWizardService {
    */
   private function resolveBasicCredential(int $uid, int $job_id): array {
     $company_id = $this->getCompanyIdForJob($job_id);
-    if ($company_id <= 0) {
-      return ['ok' => FALSE, 'error' => 'No company linked to this job.', 'credential' => []];
-    }
 
     /** @var \Drupal\job_hunter\Service\CredentialManagementService $cred_service */
     $cred_service = \Drupal::service('job_hunter.credential_management_service');
-    $credential = $cred_service->retrieveCredential($uid, $company_id, 'basic');
+    $credential = $cred_service->retrieveCredential($uid, max(0, $company_id), 'basic');
 
     if (!$credential || empty($credential['username']) || empty($credential['password'])) {
-      return ['ok' => FALSE, 'error' => 'No stored credentials found.', 'credential' => []];
+      return ['ok' => FALSE, 'error' => 'No stored default automation credentials found.', 'credential' => []];
     }
 
     return ['ok' => TRUE, 'error' => '', 'credential' => $credential];

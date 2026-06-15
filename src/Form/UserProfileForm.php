@@ -626,6 +626,24 @@ class UserProfileForm extends FormBase {
     
     // Contact info fields
     $contact_info = $consolidated['contact_info'] ?? [];
+    /** @var \Drupal\job_hunter\Service\CredentialManagementService $credential_service */
+    $credential_service = \Drupal::service('job_hunter.credential_management_service');
+    $default_automation_credential = $credential_service->retrieveDefaultAutomationCredential((int) $uid) ?? [];
+    $default_automation_userid = (string) ($default_automation_credential['username'] ?? '');
+    if ($default_automation_userid === '') {
+      $default_automation_userid = (string) ($this->getConsolidatedValue($job_seeker_profile, 'field_automation_default_userid') ?: '');
+    }
+    if ($default_automation_userid === '') {
+      $default_automation_userid = (string) ($contact_info['email'] ?? '');
+    }
+    $default_automation_email = (string) ($default_automation_credential['default_email'] ?? '');
+    if ($default_automation_email === '') {
+      $default_automation_email = (string) ($this->getConsolidatedValue($job_seeker_profile, 'field_automation_default_email') ?: '');
+    }
+    if ($default_automation_email === '') {
+      $default_automation_email = (string) ($contact_info['email'] ?? '');
+    }
+    $has_default_automation_password = !empty($default_automation_credential['password']);
     $form['core_info']['field_full_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Full Name'),
@@ -650,6 +668,30 @@ class UserProfileForm extends FormBase {
       '#type' => 'email',
       '#title' => $this->t('Email'),
       '#default_value' => $contact_info['email'] ?? '',
+    ];
+    $form['core_info']['automation_defaults'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Automation Defaults'),
+      '#description' => $this->t('Credentials used by ATS automation across employer sites.'),
+      '#open' => FALSE,
+    ];
+    $form['core_info']['automation_defaults']['field_automation_default_userid'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Default User ID for Automation'),
+      '#default_value' => $default_automation_userid,
+      '#maxlength' => 255,
+    ];
+    $form['core_info']['automation_defaults']['field_automation_default_password'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Default Password for Automation'),
+      '#description' => $has_default_automation_password
+        ? $this->t('A password is already stored. Leave blank to keep the current value.')
+        : $this->t('Stored encrypted and only decrypted during automation.'),
+    ];
+    $form['core_info']['automation_defaults']['field_automation_default_email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Default Email for Automation'),
+      '#default_value' => $default_automation_email,
     ];
     $form['core_info']['location_container'] = [
       '#type' => 'container',
@@ -1457,6 +1499,27 @@ class UserProfileForm extends FormBase {
       }
     }
 
+    $automation_userid = trim((string) $form_state->getValue('field_automation_default_userid'));
+    $automation_password = (string) $form_state->getValue('field_automation_default_password');
+    $automation_email = trim((string) $form_state->getValue('field_automation_default_email'));
+    if ($automation_userid !== '' || $automation_password !== '' || $automation_email !== '') {
+      if ($automation_userid === '') {
+        $form_state->setErrorByName('field_automation_default_userid', $this->t('Default automation user ID is required when saving automation credentials.'));
+      }
+      if ($automation_email === '') {
+        $form_state->setErrorByName('field_automation_default_email', $this->t('Default automation email is required when saving automation credentials.'));
+      }
+
+      /** @var \Drupal\job_hunter\Service\CredentialManagementService $credential_service */
+      $credential_service = \Drupal::service('job_hunter.credential_management_service');
+      $target_user = $form_state->get('user_entity');
+      $target_uid = $target_user ? (int) $target_user->id() : (int) $this->currentUser->id();
+      $existing_default_credential = $credential_service->retrieveDefaultAutomationCredential($target_uid);
+      if ($automation_password === '' && empty($existing_default_credential['password'])) {
+        $form_state->setErrorByName('field_automation_default_password', $this->t('Default automation password is required the first time you save automation credentials.'));
+      }
+    }
+
     // Validate LinkedIn URL format
     $linkedin_url = $form_state->getValue('field_linkedin_url');
     if (!empty($linkedin_url) && strpos($linkedin_url, 'linkedin.com') === FALSE) {
@@ -1667,9 +1730,33 @@ class UserProfileForm extends FormBase {
           } else {
             $job_seeker_data['consolidated_profile_json'] = $consolidated_json;
           }
+
         } else {
           $job_seeker_data['consolidated_profile_json'] = $consolidated_json;
         }
+      }
+    }
+
+    /** @var \Drupal\job_hunter\Service\CredentialManagementService $credential_service */
+    $credential_service = \Drupal::service('job_hunter.credential_management_service');
+    $automation_userid = trim((string) $form_state->getValue('field_automation_default_userid'));
+    $automation_password = (string) $form_state->getValue('field_automation_default_password');
+    $automation_email = trim((string) $form_state->getValue('field_automation_default_email'));
+    if ($automation_userid !== '' || $automation_password !== '' || $automation_email !== '') {
+      $existing_default_credential = $credential_service->retrieveDefaultAutomationCredential((int) $uid);
+      if ($automation_password === '' && !empty($existing_default_credential['password'])) {
+        $automation_password = (string) $existing_default_credential['password'];
+      }
+      $credential_result = $credential_service->storeDefaultAutomationCredential(
+        (int) $uid,
+        $automation_userid,
+        $automation_password,
+        $automation_email
+      );
+      if (empty($credential_result['success'])) {
+        $this->messenger->addError($this->t('Failed to save automation default credentials: @error', [
+          '@error' => (string) ($credential_result['error'] ?? 'Unknown error'),
+        ]));
       }
     }
     
@@ -2539,6 +2626,14 @@ class UserProfileForm extends FormBase {
         'json_path' => ['job_search_preferences', 'salary_change_minimum'],
         'db_column' => 'salary_change_minimum',
       ],
+      'field_automation_default_userid' => [
+        'json_path' => ['job_search_preferences', 'automation_defaults', 'userid'],
+        'db_column' => '',
+      ],
+      'field_automation_default_email' => [
+        'json_path' => ['job_search_preferences', 'automation_defaults', 'email'],
+        'db_column' => '',
+      ],
       'field_references_available' => [
         'json_path' => ['job_search_preferences', 'references_available'],
         'db_column' => 'references_available',
@@ -2960,6 +3055,8 @@ class UserProfileForm extends FormBase {
       'field_salary_expectation_min' => ['job_search_preferences', 'salary_min'],
       'field_salary_expectation_max' => ['job_search_preferences', 'salary_max'],
       'field_salary_change_minimum' => ['job_search_preferences', 'salary_change_minimum'],
+      'field_automation_default_userid' => ['job_search_preferences', 'automation_defaults', 'userid'],
+      'field_automation_default_email' => ['job_search_preferences', 'automation_defaults', 'email'],
       'field_references_available' => ['job_search_preferences', 'references_available'],
       'field_gender' => ['demographics', 'gender'],
       'field_race_ethnicity' => ['demographics', 'race_ethnicity'],
@@ -3069,6 +3166,8 @@ class UserProfileForm extends FormBase {
       'field_salary_expectation_min',
       'field_salary_expectation_max',
       'field_salary_change_minimum',
+      'field_automation_default_userid',
+      'field_automation_default_email',
       'field_references_available',
       'field_gender',
       'field_race_ethnicity',

@@ -104,16 +104,12 @@ class ResumeUploadService {
 
     // ── Load stored credentials ───────────────────────────────────────────
     $company_id = $this->getCompanyIdForJob($job_id);
-    if ($company_id <= 0) {
-      return array_merge($blank, ['error' => 'No company linked to this job.']);
-    }
-
     /** @var \Drupal\job_hunter\Service\CredentialManagementService $cred_service */
     $cred_service = \Drupal::service('job_hunter.credential_management_service');
-    $credential = $cred_service->retrieveCredential($uid, $company_id, 'basic');
+    $credential = $cred_service->retrieveCredential($uid, max(0, $company_id), 'basic');
 
     if (!$credential || empty($credential['username']) || empty($credential['password'])) {
-      return array_merge($blank, ['error' => 'No stored credentials found. Store credentials in Step 4 first.']);
+      return array_merge($blank, ['error' => 'No stored default automation credentials found. Update your profile credentials first.']);
     }
 
     // ── Resolve resume PDF path ───────────────────────────────────────────
@@ -140,7 +136,7 @@ class ResumeUploadService {
       'password'        => (string) $credential['password'],
       'apply_url'       => $apply_url,
       'ats_platform'    => $ats_platform,
-      'expected_email'  => (string) $credential['username'],
+      'expected_email'  => (string) ($credential['default_email'] ?? $credential['username']),
       'resume_pdf_path' => $resume_pdf_path,
       'screenshot_dir'  => $screenshot_dir,
       'application_id'  => (int) $application['id'],

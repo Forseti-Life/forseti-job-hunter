@@ -292,14 +292,13 @@ class ApplicationSubmissionService {
 
       // Check for employer credentials (required for automated submission)
       if ($job && isset($job['company_id'])) {
-        $has_credentials = $this->database->select('jobhunter_employer_credentials', 'c')
-          ->condition('c.uid', $uid)
-          ->condition('c.company_id', $job['company_id'])
-          ->countQuery()
-          ->execute()
-          ->fetchField();
+        $has_credentials = $this->credentialManagementService->hasCredentialForCompanyOrDefault(
+          $uid,
+          (int) $job['company_id'],
+          'basic'
+        );
 
-        if ($has_credentials == 0) {
+        if (!$has_credentials) {
           // For now, log a warning but don't block submission
           // Submission will be marked for manual review
           $details['credentials_missing'] = TRUE;
