@@ -138,6 +138,11 @@ class GartnerJobsService {
       return NULL;
     }
 
+    // Reject obvious non-matches before fetching the job page.
+    if (!$this->matchesQuery($query, $title . ' ' . $description)) {
+      return NULL;
+    }
+
     $job_page = $this->fetchJobPageData($url);
     $location = trim((string) ($job_page['location'] ?? ''));
     $page_text = trim(($job_page['title'] ?? '') . ' ' . ($job_page['location'] ?? '') . ' ' . ($job_page['description'] ?? ''));
@@ -158,11 +163,9 @@ class GartnerJobsService {
       'title' => $title,
       'company' => 'Gartner',
       'location' => $location !== '' ? $location : 'Not specified',
-      'employment_type' => $job_page['employment_type'] ?? 'Not specified',
-      'salary_range' => $job_page['salary_range'] ?? 'Not specified',
       'description' => $this->truncateText($combined_text, 200),
       'source' => 'Gartner Careers',
-      'posted_date' => $pub_date !== '' ? date('M j, Y', strtotime($pub_date)) : 'Unknown',
+      'posted_date' => $this->formatPostedDate($pub_date),
       'url' => $url,
       'job_hash' => md5('gartner|' . mb_strtolower($title) . '|' . mb_strtolower($location)),
       'raw_data' => [
@@ -357,6 +360,22 @@ class GartnerJobsService {
     }
 
     return substr($text, 0, $length) . '...';
+  }
+
+  /**
+   * Format an RSS pubDate safely.
+   */
+  protected function formatPostedDate(string $pub_date): string {
+    if ($pub_date === '') {
+      return 'Unknown';
+    }
+
+    $timestamp = strtotime($pub_date);
+    if ($timestamp === FALSE) {
+      return 'Unknown';
+    }
+
+    return date('M j, Y', $timestamp);
   }
 
 }
