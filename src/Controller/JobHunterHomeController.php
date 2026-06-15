@@ -457,17 +457,13 @@ class JobHunterHomeController extends ControllerBase {
   /**
    * AJAX endpoint to get queue status scoped to the current user.
    *
+   * Read-only and safe for public access because it only reports the current
+   * visitor's queue counts.
+   *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   JSON response with the user's queue counts and check timestamp.
    */
   public function getCurrentUserQueueStatusAjax(): JsonResponse {
-    if (!$this->currentUser()->isAuthenticated()) {
-      return new JsonResponse([
-        'success' => FALSE,
-        'message' => 'Access denied',
-      ], 403);
-    }
-
     $user_id = (int) $this->currentUser()->id();
     $status = $this->getCurrentUserQueueStatus($user_id);
 
@@ -497,6 +493,13 @@ class JobHunterHomeController extends ControllerBase {
         'name' => $definition['name'],
         'icon' => $definition['icon'],
         'items' => 0,
+      ];
+    }
+
+    if ($user_id <= 0) {
+      return [
+        'total_items' => 0,
+        'queues' => $queues,
       ];
     }
 
