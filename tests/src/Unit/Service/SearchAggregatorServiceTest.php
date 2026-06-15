@@ -112,6 +112,88 @@ class SearchAggregatorServiceTest extends UnitTestCase {
   }
 
   /**
+   * Tests location filtering removes broad off-target results.
+   */
+  public function testSearchJobsFiltersResultsOutsideRequestedLocation(): void {
+    $service = $this->createSearchServiceWithStaticResults([
+      'forseti' => [
+        [
+          'id' => 'forseti_1',
+          'title' => 'Chief Information Officer',
+          'company' => 'Acme Health',
+          'location' => 'Philadelphia, PA',
+          'employment_type' => 'Not specified',
+          'salary_range' => 'Not specified',
+          'description' => 'Local role',
+          'source' => 'Forseti Jobs',
+          'posted_date' => 'Jan 1, 2026',
+          'url' => '/jobhunter/job/1',
+        ],
+        [
+          'id' => 'forseti_2',
+          'title' => 'Chief Information Officer',
+          'company' => 'Acme Health',
+          'location' => 'Dallas, TX',
+          'employment_type' => 'Not specified',
+          'salary_range' => 'Not specified',
+          'description' => 'Off-target role',
+          'source' => 'Forseti Jobs',
+          'posted_date' => 'Jan 1, 2026',
+          'url' => '/jobhunter/job/2',
+        ],
+      ],
+      'serpapi' => [
+        'results' => [
+          [
+            'id' => 'serpapi_1',
+            'title' => 'CIO',
+            'company' => 'Regional Bank',
+            'location' => 'Greater Philadelphia Area',
+            'employment_type' => 'Not specified',
+            'salary_range' => 'Not specified',
+            'description' => 'Local external role',
+            'source' => 'Google Jobs (SerpAPI)',
+            'posted_date' => 'Jan 2, 2026',
+            'url' => 'https://example.com/phl',
+          ],
+          [
+            'id' => 'serpapi_2',
+            'title' => 'CIO',
+            'company' => 'Regional Bank',
+            'location' => 'Austin, Texas, United States',
+            'employment_type' => 'Not specified',
+            'salary_range' => 'Not specified',
+            'description' => 'Broad external role',
+            'source' => 'Google Jobs (SerpAPI)',
+            'posted_date' => 'Jan 2, 2026',
+            'url' => 'https://example.com/tx',
+          ],
+        ],
+        'pagination' => [
+          'current_page' => 3,
+          'next_page_token' => 'token-123',
+          'has_more' => TRUE,
+        ],
+      ],
+    ]);
+
+    $results = $service->searchJobs([
+      'query' => 'CIO',
+      'location' => 'Philadelphia, PA',
+      'sources' => ['forseti', 'serpapi'],
+      '_explicit_sources' => TRUE,
+      '_explicit_salary_min' => FALSE,
+      '_explicit_remote_preference' => FALSE,
+    ]);
+
+    $this->assertCount(2, $results['results']);
+    $this->assertSame('Philadelphia, PA', $results['results'][0]['location']);
+    $this->assertSame('Greater Philadelphia Area', $results['results'][1]['location']);
+    $this->assertSame(2, $results['total']);
+    $this->assertSame('token-123', $results['pagination']['serpapi']['next_page_token']);
+  }
+
+  /**
    * Builds the service under test with a mocked preferences row.
    *
    * @param object|null $row
@@ -148,7 +230,7 @@ class SearchAggregatorServiceTest extends UnitTestCase {
 
     return new SearchAggregatorService(
       $database,
-      $this->createMock(ConfigFactoryInterface::class),
+      $this->createSettingsConfigFactory(),
       $current_user,
       $logger_factory,
       $this->createMock(CloudTalentSolutionService::class),
@@ -178,7 +260,7 @@ class SearchAggregatorServiceTest extends UnitTestCase {
 
     return new TestableSearchAggregatorService(
       $database,
-      $this->createMock(ConfigFactoryInterface::class),
+      $this->createSettingsConfigFactory(),
       $current_user,
       $logger_factory,
       $this->createMock(CloudTalentSolutionService::class),
@@ -186,6 +268,57 @@ class SearchAggregatorServiceTest extends UnitTestCase {
       $this->createMock(UsaJobsApiService::class),
       $this->createMock(SerpApiService::class)
     );
+  }
+
+  /**
+   * Builds the service under test with static source results.
+   *
+   * @param array $source_results
+   *   Source-specific results keyed by source name.
+   */
+  protected function createSearchServiceWithStaticResults(array $source_results): TestableSearchAggregatorServiceWithStaticResults {
+    $current_user = $this->createMock(AccountProxyInterface::class);
+    $current_user->method('isAuthenticated')->willReturn(FALSE);
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->with('job_hunter')->willReturn($logger);
+
+    $service = new TestableSearchAggregatorServiceWithStaticResults(
+      $this->createMock(Connection::class),
+      $this->createSettingsConfigFactory(),
+      $current_user,
+      $logger_factory,
+      $this->createMock(CloudTalentSolutionService::class),
+      $this->createMock(AdzunaApiService::class),
+      $this->createMock(UsaJobsApiService::class),
+      $this->createMock(SerpApiService::class)
+    );
+    $service->setSourceResults($source_results);
+
+    return $service;
+  }
+
+  /**
+   * Builds a config factory mock for job_hunter.settings lookups.
+   *
+   * @param array<string, mixed> $settings
+   *   Config values returned by the job_hunter.settings mock.
+   */
+  protected function createSettingsConfigFactory(array $settings = []): ConfigFactoryInterface {
+    $config = $this->getMockBuilder(\stdClass::class)
+      ->addMethods(['get'])
+      ->getMock();
+    $config->method('get')->willReturnCallback(static function (string $key) use ($settings) {
+      return $settings[$key] ?? NULL;
+    });
+
+    $config_factory = $this->createMock(ConfigFactoryInterface::class);
+    $config_factory->method('get')
+      ->with('job_hunter.settings')
+      ->willReturn($config);
+
+    return $config_factory;
   }
 
 }
@@ -201,5 +334,54 @@ class TestableSearchAggregatorService extends SearchAggregatorService {
   public function exposeImportedJobSourceField(): string {
     return $this->getImportedJobSourceField();
   }
+
+}
+
+/**
+ * Testable subclass with controllable source outputs.
+ */
+class TestableSearchAggregatorServiceWithStaticResults extends TestableSearchAggregatorService {
+
+  /**
+   * @var array<string, array>
+   */
+  protected array $sourceResults = [];
+
+  /**
+   * Sets the source results returned by the overridden source methods.
+   *
+   * @param array<string, array> $source_results
+   *   Source outputs keyed by source name.
+   */
+  public function setSourceResults(array $source_results): void {
+    $this->sourceResults = $source_results;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function searchForsetiDatabase(array $params): array {
+    return $this->sourceResults['forseti'] ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function searchSerpApi(array $params): array {
+    return $this->sourceResults['serpapi'] ?? [
+      'results' => [],
+      'pagination' => [],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function storeSearchResults(array $params, array $results): void {}
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function importRecentResults(): void {}
 
 }

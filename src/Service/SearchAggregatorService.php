@@ -263,6 +263,18 @@ class SearchAggregatorService {
       }
     }
 
+    $requested_location = trim((string) ($params['location'] ?? ''));
+    if ($requested_location !== '') {
+      $filtered_results = $this->filterResultsByRequestedLocation($all_results, $requested_location);
+      if (count($filtered_results) !== count($all_results)) {
+        $this->logger->info('📍 SearchAggregator: Filtered @removed result(s) outside requested location @location', [
+          '@removed' => count($all_results) - count($filtered_results),
+          '@location' => $requested_location,
+        ]);
+      }
+      $all_results = $filtered_results;
+    }
+
     $this->logger->info('✅ SearchAggregator: Total results from all sources: @count', [
       '@count' => count($all_results),
     ]);
@@ -1033,6 +1045,130 @@ class SearchAggregatorService {
     }
 
     return $diagnostics;
+  }
+
+  /**
+   * Keep only results that match the requested location.
+   *
+   * The location returned by external sources is often broader than the user
+   * requested metro, so we enforce a post-search filter on the normalized
+   * result set.
+   *
+   * @param array $results
+   *   Normalized job results.
+   * @param string $requested_location
+   *   Requested location string from the search form.
+   *
+   * @return array
+   *   Results limited to the requested location.
+   */
+  protected function filterResultsByRequestedLocation(array $results, string $requested_location): array {
+    $location_tokens = $this->extractLocationTokens($requested_location);
+    if (empty($location_tokens)) {
+      return $results;
+    }
+
+    $filtered = [];
+    foreach ($results as $result) {
+      if ($this->resultMatchesRequestedLocation($result, $location_tokens)) {
+        $filtered[] = $result;
+      }
+    }
+
+    return $filtered;
+  }
+
+  /**
+   * Determine whether a normalized job result matches a requested location.
+   *
+   * @param array $result
+   *   Normalized job result.
+   * @param string[] $location_tokens
+   *   Significant tokens extracted from the requested location.
+   *
+   * @return bool
+   *   TRUE when the result location includes all required tokens.
+   */
+  protected function resultMatchesRequestedLocation(array $result, array $location_tokens): bool {
+    $result_location = trim((string) ($result['location'] ?? ''));
+    if ($result_location === '') {
+      return FALSE;
+    }
+
+    $normalized_result_location = mb_strtolower($this->normalizeLocationText($result_location));
+    if ($normalized_result_location === '') {
+      return FALSE;
+    }
+
+    foreach ($location_tokens as $token) {
+      if (!str_contains($normalized_result_location, $token)) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Extract meaningful search tokens from a requested location string.
+   *
+   * @param string $requested_location
+   *   Requested location string from the search form.
+   *
+   * @return string[]
+   *   Significant location tokens used for matching.
+   */
+  protected function extractLocationTokens(string $requested_location): array {
+    $requested_location = mb_strtolower(trim($requested_location));
+    if ($requested_location === '') {
+      return [];
+    }
+
+    $parts = preg_split('/\s*,\s*/', $requested_location, 2) ?: [];
+    $primary_fragment = trim((string) ($parts[0] ?? ''));
+    $primary_fragment = $this->normalizeLocationText($primary_fragment);
+    if ($primary_fragment === '') {
+      return [];
+    }
+
+    $stop_words = [
+      'area',
+      'city',
+      'county',
+      'district',
+      'greater',
+      'metro',
+      'metropolitan',
+      'region',
+      'surrounding',
+      'bay',
+      'and',
+      'the',
+      'of',
+    ];
+
+    $tokens = preg_split('/\s+/', $primary_fragment, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $tokens = array_values(array_filter($tokens, static function (string $token) use ($stop_words): bool {
+      return !in_array($token, $stop_words, TRUE);
+    }));
+
+    return array_values(array_unique($tokens));
+  }
+
+  /**
+   * Normalize a location string for token matching.
+   *
+   * @param string $location
+   *   Raw location string.
+   *
+   * @return string
+   *   Lowercase, punctuation-stripped location text.
+   */
+  protected function normalizeLocationText(string $location): string {
+    $location = mb_strtolower(trim($location));
+    $location = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $location) ?? $location;
+    $location = preg_replace('/\s+/', ' ', $location) ?? $location;
+    return trim($location);
   }
 
   /**
