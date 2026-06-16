@@ -5093,6 +5093,7 @@ PROMPT;
     }
 
     $roles = array_values($canonical);
+    $roles = $this->collapseExperienceCompanyAliasRows($roles);
     usort($roles, fn (array $a, array $b): int => $this->compareExperienceRoles($a, $b));
     return $roles;
   }
@@ -5225,6 +5226,72 @@ PROMPT;
   }
 
   /**
+   * Normalize a company name to its base identity, ignoring appended descriptors.
+   */
+  private function normalizeExperienceCompanyBaseIdentity(string $value): string {
+    $value = mb_strtolower(trim($value));
+    $value = preg_replace('/\s+[–—-]\s+.+$/u', '', $value);
+    $value = preg_replace('/:\s+.+$/u', '', $value);
+    return $this->normalizeExperienceIdentity($value);
+  }
+
+  /**
+   * Collapse alias company rows when the company base and date span are identical.
+   */
+  private function collapseExperienceCompanyAliasRows(array $roles): array {
+    $collapsed = [];
+
+    foreach ($roles as $role) {
+      $company = (string) ($role['company'] ?? $role['organization'] ?? '');
+      $base_company = $this->normalizeExperienceCompanyBaseIdentity($company);
+      $start_date = trim((string) ($role['start_date'] ?? ''));
+      $end_date = trim((string) ($role['end_date'] ?? ''));
+
+      if ($base_company === '' || $start_date === '') {
+        $collapsed[] = $role;
+        continue;
+      }
+
+      $merged = FALSE;
+      foreach ($collapsed as $index => $existing_role) {
+        $existing_company = (string) ($existing_role['company'] ?? $existing_role['organization'] ?? '');
+        $existing_base_company = $this->normalizeExperienceCompanyBaseIdentity($existing_company);
+        $existing_start = trim((string) ($existing_role['start_date'] ?? ''));
+        $existing_end = trim((string) ($existing_role['end_date'] ?? ''));
+
+        if ($existing_base_company !== $base_company || $existing_start !== $start_date || $existing_end !== $end_date) {
+          continue;
+        }
+
+        $combined = $this->mergeExperienceRoleRecords($existing_role, $role);
+        $combined['company'] = $this->pickPreferredCompanyLabel($existing_company, $company);
+        $combined['title'] = $this->pickPreferredAliasRoleTitle(
+          (string) ($existing_role['title'] ?? $existing_role['role'] ?? ''),
+          (string) ($role['title'] ?? $role['role'] ?? '')
+        );
+        if (isset($combined['role'])) {
+          $combined['role'] = $combined['title'];
+        }
+        if (isset($combined['organization'])) {
+          $combined['organization'] = $this->pickPreferredCompanyLabel(
+            (string) ($existing_role['organization'] ?? ''),
+            (string) ($role['organization'] ?? '')
+          );
+        }
+        $collapsed[$index] = $combined;
+        $merged = TRUE;
+        break;
+      }
+
+      if (!$merged) {
+        $collapsed[] = $role;
+      }
+    }
+
+    return array_values($collapsed);
+  }
+
+  /**
    * Merge two rows that represent the same role, preferring richer data.
    */
   private function mergeExperienceRoleRecords(array $existing, array $incoming): array {
@@ -5348,6 +5415,66 @@ PROMPT;
     }
 
     return $merged;
+  }
+
+  /**
+   * Prefer the cleaner company label when alias rows are merged.
+   */
+  private function pickPreferredCompanyLabel(string $existing, string $incoming): string {
+    $existing = trim($existing);
+    $incoming = trim($incoming);
+
+    if ($existing === '') {
+      return $incoming;
+    }
+    if ($incoming === '') {
+      return $existing;
+    }
+
+    $existing_base = $this->normalizeExperienceCompanyBaseIdentity($existing);
+    $incoming_base = $this->normalizeExperienceCompanyBaseIdentity($incoming);
+    if ($existing_base !== '' && $existing_base === $incoming_base) {
+      return mb_strlen($incoming) < mb_strlen($existing) ? $incoming : $existing;
+    }
+
+    return mb_strlen($incoming) > mb_strlen($existing) ? $incoming : $existing;
+  }
+
+  /**
+   * Prefer the more role-like title when alias company rows are merged.
+   */
+  private function pickPreferredAliasRoleTitle(string $existing, string $incoming): string {
+    $existing = trim($existing);
+    $incoming = trim($incoming);
+
+    if ($existing === '') {
+      return $incoming;
+    }
+    if ($incoming === '') {
+      return $existing;
+    }
+
+    $score = static function (string $title): int {
+      $normalized = mb_strtolower($title);
+      $score = 0;
+
+      if (preg_match('/\b(founder|principal|consultant|director|manager|lead|head|vice president|president|chief|engineer|analyst|developer|contractor)\b/u', $normalized)) {
+        $score += 3;
+      }
+      if (preg_match('/\b(practice|organization|office|department|leadership role|professional)\b/u', $normalized)) {
+        $score -= 2;
+      }
+
+      return $score;
+    };
+
+    $existing_score = $score($existing);
+    $incoming_score = $score($incoming);
+    if ($existing_score !== $incoming_score) {
+      return $incoming_score > $existing_score ? $incoming : $existing;
+    }
+
+    return mb_strlen($incoming) > mb_strlen($existing) ? $incoming : $existing;
   }
 
   /**

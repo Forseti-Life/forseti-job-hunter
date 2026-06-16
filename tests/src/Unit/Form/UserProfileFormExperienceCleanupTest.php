@@ -65,4 +65,34 @@ class UserProfileFormExperienceCleanupTest extends UnitTestCase {
     $this->assertSame('Data Analytics Contributor', $cleaned[0]['title']);
   }
 
+  public function testCleanExperienceRolesMergesAliasCompanyRowsWithSameDates(): void {
+    $form = $this->buildForm();
+    $method = new \ReflectionMethod(UserProfileForm::class, 'cleanExperienceRoles');
+    $method->setAccessible(TRUE);
+
+    $roles = [
+      [
+        'company' => 'St. Louis Integration LLC',
+        'title' => 'Data Science & AI Consulting Practice',
+        'start_date' => '2007-06',
+        'end_date' => NULL,
+        'highlights' => 'Built the consulting practice.',
+      ],
+      [
+        'company' => 'St. Louis Integration LLC – Data & AI Consulting Practice',
+        'title' => 'Founder & Principal Consultant',
+        'start_date' => '2007-06',
+        'end_date' => NULL,
+        'company_context' => 'Independent consulting firm.',
+      ],
+    ];
+
+    $cleaned = $method->invoke($form, $roles);
+
+    $this->assertCount(1, $cleaned);
+    $this->assertSame('St. Louis Integration LLC', $cleaned[0]['company']);
+    $this->assertSame('Founder & Principal Consultant', $cleaned[0]['title']);
+    $this->assertSame('Independent consulting firm.', $cleaned[0]['company_context']);
+  }
+
 }
