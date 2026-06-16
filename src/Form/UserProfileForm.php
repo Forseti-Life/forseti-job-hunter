@@ -5255,7 +5255,7 @@ PROMPT;
         $existing_company = (string) ($existing_role['company'] ?? $existing_role['organization'] ?? '');
         $existing_base_company = $this->normalizeExperienceCompanyBaseIdentity($existing_company);
 
-        if ($existing_base_company !== $base_company || $this->experienceRoleDatesExplicitlyDifferent($existing_role, $role)) {
+        if ($existing_base_company !== $base_company || $this->experienceCompanyTenuresShouldStaySeparate($existing_role, $role)) {
           continue;
         }
 
@@ -5290,16 +5290,38 @@ PROMPT;
   /**
    * Determine whether two rows carry explicitly different dates.
    */
-  private function experienceRoleDatesExplicitlyDifferent(array $existing_role, array $incoming_role): bool {
-    foreach (['start_date', 'end_date'] as $field) {
-      $existing = trim((string) ($existing_role[$field] ?? ''));
-      $incoming = trim((string) ($incoming_role[$field] ?? ''));
-      if ($existing !== '' && $incoming !== '' && $existing !== $incoming) {
-        return TRUE;
-      }
+  private function experienceCompanyTenuresShouldStaySeparate(array $existing_role, array $incoming_role): bool {
+    $existing_start = $this->parseExperienceYearMonth((string) ($existing_role['start_date'] ?? ''));
+    $existing_end = $this->parseExperienceYearMonth((string) ($existing_role['end_date'] ?? ''));
+    $incoming_start = $this->parseExperienceYearMonth((string) ($incoming_role['start_date'] ?? ''));
+    $incoming_end = $this->parseExperienceYearMonth((string) ($incoming_role['end_date'] ?? ''));
+
+    if ($existing_start === NULL || $incoming_start === NULL) {
+      return FALSE;
     }
 
-    return FALSE;
+    $existing_end ??= $existing_start;
+    $incoming_end ??= $incoming_start;
+
+    return $existing_end + 1 < $incoming_start || $incoming_end + 1 < $existing_start;
+  }
+
+  /**
+   * Parse a YYYY-MM value into a sortable month index.
+   */
+  private function parseExperienceYearMonth(string $value): ?int {
+    $value = trim($value);
+    if ($value === '' || !preg_match('/^(\d{4})-(\d{2})$/', $value, $matches)) {
+      return NULL;
+    }
+
+    $year = (int) $matches[1];
+    $month = (int) $matches[2];
+    if ($month < 1 || $month > 12) {
+      return NULL;
+    }
+
+    return ($year * 12) + ($month - 1);
   }
 
   /**

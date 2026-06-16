@@ -126,4 +126,58 @@ class UserProfileFormExperienceCleanupTest extends UnitTestCase {
     $this->assertSame('2021-12', $cleaned[0]['end_date']);
   }
 
+  public function testCleanExperienceRolesMergesContiguousSameCompanyTenures(): void {
+    $form = $this->buildForm();
+    $method = new \ReflectionMethod(UserProfileForm::class, 'cleanExperienceRoles');
+    $method->setAccessible(TRUE);
+
+    $roles = [
+      [
+        'company' => 'Express Scripts',
+        'title' => 'Data Analyst',
+        'start_date' => '2001-01',
+        'end_date' => '2002-01',
+      ],
+      [
+        'company' => 'Express Scripts',
+        'title' => 'Operations Analyst',
+        'start_date' => '2002-01',
+        'end_date' => '2003-12',
+      ],
+    ];
+
+    $cleaned = $method->invoke($form, $roles);
+
+    $this->assertCount(1, $cleaned);
+    $this->assertSame('Express Scripts', $cleaned[0]['company']);
+    $this->assertSame('Operations Analyst', $cleaned[0]['title']);
+    $this->assertSame('2001-01', $cleaned[0]['start_date']);
+    $this->assertSame('2003-12', $cleaned[0]['end_date']);
+  }
+
+  public function testCleanExperienceRolesKeepsSeparatedSameCompanyTenuresDistinct(): void {
+    $form = $this->buildForm();
+    $method = new \ReflectionMethod(UserProfileForm::class, 'cleanExperienceRoles');
+    $method->setAccessible(TRUE);
+
+    $roles = [
+      [
+        'company' => 'MasterCard',
+        'title' => 'Data Analytics Specialist',
+        'start_date' => '2001-01',
+        'end_date' => '2001-12',
+      ],
+      [
+        'company' => 'MasterCard',
+        'title' => 'Data Analytics Contributor',
+        'start_date' => '2004-01',
+        'end_date' => '2006-01',
+      ],
+    ];
+
+    $cleaned = $method->invoke($form, $roles);
+
+    $this->assertCount(2, $cleaned);
+  }
+
 }
