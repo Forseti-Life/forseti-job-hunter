@@ -2,6 +2,7 @@
 
 namespace Drupal\job_hunter\Form\Subform;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Database\Connection;
@@ -23,6 +24,7 @@ use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
  */
 class ResumeUploadSubform {
 
+  use DependencySerializationTrait;
   use StringTranslationTrait;
   use JobHunterLoggerTrait;
 
@@ -673,8 +675,7 @@ class ResumeUploadSubform {
   public function addResumeSubmit(array &$form, FormStateInterface $form_state): void {
     \Drupal::logger('job_hunter_debug')->info('=== ADD RESUME SUBMIT CALLED ===');
 
-    $user_entity = $form_state->get('user_entity');
-    $uid = $user_entity->id();
+    $uid = (int) $form_state->get('target_uid');
     \Drupal::logger('job_hunter_debug')->info('Submit handler: User ID @uid', ['@uid' => $uid]);
 
     $resume_file = $form_state->getValue('field_resume_file');
@@ -785,8 +786,7 @@ class ResumeUploadSubform {
       return;
     }
 
-    $user_entity = $form_state->get('user_entity');
-    $uid = $user_entity->id();
+    $uid = (int) $form_state->get('target_uid');
     $connection = \Drupal::database();
 
     $job_seeker_profile = $this->jobSeekerService->loadByUserId($uid);

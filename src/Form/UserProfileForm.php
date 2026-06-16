@@ -174,8 +174,9 @@ class UserProfileForm extends FormBase {
       return [];
     }
 
-    // Store user entity for submit handler
-    $form_state->set('user_entity', $user_entity);
+    // Store only the target UID in form state so the cached form does not carry
+    // a full entity object between rebuilds.
+    $form_state->set('target_uid', (int) $uid);
 
     $form['#prefix'] = '<div class="jh-profile">';
     $form['#suffix'] = '</div>';
@@ -1506,8 +1507,7 @@ class UserProfileForm extends FormBase {
 
       /** @var \Drupal\job_hunter\Service\CredentialManagementService $credential_service */
       $credential_service = \Drupal::service('job_hunter.credential_management_service');
-      $target_user = $form_state->get('user_entity');
-      $target_uid = $target_user ? (int) $target_user->id() : (int) $this->currentUser->id();
+      $target_uid = (int) ($form_state->get('target_uid') ?: $this->currentUser->id());
       $existing_default_credential = $credential_service->retrieveDefaultAutomationCredential($target_uid);
       if ($automation_password === '' && empty($existing_default_credential['password'])) {
         $form_state->setErrorByName('field_automation_default_password', $this->t('Default automation password is required the first time you save automation credentials.'));
@@ -1686,8 +1686,7 @@ class UserProfileForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $user_entity = $form_state->get('user_entity');
-    $uid = $user_entity->id();
+    $uid = (int) ($form_state->get('target_uid') ?: $this->currentUser->id());
     
     // All data saved to consolidated_profile_json only
     $job_seeker_data = [];

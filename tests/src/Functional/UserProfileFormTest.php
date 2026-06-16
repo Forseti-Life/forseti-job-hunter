@@ -4,12 +4,14 @@ namespace Drupal\Tests\job_hunter\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Functional tests for user profile forms.
  *
  * @group job_hunter
  */
+#[RunTestsInSeparateProcesses]
 class UserProfileFormTest extends BrowserTestBase {
 
   /**
@@ -127,6 +129,21 @@ class UserProfileFormTest extends BrowserTestBase {
     // Submit form.
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('The account has been updated.');
+  }
+
+  /**
+   * Tests the dedicated jobhunter profile edit route loads without errors.
+   */
+  public function testJobhunterProfileEditRouteLoads() {
+    $user = $this->drupalCreateUser([
+      'edit own user account',
+      'access job hunter',
+    ]);
+    $this->drupalLogin($user);
+
+    $this->drupalGet('/jobhunter/profile/edit');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('Edit Job Application Profile');
   }
 
 }
