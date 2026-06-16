@@ -809,7 +809,7 @@ class UserProfileForm extends FormBase {
       if (!is_array($existing_roles)) {
         $existing_roles = [];
       }
-      $existing_roles = array_values($existing_roles);
+      $existing_roles = $this->cleanExperienceRoles(array_values($existing_roles));
       $form_state->set('professional_experience_entries_state', $existing_roles);
     }
 
@@ -3255,6 +3255,8 @@ class UserProfileForm extends FormBase {
         $roles[] = $role;
       }
 
+      $roles = $this->cleanExperienceRoles($roles);
+
       if (!empty($roles)) {
         $consolidated['professional_experience'] = $roles;
       }
@@ -3763,7 +3765,7 @@ class UserProfileForm extends FormBase {
       $roles[] = $role;
     }
 
-    $consolidated['professional_experience'] = $roles;
+    $consolidated['professional_experience'] = $this->cleanExperienceRoles($roles);
     if (!isset($consolidated['extraction_metadata']) || !is_array($consolidated['extraction_metadata'])) {
       $consolidated['extraction_metadata'] = [];
     }
@@ -5053,34 +5055,317 @@ PROMPT;
    * Deduplicates by company + title combination.
    */
   private function mergeExperienceSection(array &$consolidated, string $section, array $newExperiences): int {
-    $additions = 0;
-    if (empty($consolidated[$section])) {
-      $consolidated[$section] = [];
+    $existing = $consolidated[$section] ?? [];
+    if (!is_array($existing)) {
+      $existing = [];
     }
-    
+
+    $existing = $this->cleanExperienceRoles($existing);
+    $before_count = count($existing);
+
     foreach ($newExperiences as $exp) {
-      $company = $exp['company'] ?? $exp['organization'] ?? '';
-      $title = $exp['title'] ?? $exp['role'] ?? '';
-      $key = $company . '|' . $title;
-      
-      $exists = false;
-      foreach ($consolidated[$section] as $existing) {
-        $existingCompany = $existing['company'] ?? $existing['organization'] ?? '';
-        $existingTitle = $existing['title'] ?? $existing['role'] ?? '';
-        $existingKey = $existingCompany . '|' . $existingTitle;
-        if ($key === $existingKey) {
-          $exists = true;
-          break;
+      if (is_array($exp)) {
+        $existing[] = $exp;
+      }
+    }
+
+    $consolidated[$section] = $this->cleanExperienceRoles($existing);
+
+    return max(0, count($consolidated[$section]) - $before_count);
+  }
+
+  /**
+   * Canonicalize experience rows by dropping placeholder items and merging overlaps.
+   *
+   * @param array $roles
+   *   Raw experience rows from parsed resumes or saved consolidated JSON.
+   *
+   * @return array
+   *   Cleaned rows ready for display/storage.
+   */
+  private function cleanExperienceRoles(array $roles): array {
+    $canonical = [];
+
+    foreach ($roles as $role) {
+      if (!is_array($role)) {
+        continue;
+      }
+
+      $role = $this->sanitizeExperienceRole($role);
+      if ($this->shouldDiscardExperienceRole($role)) {
+        continue;
+      }
+
+      $key = $this->buildExperienceRoleMergeKey($role);
+      if ($key === '') {
+        continue;
+      }
+
+      if (!isset($canonical[$key])) {
+        $canonical[$key] = $role;
+        continue;
+      }
+
+      $canonical[$key] = $this->mergeExperienceRoleRecords($canonical[$key], $role);
+    }
+
+    $roles = array_values($canonical);
+    usort($roles, fn (array $a, array $b): int => $this->compareExperienceRoles($a, $b));
+    return $roles;
+  }
+
+  /**
+   * Prepare an experience row for merge and display.
+   */
+  private function sanitizeExperienceRole(array $role): array {
+    foreach ([
+      'company',
+      'organization',
+      'title',
+      'role',
+      'employment_type',
+      'via_company',
+      'location',
+      'company_context',
+      'highlights',
+      'description',
+    ] as $field) {
+      if (isset($role[$field]) && is_string($role[$field])) {
+        $role[$field] = trim($role[$field]);
+      }
+    }
+
+    $title_field = isset($role['title']) ? 'title' : (isset($role['role']) ? 'role' : NULL);
+    if ($title_field !== NULL && !empty($role[$title_field])) {
+      if (preg_match('/^(.*?)\s+via\s+(.+)$/i', (string) $role[$title_field], $matches)) {
+        $role[$title_field] = trim($matches[1]);
+        if (empty($role['via_company'])) {
+          $role['via_company'] = trim($matches[2]);
         }
       }
-      
-      if (!$exists) {
-        $consolidated[$section][] = $exp;
-        $additions++;
+    }
+
+    if (isset($role['start_date']) && is_string($role['start_date']) && strtolower($role['start_date']) === 'unknown') {
+      $role['start_date'] = '';
+    }
+    if (isset($role['end_date']) && is_string($role['end_date']) && strtolower($role['end_date']) === 'unknown') {
+      $role['end_date'] = '';
+    }
+
+    if (isset($role['key_achievements']) && is_array($role['key_achievements'])) {
+      $role['key_achievements'] = $this->mergeExperienceStringList([], $role['key_achievements']);
+    }
+    if (isset($role['technologies']) && is_array($role['technologies'])) {
+      $role['technologies'] = $this->mergeExperienceStringList([], $role['technologies']);
+    }
+
+    return $role;
+  }
+
+  /**
+   * Drop low-confidence experience rows that should never survive consolidation.
+   */
+  private function shouldDiscardExperienceRole(array $role): bool {
+    $company = $this->normalizeExperienceIdentity((string) ($role['company'] ?? $role['organization'] ?? ''));
+    $title = $this->normalizeExperienceIdentity((string) ($role['title'] ?? $role['role'] ?? ''));
+
+    if ($company === '' && $title === '') {
+      return true;
+    }
+
+    foreach ([$company, $title] as $value) {
+      if ($value === 'unknown') {
+        return true;
+      }
+      if (str_contains($value, 'recovered from experience chunk')) {
+        return true;
+      }
+      if (str_contains($value, 'implied')) {
+        return true;
+      }
+      if (str_contains($value, 'from context')) {
+        return true;
+      }
+      if (str_contains($value, 'various roles')) {
+        return true;
       }
     }
-    
-    return $additions;
+
+    return false;
+  }
+
+  /**
+   * Build the canonical merge key for an experience row.
+   */
+  private function buildExperienceRoleMergeKey(array $role): string {
+    $company = $this->normalizeExperienceIdentity((string) ($role['company'] ?? $role['organization'] ?? ''));
+    $title = $this->normalizeExperienceIdentity((string) ($role['title'] ?? $role['role'] ?? ''));
+
+    if ($company === '' && $title === '') {
+      return '';
+    }
+
+    return $company . '|' . $title;
+  }
+
+  /**
+   * Normalize text identity for experience dedupe comparisons.
+   */
+  private function normalizeExperienceIdentity(string $value): string {
+    $value = mb_strtolower(trim($value));
+    $value = preg_replace('/\s+via\s+.+$/u', '', $value);
+    $value = preg_replace('/\([^)]*implied[^)]*\)/u', '', $value);
+    $value = preg_replace('/\([^)]*from context[^)]*\)/u', '', $value);
+    $value = preg_replace('/[^a-z0-9]+/u', ' ', $value);
+    $value = trim((string) preg_replace('/\s+/u', ' ', $value));
+    return $value;
+  }
+
+  /**
+   * Merge two rows that represent the same role, preferring richer data.
+   */
+  private function mergeExperienceRoleRecords(array $existing, array $incoming): array {
+    $merged = $existing;
+
+    foreach ([
+      'company',
+      'organization',
+      'title',
+      'role',
+      'employment_type',
+      'via_company',
+      'location',
+      'company_context',
+      'highlights',
+      'description',
+    ] as $field) {
+      $merged[$field] = $this->pickPreferredExperienceText(
+        isset($existing[$field]) ? (string) $existing[$field] : '',
+        isset($incoming[$field]) ? (string) $incoming[$field] : ''
+      );
+    }
+
+    $merged['start_date'] = $this->pickPreferredStartDate(
+      isset($existing['start_date']) ? (string) $existing['start_date'] : '',
+      isset($incoming['start_date']) ? (string) $incoming['start_date'] : ''
+    );
+    $merged['end_date'] = $this->pickPreferredEndDate(
+      isset($existing['end_date']) ? (string) $existing['end_date'] : '',
+      isset($incoming['end_date']) ? (string) $incoming['end_date'] : ''
+    );
+
+    $merged['key_achievements'] = $this->mergeExperienceStringList(
+      is_array($existing['key_achievements'] ?? NULL) ? $existing['key_achievements'] : [],
+      is_array($incoming['key_achievements'] ?? NULL) ? $incoming['key_achievements'] : []
+    );
+    $merged['technologies'] = $this->mergeExperienceStringList(
+      is_array($existing['technologies'] ?? NULL) ? $existing['technologies'] : [],
+      is_array($incoming['technologies'] ?? NULL) ? $incoming['technologies'] : []
+    );
+
+    return $merged;
+  }
+
+  /**
+   * Prefer the richer non-empty text value for an experience field.
+   */
+  private function pickPreferredExperienceText(string $existing, string $incoming): string {
+    $existing = trim($existing);
+    $incoming = trim($incoming);
+
+    if ($existing === '') {
+      return $incoming;
+    }
+    if ($incoming === '') {
+      return $existing;
+    }
+
+    return mb_strlen($incoming) > mb_strlen($existing) ? $incoming : $existing;
+  }
+
+  /**
+   * Pick the earliest known start date.
+   */
+  private function pickPreferredStartDate(string $existing, string $incoming): string {
+    $existing = trim($existing);
+    $incoming = trim($incoming);
+
+    if ($existing === '') {
+      return $incoming;
+    }
+    if ($incoming === '') {
+      return $existing;
+    }
+
+    return strcmp($incoming, $existing) < 0 ? $incoming : $existing;
+  }
+
+  /**
+   * Pick the most current end date, preserving blank for active roles.
+   */
+  private function pickPreferredEndDate(string $existing, string $incoming): ?string {
+    $existing = trim($existing);
+    $incoming = trim($incoming);
+
+    if ($existing === '' || $incoming === '') {
+      return NULL;
+    }
+
+    return strcmp($incoming, $existing) > 0 ? $incoming : $existing;
+  }
+
+  /**
+   * Merge and dedupe string lists while preserving insertion order.
+   *
+   * @param array $existing
+   *   Existing list values.
+   * @param array $incoming
+   *   Incoming list values.
+   *
+   * @return array
+   *   Deduped merged list.
+   */
+  private function mergeExperienceStringList(array $existing, array $incoming): array {
+    $merged = [];
+    $seen = [];
+
+    foreach (array_merge($existing, $incoming) as $value) {
+      $value = trim((string) $value);
+      if ($value === '') {
+        continue;
+      }
+
+      $key = mb_strtolower($value);
+      if (isset($seen[$key])) {
+        continue;
+      }
+
+      $seen[$key] = true;
+      $merged[] = $value;
+    }
+
+    return $merged;
+  }
+
+  /**
+   * Sort experience roles by most recent start date, then title/company.
+   */
+  private function compareExperienceRoles(array $a, array $b): int {
+    $a_start = (string) ($a['start_date'] ?? '');
+    $b_start = (string) ($b['start_date'] ?? '');
+    if ($a_start !== $b_start) {
+      return strcmp($b_start, $a_start);
+    }
+
+    $a_title = $this->normalizeExperienceIdentity((string) ($a['title'] ?? $a['role'] ?? ''));
+    $b_title = $this->normalizeExperienceIdentity((string) ($b['title'] ?? $b['role'] ?? ''));
+    if ($a_title !== $b_title) {
+      return strcmp($a_title, $b_title);
+    }
+
+    $a_company = $this->normalizeExperienceIdentity((string) ($a['company'] ?? $a['organization'] ?? ''));
+    $b_company = $this->normalizeExperienceIdentity((string) ($b['company'] ?? $b['organization'] ?? ''));
+    return strcmp($a_company, $b_company);
   }
 
   /**
