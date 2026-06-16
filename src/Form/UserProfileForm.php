@@ -256,6 +256,15 @@ class UserProfileForm extends FormBase {
     if ($job_seeker_profile && !empty($job_seeker_profile->consolidated_profile_json)) {
       $consolidated = json_decode($job_seeker_profile->consolidated_profile_json, TRUE) ?: [];
     }
+    if (isset($consolidated['education']) && is_array($consolidated['education'])) {
+      $consolidated['education'] = $this->cleanEducationRecords($consolidated['education']);
+    }
+    if (isset($consolidated['publications']) && is_array($consolidated['publications'])) {
+      $consolidated['publications'] = $this->cleanPublicationRecords($consolidated['publications']);
+    }
+    if ($job_seeker_profile && !empty($consolidated)) {
+      $job_seeker_profile->consolidated_profile_json = json_encode($consolidated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
 
     $get_profile_value = function($property, $default = '') use ($job_seeker_profile) {
       if ($job_seeker_profile && isset($job_seeker_profile->$property) && $job_seeker_profile->$property !== '') {
@@ -3198,6 +3207,22 @@ class UserProfileForm extends FormBase {
         $has_changes = true;
       }
     }
+
+    if (isset($consolidated['education']) && is_array($consolidated['education'])) {
+      $cleaned_education = $this->cleanEducationRecords($consolidated['education']);
+      if ($cleaned_education !== $consolidated['education']) {
+        $consolidated['education'] = $cleaned_education;
+        $has_changes = true;
+      }
+    }
+
+    if (isset($consolidated['publications']) && is_array($consolidated['publications'])) {
+      $cleaned_publications = $this->cleanPublicationRecords($consolidated['publications']);
+      if ($cleaned_publications !== $consolidated['publications']) {
+        $consolidated['publications'] = $cleaned_publications;
+        $has_changes = true;
+      }
+    }
     
     if ($has_changes) {
       $consolidated['extraction_metadata']['last_form_sync'] = date('c');
@@ -4751,24 +4776,7 @@ PROMPT;
     
     // Education - dedupe by institution+degree
     if (!empty($new_data['education'])) {
-      if (empty($consolidated['education'])) {
-        $consolidated['education'] = [];
-      }
-      foreach ($new_data['education'] as $edu) {
-        $key = ($edu['institution'] ?? '') . '|' . ($edu['degree'] ?? '');
-        $exists = false;
-        foreach ($consolidated['education'] as $existing) {
-          $existingKey = ($existing['institution'] ?? '') . '|' . ($existing['degree'] ?? '');
-          if ($key === $existingKey) {
-            $exists = true;
-            break;
-          }
-        }
-        if (!$exists) {
-          $consolidated['education'][] = $edu;
-          $additions++;
-        }
-      }
+      $additions += $this->mergeEducationSection($consolidated, $new_data['education']);
     }
     
     // Technical expertise - merge categories and dedupe skills within each
@@ -4819,32 +4827,7 @@ PROMPT;
     
     // Publications - dedupe by title and authors
     if (!empty($new_data['publications'])) {
-      if (empty($consolidated['publications'])) {
-        $consolidated['publications'] = [];
-      }
-      foreach ($new_data['publications'] as $publication) {
-        $title = $publication['title'] ?? '';
-        $authors = isset($publication['authors']) && is_array($publication['authors']) 
-          ? implode('|', $publication['authors']) 
-          : ($publication['authors'] ?? '');
-        $key = $title . '|' . $authors;
-        $exists = false;
-        foreach ($consolidated['publications'] as $existing) {
-          $existingTitle = $existing['title'] ?? '';
-          $existingAuthors = isset($existing['authors']) && is_array($existing['authors']) 
-            ? implode('|', $existing['authors']) 
-            : ($existing['authors'] ?? '');
-          $existingKey = $existingTitle . '|' . $existingAuthors;
-          if ($key === $existingKey) {
-            $exists = true;
-            break;
-          }
-        }
-        if (!$exists) {
-          $consolidated['publications'][] = $publication;
-          $additions++;
-        }
-      }
+      $additions += $this->mergePublicationSection($consolidated, $new_data['publications']);
     }
     
     // Certifications - dedupe by name
@@ -5366,6 +5349,309 @@ PROMPT;
     $a_company = $this->normalizeExperienceIdentity((string) ($a['company'] ?? $a['organization'] ?? ''));
     $b_company = $this->normalizeExperienceIdentity((string) ($b['company'] ?? $b['organization'] ?? ''));
     return strcmp($a_company, $b_company);
+  }
+
+  /**
+   * Merge education records and canonicalize the result.
+   */
+  private function mergeEducationSection(array &$consolidated, array $newItems): int {
+    $existing = $consolidated['education'] ?? [];
+    if (!is_array($existing)) {
+      $existing = [];
+    }
+
+    $existing = $this->cleanEducationRecords($existing);
+    $before_count = count($existing);
+
+    foreach ($newItems as $item) {
+      if (is_array($item)) {
+        $existing[] = $item;
+      }
+    }
+
+    $consolidated['education'] = $this->cleanEducationRecords($existing);
+    return max(0, count($consolidated['education']) - $before_count);
+  }
+
+  /**
+   * Canonicalize education records by dropping placeholders and merging overlaps.
+   */
+  private function cleanEducationRecords(array $items): array {
+    $canonical = [];
+
+    foreach ($items as $item) {
+      if (!is_array($item)) {
+        continue;
+      }
+
+      $item = $this->sanitizeEducationRecord($item);
+      if ($this->shouldDiscardEducationRecord($item)) {
+        continue;
+      }
+
+      $key = $this->buildEducationMergeKey($item);
+      if ($key === '') {
+        continue;
+      }
+
+      if (!isset($canonical[$key])) {
+        $canonical[$key] = $item;
+        continue;
+      }
+
+      $canonical[$key] = $this->mergeEducationRecords($canonical[$key], $item);
+    }
+
+    $items = array_values($canonical);
+    usort($items, fn (array $a, array $b): int => $this->compareEducationRecords($a, $b));
+    return $items;
+  }
+
+  /**
+   * Prepare an education record for merge and display.
+   */
+  private function sanitizeEducationRecord(array $item): array {
+    foreach (['institution', 'degree', 'abbreviation', 'field', 'start_date', 'end_date', 'location'] as $field) {
+      if (isset($item[$field]) && is_string($item[$field])) {
+        $item[$field] = trim($item[$field]);
+      }
+    }
+
+    return $item;
+  }
+
+  /**
+   * Drop placeholder education rows.
+   */
+  private function shouldDiscardEducationRecord(array $item): bool {
+    $raw_institution = mb_strtolower(trim((string) ($item['institution'] ?? '')));
+    $institution = $this->normalizeEducationIdentity((string) ($item['institution'] ?? ''));
+    $degree = $this->normalizeEducationIdentity((string) ($item['degree'] ?? ''));
+
+    if ($institution === '' && $degree === '') {
+      return true;
+    }
+
+    if ($institution === 'unknown' || $institution === 'university not specified' || $institution === 'university') {
+      return true;
+    }
+
+    if (str_contains($raw_institution, 'implied')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Build a canonical merge key for education records.
+   */
+  private function buildEducationMergeKey(array $item): string {
+    $institution = $this->normalizeEducationIdentity((string) ($item['institution'] ?? ''));
+    $degree = $this->normalizeEducationIdentity((string) ($item['degree'] ?? ''));
+
+    if ($institution === '' && $degree === '') {
+      return '';
+    }
+
+    return $institution . '|' . $degree;
+  }
+
+  /**
+   * Normalize text identity for education comparisons.
+   */
+  private function normalizeEducationIdentity(string $value): string {
+    $value = mb_strtolower(trim($value));
+    $value = preg_replace('/\([^)]*implied[^)]*\)/u', '', $value);
+    $value = preg_replace('/[^a-z0-9]+/u', ' ', $value);
+    $value = trim((string) preg_replace('/\s+/u', ' ', $value));
+    return $value;
+  }
+
+  /**
+   * Merge overlapping education records and prefer richer details.
+   */
+  private function mergeEducationRecords(array $existing, array $incoming): array {
+    $merged = $existing;
+
+    foreach (['institution', 'degree', 'abbreviation', 'field', 'location'] as $field) {
+      $merged[$field] = $this->pickPreferredExperienceText(
+        isset($existing[$field]) ? (string) $existing[$field] : '',
+        isset($incoming[$field]) ? (string) $incoming[$field] : ''
+      );
+    }
+
+    $merged['start_date'] = $this->pickPreferredStartDate(
+      isset($existing['start_date']) ? (string) $existing['start_date'] : '',
+      isset($incoming['start_date']) ? (string) $incoming['start_date'] : ''
+    );
+    $merged['end_date'] = $this->pickPreferredEndDate(
+      isset($existing['end_date']) ? (string) $existing['end_date'] : '',
+      isset($incoming['end_date']) ? (string) $incoming['end_date'] : ''
+    );
+
+    return $merged;
+  }
+
+  /**
+   * Sort education records by most recent completion date, then institution.
+   */
+  private function compareEducationRecords(array $a, array $b): int {
+    $a_end = (string) ($a['end_date'] ?? '');
+    $b_end = (string) ($b['end_date'] ?? '');
+    if ($a_end !== $b_end) {
+      return strcmp($b_end, $a_end);
+    }
+
+    $a_institution = $this->normalizeEducationIdentity((string) ($a['institution'] ?? ''));
+    $b_institution = $this->normalizeEducationIdentity((string) ($b['institution'] ?? ''));
+    return strcmp($a_institution, $b_institution);
+  }
+
+  /**
+   * Merge publication records and canonicalize the result.
+   */
+  private function mergePublicationSection(array &$consolidated, array $newItems): int {
+    $existing = $consolidated['publications'] ?? [];
+    if (!is_array($existing)) {
+      $existing = [];
+    }
+
+    $existing = $this->cleanPublicationRecords($existing);
+    $before_count = count($existing);
+
+    foreach ($newItems as $item) {
+      if (is_array($item)) {
+        $existing[] = $item;
+      }
+    }
+
+    $consolidated['publications'] = $this->cleanPublicationRecords($existing);
+    return max(0, count($consolidated['publications']) - $before_count);
+  }
+
+  /**
+   * Canonicalize publication records by dropping placeholders and merging overlaps.
+   */
+  private function cleanPublicationRecords(array $items): array {
+    $canonical = [];
+
+    foreach ($items as $item) {
+      if (!is_array($item)) {
+        continue;
+      }
+
+      $item = $this->sanitizePublicationRecord($item);
+      if ($this->shouldDiscardPublicationRecord($item)) {
+        continue;
+      }
+
+      $key = $this->buildPublicationMergeKey($item);
+      if ($key === '') {
+        continue;
+      }
+
+      if (!isset($canonical[$key])) {
+        $canonical[$key] = $item;
+        continue;
+      }
+
+      $canonical[$key] = $this->mergePublicationRecords($canonical[$key], $item);
+    }
+
+    $items = array_values($canonical);
+    usort($items, fn (array $a, array $b): int => $this->comparePublicationRecords($a, $b));
+    return $items;
+  }
+
+  /**
+   * Prepare a publication record for merge and display.
+   */
+  private function sanitizePublicationRecord(array $item): array {
+    foreach (['title', 'publication', 'publisher', 'journal', 'date', 'year'] as $field) {
+      if (isset($item[$field]) && is_string($item[$field])) {
+        $item[$field] = trim($item[$field]);
+      }
+    }
+
+    if (isset($item['authors']) && is_array($item['authors'])) {
+      $item['authors'] = $this->mergeExperienceStringList([], $item['authors']);
+    }
+    elseif (isset($item['authors']) && is_string($item['authors'])) {
+      $item['authors'] = $this->mergeExperienceStringList([], preg_split('/[,;]+/', $item['authors']) ?: []);
+    }
+
+    return $item;
+  }
+
+  /**
+   * Drop placeholder publication rows.
+   */
+  private function shouldDiscardPublicationRecord(array $item): bool {
+    $title = $this->normalizePublicationIdentity((string) ($item['title'] ?? ''));
+    return $title === '' || $title === 'unknown' || str_contains($title, 'implied');
+  }
+
+  /**
+   * Build a canonical merge key for publication records.
+   */
+  private function buildPublicationMergeKey(array $item): string {
+    $title = $this->normalizePublicationIdentity((string) ($item['title'] ?? ''));
+    if ($title === '') {
+      return '';
+    }
+
+    $authors = isset($item['authors']) && is_array($item['authors'])
+      ? implode('|', array_map(fn ($value): string => $this->normalizePublicationIdentity((string) $value), $item['authors']))
+      : $this->normalizePublicationIdentity((string) ($item['authors'] ?? ''));
+
+    return $title . '|' . $authors;
+  }
+
+  /**
+   * Normalize text identity for publication comparisons.
+   */
+  private function normalizePublicationIdentity(string $value): string {
+    $value = mb_strtolower(trim($value));
+    $value = preg_replace('/[^a-z0-9]+/u', ' ', $value);
+    $value = trim((string) preg_replace('/\s+/u', ' ', $value));
+    return $value;
+  }
+
+  /**
+   * Merge overlapping publication records and prefer richer details.
+   */
+  private function mergePublicationRecords(array $existing, array $incoming): array {
+    $merged = $existing;
+
+    foreach (['title', 'publication', 'publisher', 'journal', 'date', 'year'] as $field) {
+      $merged[$field] = $this->pickPreferredExperienceText(
+        isset($existing[$field]) ? (string) $existing[$field] : '',
+        isset($incoming[$field]) ? (string) $incoming[$field] : ''
+      );
+    }
+
+    $merged['authors'] = $this->mergeExperienceStringList(
+      is_array($existing['authors'] ?? NULL) ? $existing['authors'] : [],
+      is_array($incoming['authors'] ?? NULL) ? $incoming['authors'] : []
+    );
+
+    return $merged;
+  }
+
+  /**
+   * Sort publication records by year/date, then title.
+   */
+  private function comparePublicationRecords(array $a, array $b): int {
+    $a_date = (string) ($a['date'] ?? $a['year'] ?? '');
+    $b_date = (string) ($b['date'] ?? $b['year'] ?? '');
+    if ($a_date !== $b_date) {
+      return strcmp($b_date, $a_date);
+    }
+
+    $a_title = $this->normalizePublicationIdentity((string) ($a['title'] ?? ''));
+    $b_title = $this->normalizePublicationIdentity((string) ($b['title'] ?? ''));
+    return strcmp($a_title, $b_title);
   }
 
   /**
