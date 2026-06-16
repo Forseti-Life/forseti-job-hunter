@@ -5149,11 +5149,31 @@ PROMPT;
    * Drop low-confidence experience rows that should never survive consolidation.
    */
   private function shouldDiscardExperienceRole(array $role): bool {
-    $company = $this->normalizeExperienceIdentity((string) ($role['company'] ?? $role['organization'] ?? ''));
-    $title = $this->normalizeExperienceIdentity((string) ($role['title'] ?? $role['role'] ?? ''));
+    $raw_company = mb_strtolower(trim((string) ($role['company'] ?? $role['organization'] ?? '')));
+    $raw_title = mb_strtolower(trim((string) ($role['title'] ?? $role['role'] ?? '')));
+    $company = $this->normalizeExperienceIdentity($raw_company);
+    $title = $this->normalizeExperienceIdentity($raw_title);
 
     if ($company === '' && $title === '') {
       return true;
+    }
+
+    foreach ([$raw_company, $raw_title] as $raw_value) {
+      if ($raw_value === '') {
+        continue;
+      }
+      if (str_contains($raw_value, 'recovered from experience chunk')) {
+        return true;
+      }
+      if (str_contains($raw_value, 'implied')) {
+        return true;
+      }
+      if (str_contains($raw_value, 'from context')) {
+        return true;
+      }
+      if (str_contains($raw_value, 'various roles')) {
+        return true;
+      }
     }
 
     foreach ([$company, $title] as $value) {
