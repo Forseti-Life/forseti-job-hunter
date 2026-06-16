@@ -95,4 +95,35 @@ class UserProfileFormExperienceCleanupTest extends UnitTestCase {
     $this->assertSame('Independent consulting firm.', $cleaned[0]['company_context']);
   }
 
+  public function testCleanExperienceRolesMergesSameCompanyWhenOneRowLacksExplicitDates(): void {
+    $form = $this->buildForm();
+    $method = new \ReflectionMethod(UserProfileForm::class, 'cleanExperienceRoles');
+    $method->setAccessible(TRUE);
+
+    $roles = [
+      [
+        'company' => 'Example Corp',
+        'title' => 'Platform Lead',
+        'start_date' => '2020-01',
+        'end_date' => '2021-12',
+        'highlights' => 'Led the platform team.',
+      ],
+      [
+        'company' => 'Example Corp',
+        'title' => 'Platform Engineering Lead',
+        'start_date' => '',
+        'end_date' => '',
+        'company_context' => 'Broader resume summary row.',
+      ],
+    ];
+
+    $cleaned = $method->invoke($form, $roles);
+
+    $this->assertCount(1, $cleaned);
+    $this->assertSame('Example Corp', $cleaned[0]['company']);
+    $this->assertSame('Platform Engineering Lead', $cleaned[0]['title']);
+    $this->assertSame('2020-01', $cleaned[0]['start_date']);
+    $this->assertSame('2021-12', $cleaned[0]['end_date']);
+  }
+
 }

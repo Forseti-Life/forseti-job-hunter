@@ -5244,10 +5244,8 @@ PROMPT;
     foreach ($roles as $role) {
       $company = (string) ($role['company'] ?? $role['organization'] ?? '');
       $base_company = $this->normalizeExperienceCompanyBaseIdentity($company);
-      $start_date = trim((string) ($role['start_date'] ?? ''));
-      $end_date = trim((string) ($role['end_date'] ?? ''));
 
-      if ($base_company === '' || $start_date === '') {
+      if ($base_company === '') {
         $collapsed[] = $role;
         continue;
       }
@@ -5256,10 +5254,8 @@ PROMPT;
       foreach ($collapsed as $index => $existing_role) {
         $existing_company = (string) ($existing_role['company'] ?? $existing_role['organization'] ?? '');
         $existing_base_company = $this->normalizeExperienceCompanyBaseIdentity($existing_company);
-        $existing_start = trim((string) ($existing_role['start_date'] ?? ''));
-        $existing_end = trim((string) ($existing_role['end_date'] ?? ''));
 
-        if ($existing_base_company !== $base_company || $existing_start !== $start_date || $existing_end !== $end_date) {
+        if ($existing_base_company !== $base_company || $this->experienceRoleDatesExplicitlyDifferent($existing_role, $role)) {
           continue;
         }
 
@@ -5289,6 +5285,21 @@ PROMPT;
     }
 
     return array_values($collapsed);
+  }
+
+  /**
+   * Determine whether two rows carry explicitly different dates.
+   */
+  private function experienceRoleDatesExplicitlyDifferent(array $existing_role, array $incoming_role): bool {
+    foreach (['start_date', 'end_date'] as $field) {
+      $existing = trim((string) ($existing_role[$field] ?? ''));
+      $incoming = trim((string) ($incoming_role[$field] ?? ''));
+      if ($existing !== '' && $incoming !== '' && $existing !== $incoming) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
   }
 
   /**
@@ -5377,8 +5388,11 @@ PROMPT;
     $existing = trim($existing);
     $incoming = trim($incoming);
 
-    if ($existing === '' || $incoming === '') {
-      return NULL;
+    if ($existing === '') {
+      return $incoming !== '' ? $incoming : NULL;
+    }
+    if ($incoming === '') {
+      return $existing;
     }
 
     return strcmp($incoming, $existing) > 0 ? $incoming : $existing;
