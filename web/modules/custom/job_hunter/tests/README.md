@@ -265,3 +265,7 @@ For complete test case details, see [TEST_CASES.md](TEST_CASES.md)
 - **Purpose:** the purpose of the `tests` directory
 - **Nearby directories:** `src`
 - **Nearby files:** `TEST_CASES.md`
+
+## Agentic Development Readiness
+
+- **Source of truth:** treat the checked-in code and documentation under this component directory as the authoritative reference before updating adjacent layers.
