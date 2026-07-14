@@ -1,3 +1,4 @@
+<!-- REVIEWED: 2026-07-14 -->
 # Job Hunter Module - Testing Documentation
 
 ## Overview
@@ -255,3 +256,10 @@ This testing documentation is a living document and should be updated:
 ---
 
 For complete test case details, see [TEST_CASES.md](TEST_CASES.md)
+
+## Scope covered by this document
+
+- **Primary target:** `web/modules/custom/job_hunter/tests/README.md`
+- **Purpose:** the purpose of the `tests` directory
+- **Nearby directories:** `src`
+- **Nearby files:** `TEST_CASES.md`
