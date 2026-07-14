@@ -1,3 +1,4 @@
+<!-- REVIEWED: 2026-07-14 -->
 # Job Application Automation - Documentation Index
 
 Welcome to the comprehensive documentation for the Job Application Automation module.
@@ -489,3 +490,7 @@ If you can't find what you need in the documentation:
 **Module Version:** 1.0.1
 
 **Happy coding! 🚀**
+
+## Agentic Development Readiness
+
+- **Constraints / gotchas:** preserve existing module boundaries, reuse local documentation and test surfaces, and avoid broad cross-repo assumptions without evidence from this subtree.
