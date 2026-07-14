@@ -35,17 +35,23 @@ This directory contains test cases and testing documentation for the Job Hunter 
 
 ## Current Test Implementation Status
 
-### ✅ Implemented Tests (5 cases)
-Located in: `src/Unit/Service/UserProfileServiceTest.php`
+### Implemented Test Files (15 cases)
 
-1. **UPS-001**: Profile Completeness Calculation
-2. **UPS-002**: Field Completion Detection
-3. **UPS-003**: Missing Field Recommendations
-4. **UPS-004**: Completeness Status Detection
-5. **UPS-005**: Job Application Validation
+Currently present under `tests/src/`:
 
-### 🔄 Pending Implementation (104+ cases)
-See [TEST_CASES.md](TEST_CASES.md) for complete list and implementation roadmap.
+- `src/Functional/Controller/ApplicationSubmissionRouteTest.php`
+- `src/Functional/Controller/CredentialControllerTest.php`
+- `src/Functional/CredentialsControllerTest.php`
+- `src/Functional/CsrfApplicationSubmissionTest.php`
+- `src/Functional/UserProfileFormTest.php`
+- `src/Unit/Controller/ContactTrackerContractTest.php`
+- `src/Unit/Controller/CsrfSeedConsistencyTest.php`
+- `src/Unit/Controller/InterviewRoundRouteContractTest.php`
+- `src/Unit/Repository/JobApplicationRepositoryTest.php`
+- `src/Unit/Service/BrowserAutomationServiceTest.php`
+- `src/Unit/Service/ErrorQueueServiceTest.php`
+- `src/Unit/Service/SearchAggregatorServiceTest.php`
+- ...and 3 more checked-in test files
 
 ## Quick Start
 
@@ -77,15 +83,11 @@ vendor/bin/phpunit --coverage-html coverage modules/custom/job_hunter/tests/
 
 ```
 tests/
-├── README.md                          # This file
-├── TEST_CASES.md                      # Comprehensive test documentation
+├── README.md
+├── TEST_CASES.md
 └── src/
-    ├── Unit/                          # Unit tests (service layer)
-    │   └── Service/
-    │       └── UserProfileServiceTest.php
-    ├── Kernel/                        # Integration tests (module integration)
-    ├── Functional/                    # Functional tests (user workflows)
-    └── FunctionalJavascript/          # Browser tests (UI interaction)
+    ├── Functional/    # 5 checked-in test file(s)
+    └── Unit/    # 10 checked-in test file(s)
 ```
 
 ## Test Implementation Priority
