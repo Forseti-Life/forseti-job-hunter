@@ -1,3 +1,4 @@
+<!-- REVIEWED: 2026-07-15 -->
 # Job Application Automation Module
 
 **Last Updated:** February 18, 2026
