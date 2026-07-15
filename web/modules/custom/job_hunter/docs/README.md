@@ -1,4 +1,4 @@
-<!-- REVIEWED: 2026-07-14 -->
+<!-- REVIEWED: 2026-07-15 -->
 # Job Application Automation - Documentation Index
 
 Welcome to the comprehensive documentation for the Job Application Automation module.
