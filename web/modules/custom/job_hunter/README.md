@@ -1,8 +1,6 @@
 <!-- REVIEWED: 2026-07-15 -->
 # Job Application Automation Module
 
-**Last Updated:** February 18, 2026
-
 ## 📚 Documentation
 
 This module has comprehensive documentation organized for different audiences:
@@ -901,3 +899,10 @@ For technical issues, feature requests, and development questions:
 - **Security Standards:** SOC 2 Type II framework alignment
 - **Ethical AI:** Responsible AI usage guidelines and bias mitigation
 - **Web Scraping:** Respectful scraping practices and robots.txt compliance
+
+## Scope covered by this document
+
+- **Primary target:** `web/modules/custom/job_hunter/README.md`
+- **Purpose:** the purpose of the `job_hunter` directory
+- **Nearby directories:** `config`, `css`, `docs`, `js`, `playwright`, `src`, `templates`, `tests`
+- **Nearby files:** `ARCHITECTURE.md`, `CODE_REVIEW_job_hunter.info.yml.md`, `CODE_REVIEW_job_hunter.install.md`, `CODE_REVIEW_job_hunter.libraries.yml.md`, `CODE_REVIEW_job_hunter.module.md`, `CODE_REVIEW_job_hunter.permissions.yml.md`, `CODE_REVIEW_job_hunter.routing.yml.md`, `CODE_REVIEW_job_hunter.services.yml.md`, `CODE_REVIEW_SETTINGS_FORM.md`, `DOCUMENTATION_REVIEW_SUMMARY.md`, `drush.services.yml`, `enumerate_post_routes.py`

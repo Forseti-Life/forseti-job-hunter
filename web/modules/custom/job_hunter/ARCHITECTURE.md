@@ -1,6 +1,5 @@
+<!-- REVIEWED: 2026-07-15 -->
 # Job Application Automation Module - Architecture Design
-
-**Last Updated:** February 6, 2026
 
 > **📁 Documentation Note:** This is the comprehensive architecture reference document. For a condensed architecture overview, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For the complete documentation index, see [docs/README.md](docs/README.md).
 
@@ -2227,3 +2226,10 @@ Employer Career Portals → Diffbot API → Structured JSON Data → Drupal Job 
 - **Audit Logging** - Compliance and security monitoring
 
 This architecture provides a comprehensive foundation for building an AI-powered job application automation system that respects user privacy, maintains high security standards, and delivers reliable automated application submission across multiple employer platforms.
+
+## Scope covered by this document
+
+- **Primary target:** `web/modules/custom/job_hunter/ARCHITECTURE.md`
+- **Purpose:** the architecture of the `job_hunter` documentation or implementation surface
+- **Nearby directories:** `config`, `css`, `docs`, `js`, `playwright`, `src`, `templates`, `tests`
+- **Nearby files:** `CODE_REVIEW_job_hunter.info.yml.md`, `CODE_REVIEW_job_hunter.install.md`, `CODE_REVIEW_job_hunter.libraries.yml.md`, `CODE_REVIEW_job_hunter.module.md`, `CODE_REVIEW_job_hunter.permissions.yml.md`, `CODE_REVIEW_job_hunter.routing.yml.md`, `CODE_REVIEW_job_hunter.services.yml.md`, `CODE_REVIEW_SETTINGS_FORM.md`, `DOCUMENTATION_REVIEW_SUMMARY.md`, `drush.services.yml`, `enumerate_post_routes.py`, `GITHUB_ISSUES_TO_CREATE.md`
