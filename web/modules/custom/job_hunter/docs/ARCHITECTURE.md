@@ -1,3 +1,4 @@
+<!-- REVIEWED: 2026-07-15 -->
 # Job Application Automation - Architecture Documentation
 
 > **📁 Documentation Note:** This is a condensed architecture reference. For the comprehensive architecture design document with full development guidelines, see [../ARCHITECTURE.md](../ARCHITECTURE.md). For the complete documentation index, see [README.md](README.md).
