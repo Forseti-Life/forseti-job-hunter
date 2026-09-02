@@ -147,8 +147,14 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     $connection = \Drupal::database();
 
     try {
-      // Update status to processing
-      $this->updateDatabaseStatus($connection, 'jobhunter_tailored_resumes', $uid, $job_id, 'processing');
+      // Update status to processing. Keep run_uuid current so the resume
+      // record always points at whichever run is actively driving it,
+      // even after a prior run on this uid/job_id failed.
+      $record_fields = [];
+      if ($connection->schema()->fieldExists('jobhunter_tailored_resumes', 'run_uuid')) {
+        $record_fields['run_uuid'] = $run_id;
+      }
+      $this->updateDatabaseStatus($connection, 'jobhunter_tailored_resumes', $uid, $job_id, 'processing', $record_fields);
 
       // Parse job data (extracted already parsed above for logging)
       $skills = !empty($job_data['skills_required_json']) ? json_decode($job_data['skills_required_json'], TRUE) : [];
@@ -178,14 +184,18 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
         throw new \RuntimeException("GenAI returned no usable result for job {$job_id}. JSON parse may have failed; see prior log entries.");
       }
 
-      // Save the tailored resume
+      // Save the tailored resume. Clear any stale error_message from a
+      // previous failed run on this uid/job_id, now that this run succeeded.
       $this->updateDatabaseStatus(
         $connection,
         'jobhunter_tailored_resumes',
         $uid,
         $job_id,
         'completed',
-        ['tailored_resume_json' => json_encode($tailored_result['tailored_resume_json'])]
+        $record_fields + [
+          'tailored_resume_json' => json_encode($tailored_result['tailored_resume_json']),
+          'error_message' => NULL,
+        ]
       );
 
       if ($run_id) {
