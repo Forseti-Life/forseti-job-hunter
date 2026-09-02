@@ -409,9 +409,18 @@ class ResumePdfService {
         continue;
       }
 
-      // Check if section has content.
-      $sectionContent = $this->content[$section] ?? NULL;
-      if (empty($sectionContent)) {
+      // Check if section has content, and normalize/filter sections whose
+      // AI-generated shape is inconsistent or may contain items with no
+      // real substance (e.g. an engagement with only a client name and no
+      // role/description, or a duplicate demonstration project). Sections
+      // that end up with nothing meaningful after normalization are
+      // skipped entirely so no blank header is ever printed.
+      $rawContent = $this->content[$section] ?? NULL;
+      if (empty($rawContent)) {
+        continue;
+      }
+      $sectionContent = $this->prepareSectionContent($section, $rawContent);
+      if ($sectionContent === NULL) {
         continue;
       }
 
@@ -482,6 +491,371 @@ class ResumePdfService {
           break;
       }
     }
+  }
+
+  /**
+   * Normalize and filter section content that may contain low-substance or
+   * inconsistently-shaped AI-generated items before a header is printed.
+   *
+   * The GenAI tailoring prompts leave several optional sections' schemas
+   * loosely specified ("include if relevant" with no strict shape), so the
+   * model can return inconsistent field names/structures across runs (e.g.
+   * strategic_differentiators as bare strings vs {title, description}
+   * objects, or consulting_practice under an "engagements" key instead of
+   * "notable_engagements"). Source profile data for these optional sections
+   * can also contain items that are little more than a label with every
+   * descriptive field blank. This normalizes known-problematic sections
+   * into the shape their renderer expects and drops items/sections with
+   * nothing substantive to display, so a section header is never printed
+   * with a blank body underneath it.
+   *
+   * @param string $section
+   *   The section key (e.g. 'strategic_differentiators').
+   * @param mixed $content
+   *   The raw section content.
+   *
+   * @return mixed|null
+   *   Normalized content ready for the section's renderer, or NULL if the
+   *   section has nothing meaningful to display and should be skipped.
+   */
+  protected function prepareSectionContent(string $section, $content) {
+    switch ($section) {
+      case 'strategic_differentiators':
+        return $this->normalizeStrategicDifferentiators($content);
+
+      case 'consulting_practice':
+        return $this->normalizeConsultingPractice($content);
+
+      case 'early_career':
+        return $this->normalizeEarlyCareer($content);
+
+      case 'leadership_philosophy':
+        return $this->normalizeLeadershipPhilosophy($content);
+
+      case 'demonstration_projects':
+        return $this->normalizeDemonstrationProjects($content);
+
+      default:
+        // All other sections keep their existing pass-through behavior.
+        return $content;
+    }
+  }
+
+  /**
+   * Normalize strategic_differentiators to an array of {title, description}.
+   *
+   * Accepts either the tailored-prompt shape (array of bare strings) or the
+   * source-profile shape (array of {title, description} objects). Drops
+   * any item where both title and description are empty.
+   */
+  protected function normalizeStrategicDifferentiators($content): ?array {
+    if (!is_array($content)) {
+      return NULL;
+    }
+
+    $items = [];
+    foreach ($content as $item) {
+      if (is_string($item)) {
+        $item = trim($item);
+        // The tailoring AI often emits these as "Heading: description"
+        // strings rather than {title, description} objects. Split on the
+        // first colon so the heading still renders bold with the
+        // description as regular body text underneath, matching the
+        // {title, description} rendering path.
+        if (preg_match('/^([^:]{2,80}):\s*(.+)$/s', $item, $matches)) {
+          $title = trim($matches[1]);
+          $description = trim($matches[2]);
+        }
+        else {
+          $title = $item;
+          $description = '';
+        }
+      }
+      elseif (is_array($item)) {
+        $title = trim($item['title'] ?? '');
+        $description = trim($item['description'] ?? '');
+      }
+      else {
+        continue;
+      }
+
+      if ($title === '' && $description === '') {
+        continue;
+      }
+
+      $items[] = ['title' => $title, 'description' => $description];
+    }
+
+    return $items ?: NULL;
+  }
+
+  /**
+   * Normalize consulting_practice, tolerating an "engagements" key alias
+   * for "notable_engagements", and dropping engagements with no client,
+   * role, project name, or description at all.
+   */
+  protected function normalizeConsultingPractice($content): ?array {
+    if (!is_array($content)) {
+      return NULL;
+    }
+
+    $rawEngagements = $content['notable_engagements'] ?? $content['engagements'] ?? [];
+    $engagements = [];
+    if (is_array($rawEngagements)) {
+      foreach ($rawEngagements as $engagement) {
+        if (!is_array($engagement)) {
+          continue;
+        }
+        $client = trim($engagement['client'] ?? '');
+        $role = trim($engagement['role'] ?? '');
+        $project = trim($engagement['project_name'] ?? '');
+        $description = trim($engagement['description'] ?? '');
+
+        if ($client === '' && $role === '' && $project === '' && $description === '') {
+          continue;
+        }
+
+        $engagements[] = [
+          'client' => $client,
+          'role' => $role ?: $project,
+          'description' => $description,
+        ];
+      }
+    }
+
+    $hasHeaderContent = !empty(trim($content['company'] ?? ''));
+
+    if (!$hasHeaderContent && empty($engagements)) {
+      return NULL;
+    }
+
+    $normalized = $content;
+    unset($normalized['engagements']);
+    $normalized['notable_engagements'] = $engagements;
+    return $normalized;
+  }
+
+  /**
+   * Normalize early_career into a flat array of display strings, regardless
+   * of whether it arrived as bare strings, {summary, positions}, or the
+   * ad hoc {company, title, description} shape the tailoring AI tends to
+   * produce for this loosely-specified section.
+   */
+  protected function normalizeEarlyCareer($content): ?array {
+    if (is_string($content)) {
+      $content = trim($content) === '' ? [] : [$content];
+    }
+    if (!is_array($content)) {
+      return NULL;
+    }
+
+    // Object format with an explicit summary/positions shape.
+    if (array_key_exists('summary', $content) || array_key_exists('positions', $content)) {
+      $lines = [];
+      $summary = trim($content['summary'] ?? '');
+      if ($summary !== '') {
+        $lines[] = $summary;
+      }
+      foreach ($content['positions'] ?? [] as $pos) {
+        if (!is_array($pos)) {
+          continue;
+        }
+        $parts = [];
+        if (!empty($pos['company'])) {
+          $parts[] = trim($pos['company']);
+        }
+        if (!empty($pos['duration'])) {
+          $parts[] = '(' . trim($pos['duration']) . ')';
+        }
+        if (!empty($pos['focus'])) {
+          $parts[] = '– ' . trim($pos['focus']);
+        }
+        $line = trim(implode(' ', $parts));
+        if ($line !== '') {
+          $lines[] = $line;
+        }
+      }
+      return $lines ?: NULL;
+    }
+
+    // Flat list: bare strings, or ad hoc {company, title, description} items.
+    $lines = [];
+    $leadingDateRange = NULL;
+    foreach ($content as $item) {
+      if (is_string($item)) {
+        $line = trim($item);
+        if ($line !== '') {
+          $lines[] = $line;
+        }
+        continue;
+      }
+      if (!is_array($item)) {
+        continue;
+      }
+
+      $company = trim($item['company'] ?? '');
+      $title = trim($item['title'] ?? '');
+      $description = trim($item['description'] ?? '');
+
+      // A bare year range (e.g. "2000-2011") is more useful as an overall
+      // leading label for the section than as a standalone bullet or a
+      // colon-joined prefix on whichever item happens to carry it — capture
+      // the first one seen and prepend it to the final output instead.
+      if ($company !== '' && $this->looksLikeDateRange($company)) {
+        if ($leadingDateRange === NULL) {
+          $leadingDateRange = $company;
+        }
+        $company = '';
+      }
+
+      $parts = array_filter([$company, $title, $description], fn($p) => $p !== '');
+      $line = trim(implode(': ', $parts));
+      if ($line !== '') {
+        $lines[] = $line;
+      }
+    }
+
+    // Drop exact duplicate lines (the tailoring AI occasionally repeats
+    // near-identical summary text across multiple items).
+    $lines = array_values(array_unique($lines));
+
+    if ($leadingDateRange !== NULL) {
+      if (!empty($lines)) {
+        $lines[0] = "{$leadingDateRange} — {$lines[0]}";
+      }
+      else {
+        $lines[] = $leadingDateRange;
+      }
+    }
+
+    return $lines ?: NULL;
+  }
+
+  /**
+   * Normalize leadership_philosophy into a deduplicated array of paragraph
+   * strings, tolerating a bare string, an array of strings, {statement},
+   * or an array of {principle} objects.
+   */
+  protected function normalizeLeadershipPhilosophy($content): ?array {
+    if (is_string($content)) {
+      $content = trim($content) === '' ? [] : [$content];
+    }
+    elseif (is_array($content) && !empty($content['statement']) && !isset($content[0])) {
+      $content = [$content];
+    }
+    if (!is_array($content)) {
+      return NULL;
+    }
+
+    $paragraphs = [];
+    $seen = [];
+    foreach ($content as $item) {
+      $text = '';
+      if (is_string($item)) {
+        $text = trim($item);
+      }
+      elseif (is_array($item)) {
+        $text = trim($item['principle'] ?? $item['statement'] ?? $item['summary'] ?? $item['text'] ?? '');
+      }
+
+      if ($text === '') {
+        continue;
+      }
+
+      // Dedupe near-identical paragraphs (the source data has repeated the
+      // same idea reworded several times) by comparing a normalized prefix.
+      $fingerprint = strtolower(substr(preg_replace('/\s+/', ' ', $text), 0, 100));
+      if (isset($seen[$fingerprint])) {
+        continue;
+      }
+      $seen[$fingerprint] = TRUE;
+
+      $paragraphs[] = $text;
+
+      // Keep the section focused — cap at 2 distinct paragraphs.
+      if (count($paragraphs) >= 2) {
+        break;
+      }
+    }
+
+    return $paragraphs ?: NULL;
+  }
+
+  /**
+   * Normalize demonstration_projects: drop items with no name, description,
+   * URL, or technologies at all, and dedupe/collapse near-duplicate project
+   * names (e.g. a project listed both standalone and as part of a longer,
+   * more descriptive combined name).
+   */
+  protected function normalizeDemonstrationProjects($content): ?array {
+    if (!is_array($content)) {
+      return NULL;
+    }
+
+    $accepted = [];
+    foreach ($content as $project) {
+      if (!is_array($project)) {
+        continue;
+      }
+      $name = trim($project['name'] ?? '');
+      $description = trim($project['description'] ?? '');
+      $url = trim($project['url'] ?? '');
+      $technologies = $project['technologies'] ?? [];
+
+      if ($name === '' && $description === '' && $url === '' && empty($technologies)) {
+        continue;
+      }
+
+      $normalizedName = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $name));
+      $normalizedName = trim(preg_replace('/\s+/', ' ', $normalizedName));
+
+      $isSubsumed = FALSE;
+      foreach ($accepted as $index => $existing) {
+        if ($normalizedName === '' || $existing['_normalized_name'] === '') {
+          continue;
+        }
+        if ($normalizedName === $existing['_normalized_name']) {
+          $isSubsumed = TRUE;
+          break;
+        }
+        // If this name is fully contained within an already-accepted,
+        // more descriptive name (or vice versa), keep only the longer one.
+        if (str_contains($existing['_normalized_name'], $normalizedName)) {
+          $isSubsumed = TRUE;
+          break;
+        }
+        if (str_contains($normalizedName, $existing['_normalized_name'])) {
+          unset($accepted[$index]);
+        }
+      }
+
+      if ($isSubsumed) {
+        continue;
+      }
+
+      $accepted[] = [
+        'name' => $name,
+        'description' => $description,
+        'url' => $url,
+        'technologies' => $technologies,
+        '_normalized_name' => $normalizedName,
+      ];
+    }
+
+    $accepted = array_values(array_map(function ($item) {
+      unset($item['_normalized_name']);
+      return $item;
+    }, $accepted));
+
+    return $accepted ?: NULL;
+  }
+
+  /**
+   * Determine whether a string looks like a bare year range, e.g.
+   * "2000-2011" or "2000 – Present".
+   */
+  protected function looksLikeDateRange(string $text): bool {
+    return (bool) preg_match('/^\s*\d{4}\s*[-–—]\s*(\d{4}|present)\s*$/i', $text);
   }
 
   /**
