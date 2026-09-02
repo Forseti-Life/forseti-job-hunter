@@ -3821,3 +3821,30 @@ function job_hunter_update_9062() {
 
   return t($messages ? implode(' ', $messages) : 'No update needed for tailoring run metadata.');
 }
+
+/**
+ * Add error_message column to jobhunter_tailored_resumes.
+ *
+ * ResumeTailoringWorker's permanent-failure path writes an 'error_message'
+ * field via updateDatabaseStatus(), mirroring the pattern already used for
+ * jobhunter_cover_letters (which has had this column since its original
+ * schema). jobhunter_tailored_resumes was missing it, which caused an
+ * uncaught SQLSTATE[42S22] "Unknown column" exception on final resume
+ * tailoring failures — the queue item was never deleted or marked failed,
+ * so it silently retried forever every cron cycle instead of surfacing as
+ * failed.
+ */
+function job_hunter_update_9063() {
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('jobhunter_tailored_resumes') &&
+      !$schema->fieldExists('jobhunter_tailored_resumes', 'error_message')) {
+    $schema->addField('jobhunter_tailored_resumes', 'error_message', [
+      'type' => 'text',
+      'not null' => FALSE,
+      'description' => 'Last tailoring failure message for this uid/job_id, if any.',
+    ]);
+  }
+
+  return t('Added error_message column to jobhunter_tailored_resumes.');
+}
