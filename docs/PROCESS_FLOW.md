@@ -208,66 +208,97 @@ This document describes the complete process flows for the Job Application Autom
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Manual Resume Tailoring 🔄 PARTIAL
+### Resume + Cover-Letter Tailoring 🔄 IMPLEMENTED
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ User: Navigate to /user/{uid}/tailor-resume/{job_nid}      │
+│ User: Navigate to /user/{uid}/tailor-resume/{job_id}       │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ UserProfileController::tailorResume()                       │
-│ - Load job posting node                                     │
-│ - Load original resume                                      │
+│ - Load parsed job data from jobhunter_job_requirements      │
+│ - Load profile from jobhunter_job_seeker                    │
 │ - Render tailor-resume.html.twig template                   │
-│ - Display job details and current resume                    │
+│ - Resolve canonical resume status from tailoring run        │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Page Loads                                                   │
 │ - Show job title, company, description                      │
-│ - Show current resume content                               │
-│ - Display "Start AI Tailoring" button                       │
+│ - Show current tailored resume/result state                 │
+│ - Display "Generate Tailored Resume" button                 │
 │ - Load tailor-resume.js JavaScript                          │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ User: Click "Start AI Tailoring"                            │
+│ User: Click "Generate Tailored Resume"                      │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ JavaScript: AJAX POST to /tailor-resume/ajax                │
-│ - Send: job_nid, user_uid                                   │
-│ - Show loading spinner                                      │
+│ - Send: job_id (+ optional force=1 on regenerate)           │
+│ - Update UI to "submitted / starting automatically"         │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ UserProfileController::tailorResumeAjax()                   │
 │ - Validate request                                          │
-│ - Load job posting and resume                               │
-│ - Call ResumeTailoringService                               │
-│ - Return JSON response                                      │
+│ - Load job + profile rows                                   │
+│ - Call TailoringRunService::createOrReuseRuns()             │
+│ - Create/reuse resume run_type=resume                       │
+│ - Create/reuse cover-letter run_type=cover_letter           │
+│ - Write transactional outbox event(s) + run_id queue item(s)│
+│ - Return JSON response with resume run_id for polling       │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ JavaScript: Handle Response                                  │
-│ - Hide loading spinner                                      │
-│ - Display tailored resume in #resume-content                │
-│ - Show success message with link to view                    │
+│ TailoringRunService                                          │
+│ - Insert jobhunter_tailoring_runs row(s)                    │
+│ - Insert jobhunter_tailoring_outbox row(s)                  │
+│ - Dispatch {run_id} to resume / cover-letter queue          │
+│ - Keep resume and cover-letter requests idempotent          │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ User: Review Tailored Resume                                 │
-│ - Option: Click link to view full tailored_resume node      │
-│ - Option: Edit if needed                                    │
-│ - Option: Proceed with application                          │
+│ Supervised dispatcher / consumer                             │
+│ - drush job-hunter:tailoring-outbox-dispatch                │
+│ - drush job-hunter:tailoring-consume --queue=...            │
+│ - Runs near-immediately after submission                    │
+│ - Cron queue workers remain fallback only                   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Queue Workers                                                │
+│ - ResumeTailoringWorker resolves run inputs by run_id       │
+│ - CoverLetterTailoringWorker resolves run inputs by run_id  │
+│ - Each worker updates its result table + run lifecycle      │
+│ - Legacy queue payloads are adopted into run records        │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ JavaScript polling + status endpoint                         │
+│ - tailorResumeStatusAjax() polls by run_id                  │
+│ - Resume run is canonical for the main page                 │
+│ - Cover-letter run status is resolved independently         │
+│ - UI reloads when resume completes                          │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Result storage                                               │
+│ - Resume saved in jobhunter_tailored_resumes                │
+│ - Cover letter saved in jobhunter_cover_letters             │
+│ - run_uuid links result rows back to tailoring runs         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -775,25 +806,34 @@ AI Responses:
 - Consider caching for repeated job/resume combinations
 ```
 
-### Async Processing (Future)
+### Tailoring Async Processing ✅ CURRENT
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Job Posting Created                                          │
-│ Instead of: Immediate tailoring (blocks save)               │
-│ Future: Queue job for background processing                 │
+│ Tailoring request submitted                                  │
+│ - Durable run record written first                          │
+│ - Durable outbox event written in same transaction          │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Queue API / Cron                                             │
-│ - Add task to queue                                         │
-│ - Process during cron runs                                  │
-│ - Update node when complete                                 │
+│ Primary async path                                           │
+│ - job-hunter:tailoring-outbox-dispatch reconciles backlog   │
+│ - job-hunter:tailoring-consume drains tailoring queues      │
+│ - Queue payloads carry run_id only                          │
+│ - Workers resolve live profile/job data at execution time   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Recovery / fallback                                          │
+│ - QueueWorker cron annotations stay enabled                 │
+│ - Cron can still process tailoring items if consumer stops  │
+│ - Pending outbox rows can be safely re-dispatched           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** September 2026
 **Module Version:** 1.0-dev

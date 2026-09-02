@@ -124,7 +124,7 @@
           if (response.status === 'processing') {
             updateStatusHeader('processing', 'Tailoring in Progress', 'AI is generating your tailored resume...');
           } else if (response.status === 'queued') {
-            updateStatusHeader('queued', 'In Queue', 'Waiting for AI processing...');
+            updateStatusHeader('queued', 'Submitted', 'Your request has been submitted. Processing is starting automatically...');
           }
           
           if (response.status === 'completed') {
@@ -201,12 +201,12 @@
           
           // Show loading status with spinner
           $('#tailoring-status').removeClass('hidden').show();
-          $('#tailoring-status-text').html('<span class="spinner"></span> 🔄 Queuing resume tailoring...');
+          $('#tailoring-status-text').html('<span class="spinner"></span> 🔄 Submitting resume tailoring request...');
           $('#tailoring-results').hide();
           button.prop('disabled', true);
           
           // Update status header
-          updateStatusHeader('queued', 'In Queue', 'Your tailoring request is queued...');
+          updateStatusHeader('queued', 'Submitted', 'Your tailoring request has been submitted. Processing is starting automatically...');
           
           // Queue the tailoring job
           $.ajax({
@@ -267,11 +267,11 @@
           
           // Show loading status
           $('#tailoring-status').show();
-          $('#tailoring-status-text').text('🔄 Queuing resume regeneration...');
+          $('#tailoring-status-text').text('🔄 Submitting resume regeneration...');
           button.prop('disabled', true);
           
           // Update status header
-          updateStatusHeader('queued', 'In Queue', 'Your regeneration request is queued...');
+          updateStatusHeader('queued', 'Submitted', 'Your regeneration request has been submitted. Processing is starting automatically...');
           
           // Queue the tailoring job with force flag
           $.ajax({

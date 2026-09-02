@@ -141,12 +141,12 @@ class JobHunterHomeController extends ControllerBase {
     ],
     'job_hunter_resume_tailoring' => [
       'name' => 'Resume Tailoring',
-      'description' => 'Generates tailored resumes matching job requirements',
+      'description' => 'Event-driven tailoring run dispatched on submission; cron is fallback reconciliation only',
       'icon' => '✨',
     ],
     'job_hunter_cover_letter_tailoring' => [
       'name' => 'Cover Letter Tailoring',
-      'description' => 'Generates personalized cover letters for job applications',
+      'description' => 'Event-driven tailoring run dispatched on submission; cron is fallback reconciliation only',
       'icon' => '✉️',
     ],
     'job_hunter_application_submission' => [

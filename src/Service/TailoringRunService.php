@@ -9,13 +9,12 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 
 /**
- * Manages versioned resume tailoring runs and their transactional outbox.
+ * Manages versioned tailoring runs and their transactional outbox.
  *
- * This is the first production-safe slice of the event-driven resume
- * tailoring plan: a run record makes tailoring requests idempotent per
- * uid/job_id, and a transactional outbox guarantees that the durable
- * record of "this run was requested" is written atomically with the
- * (small) queue payload used to trigger asynchronous processing.
+ * A run record makes tailoring requests idempotent per uid/job_id/run_type,
+ * and a transactional outbox guarantees that the durable record of "this
+ * run was requested" is written atomically with the (small) queue payload
+ * used to trigger asynchronous processing.
  *
  * Design notes:
  * - The default Drupal queue backend ('queue.database') writes to the
@@ -43,6 +42,8 @@ class TailoringRunService {
 
   const RUN_TABLE = 'jobhunter_tailoring_runs';
   const OUTBOX_TABLE = 'jobhunter_tailoring_outbox';
+  const RUN_TYPE_RESUME = 'resume';
+  const RUN_TYPE_COVER_LETTER = 'cover_letter';
 
   /**
    * The database connection.
@@ -88,75 +89,132 @@ class TailoringRunService {
    * @param bool $force
    *   TRUE to always create a new run (e.g. regenerate request).
    * @param string $run_type
-   *   The run type identifier (default: 'resume_tailoring').
-   * @param string $queue_name
-   *   The queue to dispatch the run_id payload to.
+   *   The run type identifier (default: self::RUN_TYPE_RESUME).
    *
    * @return array
    *   Array with keys: 'run_id' (UUID string), 'status', 'reused' (bool).
    */
-  public function createOrReuseRun(int $uid, int $job_id, bool $force = FALSE, string $run_type = 'resume_tailoring', string $queue_name = 'job_hunter_resume_tailoring'): array {
-    if (!$force) {
-      $existing = $this->findActiveRun($uid, $job_id, $run_type);
-      if ($existing) {
-        return [
-          'run_id' => $existing->run_uuid,
-          'status' => $existing->status,
-          'reused' => TRUE,
-        ];
+  public function createOrReuseRun(int $uid, int $job_id, bool $force = FALSE, string $run_type = self::RUN_TYPE_RESUME): array {
+    $run_type = $this->normalizeRunType($run_type);
+    $results = $this->createOrReuseRuns($uid, $job_id, [$run_type], $force);
+    return $results[$run_type];
+  }
+
+  /**
+   * Create or reuse multiple run types in a single transaction.
+   *
+   * Reused active runs are returned immediately. Any missing run types are
+   * created and dispatched together inside one transaction so a paired resume
+   * + cover-letter submission either persists completely or rolls back.
+   *
+   * @param int $uid
+   *   The user ID.
+   * @param int $job_id
+   *   The job requirement ID.
+   * @param array $run_types
+   *   List of run types to create/reuse.
+   * @param bool $force
+   *   TRUE to always create new runs.
+   *
+   * @return array
+   *   Results keyed by run type. Each value contains 'run_id', 'status',
+   *   and 'reused'.
+   */
+  public function createOrReuseRuns(int $uid, int $job_id, array $run_types, bool $force = FALSE): array {
+    $results = [];
+    $pending_run_types = [];
+    $seen = [];
+
+    foreach ($run_types as $run_type) {
+      $normalized_run_type = $this->normalizeRunType((string) $run_type);
+      if (isset($seen[$normalized_run_type])) {
+        continue;
       }
+      $seen[$normalized_run_type] = TRUE;
+
+      if (!$force) {
+        $existing = $this->findActiveRun($uid, $job_id, $normalized_run_type);
+        if ($existing) {
+          $results[$normalized_run_type] = [
+            'run_id' => $existing->run_uuid,
+            'status' => $existing->status,
+            'reused' => TRUE,
+          ];
+          continue;
+        }
+      }
+
+      $pending_run_types[] = $normalized_run_type;
     }
 
-    $run_uuid = $this->uuidGenerator->generate();
-    $now = time();
-    $version = $this->getNextVersion($uid, $job_id, $run_type);
+    if (!$pending_run_types) {
+      return $results;
+    }
 
+    $now = time();
     $transaction = $this->database->startTransaction();
     try {
-      $run_id = $this->database->insert(self::RUN_TABLE)
-        ->fields([
-          'run_uuid' => $run_uuid,
-          'uid' => $uid,
-          'job_id' => $job_id,
-          'run_type' => $run_type,
+      foreach ($pending_run_types as $run_type) {
+        $run_uuid = $this->uuidGenerator->generate();
+        $version = $this->getNextVersion($uid, $job_id, $run_type);
+        $queue_name = $this->getQueueNameForRunType($run_type);
+
+        $run_id = $this->database->insert(self::RUN_TABLE)
+          ->fields([
+            'run_uuid' => $run_uuid,
+            'uid' => $uid,
+            'job_id' => $job_id,
+            'run_type' => $run_type,
+            'status' => self::STATUS_QUEUED,
+            'version' => $version,
+            'force' => $force ? 1 : 0,
+            'created' => $now,
+            'updated' => $now,
+          ])
+          ->execute();
+
+        $payload = ['run_id' => $run_uuid];
+
+        $outbox_id = $this->database->insert(self::OUTBOX_TABLE)
+          ->fields([
+            'run_id' => $run_id,
+            'run_uuid' => $run_uuid,
+            'event_type' => $run_type . '.requested',
+            'queue_name' => $queue_name,
+            'payload_json' => json_encode($payload),
+            'status' => 'pending',
+            'attempts' => 0,
+            'created' => $now,
+            'updated' => $now,
+          ])
+          ->execute();
+
+        $this->queueFactory->get($queue_name)->createItem($payload);
+
+        $this->database->update(self::OUTBOX_TABLE)
+          ->fields([
+            'status' => 'dispatched',
+            'attempts' => 1,
+            'dispatched_at' => $now,
+            'updated' => $now,
+          ])
+          ->condition('id', $outbox_id)
+          ->execute();
+
+        $results[$run_type] = [
+          'run_id' => $run_uuid,
           'status' => self::STATUS_QUEUED,
-          'version' => $version,
-          'force' => $force ? 1 : 0,
-          'created' => $now,
-          'updated' => $now,
-        ])
-        ->execute();
+          'reused' => FALSE,
+        ];
 
-      $payload = ['run_id' => $run_uuid];
-
-      $outbox_id = $this->database->insert(self::OUTBOX_TABLE)
-        ->fields([
-          'run_id' => $run_id,
-          'run_uuid' => $run_uuid,
-          'event_type' => $run_type . '.requested',
-          'queue_name' => $queue_name,
-          'payload_json' => json_encode($payload),
-          'status' => 'pending',
-          'attempts' => 0,
-          'created' => $now,
-          'updated' => $now,
-        ])
-        ->execute();
-
-      // Attempt immediate dispatch within the same transaction. The default
-      // database queue backend shares this connection, so this commits or
-      // rolls back atomically with the run + outbox rows above.
-      $this->queueFactory->get($queue_name)->createItem($payload);
-
-      $this->database->update(self::OUTBOX_TABLE)
-        ->fields([
-          'status' => 'dispatched',
-          'attempts' => 1,
-          'dispatched_at' => $now,
-          'updated' => $now,
-        ])
-        ->condition('id', $outbox_id)
-        ->execute();
+        $this->logInfo('Created @run_type tailoring run @run_id (v@version) for uid @uid job @job_id', [
+          '@run_type' => $run_type,
+          '@run_id' => $run_uuid,
+          '@version' => $version,
+          '@uid' => $uid,
+          '@job_id' => $job_id,
+        ]);
+      }
 
       unset($transaction);
     }
@@ -170,18 +228,7 @@ class TailoringRunService {
       throw $e;
     }
 
-    $this->logInfo('Created tailoring run @run_id (v@version) for uid @uid job @job_id', [
-      '@run_id' => $run_uuid,
-      '@version' => $version,
-      '@uid' => $uid,
-      '@job_id' => $job_id,
-    ]);
-
-    return [
-      'run_id' => $run_uuid,
-      'status' => self::STATUS_QUEUED,
-      'reused' => FALSE,
-    ];
+    return $results;
   }
 
   /**
@@ -191,6 +238,7 @@ class TailoringRunService {
    *   The run record, or NULL if none active.
    */
   protected function findActiveRun(int $uid, int $job_id, string $run_type) {
+    $run_type = $this->normalizeRunType($run_type);
     if (!$this->database->schema()->tableExists(self::RUN_TABLE)) {
       return NULL;
     }
@@ -211,6 +259,7 @@ class TailoringRunService {
    * Compute the next version number for a uid+job_id+run_type combination.
    */
   protected function getNextVersion(int $uid, int $job_id, string $run_type): int {
+    $run_type = $this->normalizeRunType($run_type);
     if (!$this->database->schema()->tableExists(self::RUN_TABLE)) {
       return 1;
     }
@@ -252,7 +301,8 @@ class TailoringRunService {
    * @return object|null
    *   The run record, or NULL if none exists.
    */
-  public function getLatestRun(int $uid, int $job_id, string $run_type = 'resume_tailoring') {
+  public function getLatestRun(int $uid, int $job_id, string $run_type = self::RUN_TYPE_RESUME) {
+    $run_type = $this->normalizeRunType($run_type);
     if (!$this->database->schema()->tableExists(self::RUN_TABLE)) {
       return NULL;
     }
@@ -281,7 +331,7 @@ class TailoringRunService {
    *   Array with keys 'run_id' (UUID), 'status', 'error_message' (nullable),
    *   or NULL if no run exists for this uid/job_id/run_type.
    */
-  public function getCanonicalStatus(int $uid, int $job_id, string $run_type = 'resume_tailoring'): ?array {
+  public function getCanonicalStatus(int $uid, int $job_id, string $run_type = self::RUN_TYPE_RESUME): ?array {
     $run = $this->getLatestRun($uid, $job_id, $run_type);
     if (!$run) {
       return NULL;
@@ -308,7 +358,8 @@ class TailoringRunService {
    * @return string
    *   The newly created run's UUID.
    */
-  public function adoptLegacyQueueItem(int $uid, int $job_id, string $run_type = 'resume_tailoring'): string {
+  public function adoptLegacyQueueItem(int $uid, int $job_id, string $run_type = self::RUN_TYPE_RESUME): string {
+    $run_type = $this->normalizeRunType($run_type);
     $run_uuid = $this->uuidGenerator->generate();
     $now = time();
     $version = $this->getNextVersion($uid, $job_id, $run_type);
@@ -340,8 +391,9 @@ class TailoringRunService {
    *   The run UUID from the queue payload.
    *
    * @return array|null
-   *   Array with keys 'uid', 'job_id', 'profile_json', 'job_data', or NULL
-   *   if the run or its underlying profile/job data could not be resolved.
+   *   Array with keys 'uid', 'job_id', 'run_type', 'profile_json', and
+   *   'job_data', or NULL if the run or its underlying profile/job data
+   *   could not be resolved.
    */
   public function resolveRunInputs(string $run_uuid): ?array {
     $run = $this->getRunByUuid($run_uuid);
@@ -377,6 +429,7 @@ class TailoringRunService {
     return [
       'uid' => $uid,
       'job_id' => $job_id,
+      'run_type' => $this->normalizeRunType((string) ($run->run_type ?? self::RUN_TYPE_RESUME)),
       'profile_json' => json_decode($job_seeker_row->consolidated_profile_json, TRUE) ?: [],
       'job_data' => [
         'extracted_json' => $job_data_row->extracted_json,
@@ -511,6 +564,28 @@ class TailoringRunService {
     }
 
     return $summary;
+  }
+
+  /**
+   * Resolve the queue name for a run type.
+   */
+  public function getQueueNameForRunType(string $run_type): string {
+    return match ($this->normalizeRunType($run_type)) {
+      self::RUN_TYPE_RESUME => 'job_hunter_resume_tailoring',
+      self::RUN_TYPE_COVER_LETTER => 'job_hunter_cover_letter_tailoring',
+      default => throw new \InvalidArgumentException("Unsupported tailoring run type: {$run_type}"),
+    };
+  }
+
+  /**
+   * Normalize legacy and canonical run type names.
+   */
+  protected function normalizeRunType(string $run_type): string {
+    return match ($run_type) {
+      '', 'resume_tailoring', self::RUN_TYPE_RESUME => self::RUN_TYPE_RESUME,
+      'cover_letter_tailoring', self::RUN_TYPE_COVER_LETTER => self::RUN_TYPE_COVER_LETTER,
+      default => $run_type,
+    };
   }
 
 }

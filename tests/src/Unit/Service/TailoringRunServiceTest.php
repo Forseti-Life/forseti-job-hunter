@@ -138,11 +138,48 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->queueFactory->expects($this->never())->method('get');
 
     $service = $this->buildService();
-    $result = $service->createOrReuseRun(7, 99, FALSE);
+    $result = $service->createOrReuseRun(7, 99, FALSE, TailoringRunService::RUN_TYPE_RESUME);
 
     $this->assertTrue($result['reused']);
     $this->assertSame('existing-uuid-1234', $result['run_id']);
     $this->assertSame('queued', $result['status']);
+  }
+
+  /**
+   * Cover-letter runs reuse their own active run independently of resumes.
+   *
+   * @covers ::createOrReuseRun
+   */
+  public function testCreateOrReuseRunReusesActiveCoverLetterRun() {
+    $existing_run = (object) [
+      'id' => 84,
+      'run_uuid' => 'existing-cover-uuid',
+      'uid' => 7,
+      'job_id' => 99,
+      'status' => 'processing',
+      'run_type' => TailoringRunService::RUN_TYPE_COVER_LETTER,
+    ];
+
+    $statement = $this->createMock(StatementInterface::class);
+    $statement->method('fetchObject')->willReturn($existing_run);
+
+    $select = $this->createMock(Select::class);
+    $select->method('fields')->willReturnSelf();
+    $select->method('condition')->willReturnSelf();
+    $select->method('orderBy')->willReturnSelf();
+    $select->method('range')->willReturnSelf();
+    $select->method('execute')->willReturn($statement);
+
+    $this->database->method('select')->willReturn($select);
+    $this->database->expects($this->never())->method('insert');
+    $this->queueFactory->expects($this->never())->method('get');
+
+    $service = $this->buildService();
+    $result = $service->createOrReuseRun(7, 99, FALSE, TailoringRunService::RUN_TYPE_COVER_LETTER);
+
+    $this->assertTrue($result['reused']);
+    $this->assertSame('existing-cover-uuid', $result['run_id']);
+    $this->assertSame('processing', $result['status']);
   }
 
   /**
@@ -169,7 +206,13 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->uuidGenerator->method('generate')->willReturn('new-uuid-5678');
 
     $run_insert = $this->createMock(Insert::class);
-    $run_insert->method('fields')->willReturnSelf();
+    $run_insert->expects($this->once())
+      ->method('fields')
+      ->with($this->callback(function ($fields) {
+        return $fields['run_type'] === TailoringRunService::RUN_TYPE_RESUME
+          && $fields['status'] === TailoringRunService::STATUS_QUEUED;
+      }))
+      ->willReturnSelf();
     $run_insert->method('execute')->willReturn(101);
 
     $outbox_insert = $this->createMock(Insert::class);
@@ -193,7 +236,7 @@ class TailoringRunServiceTest extends UnitTestCase {
       }));
 
     $service = $this->buildService();
-    $result = $service->createOrReuseRun(7, 99, FALSE);
+    $result = $service->createOrReuseRun(7, 99, FALSE, TailoringRunService::RUN_TYPE_RESUME);
 
     $this->assertFalse($result['reused']);
     $this->assertSame('new-uuid-5678', $result['run_id']);
@@ -235,7 +278,7 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->queue->expects($this->once())->method('createItem');
 
     $service = $this->buildService();
-    $result = $service->createOrReuseRun(7, 99, TRUE);
+    $result = $service->createOrReuseRun(7, 99, TRUE, TailoringRunService::RUN_TYPE_RESUME);
 
     $this->assertFalse($result['reused']);
     $this->assertSame('forced-uuid-999', $result['run_id']);
@@ -292,7 +335,7 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->database->method('select')->willReturn($select);
 
     $service = $this->buildService();
-    $status = $service->getCanonicalStatus(7, 99);
+    $status = $service->getCanonicalStatus(7, 99, TailoringRunService::RUN_TYPE_RESUME);
 
     $this->assertSame('run-uuid-abc', $status['run_id']);
     $this->assertSame('processing', $status['status']);
@@ -317,7 +360,7 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->database->method('select')->willReturn($select);
 
     $service = $this->buildService();
-    $this->assertNull($service->getCanonicalStatus(7, 99));
+    $this->assertNull($service->getCanonicalStatus(7, 99, TailoringRunService::RUN_TYPE_RESUME));
   }
 
   /**
@@ -356,9 +399,76 @@ class TailoringRunServiceTest extends UnitTestCase {
     $this->queueFactory->expects($this->never())->method('get');
 
     $service = $this->buildService();
-    $run_uuid = $service->adoptLegacyQueueItem(7, 99);
+    $run_uuid = $service->adoptLegacyQueueItem(7, 99, TailoringRunService::RUN_TYPE_RESUME);
 
     $this->assertSame('adopted-uuid-321', $run_uuid);
+  }
+
+  /**
+   * Cover-letter runs use an independent run_type/queue and do not collide
+   * with resume runs for the same uid/job_id pair.
+   *
+   * @covers ::createOrReuseRun
+   * @covers ::getQueueNameForRunType
+   */
+  public function testCreateOrReuseRunDispatchesCoverLetterQueue() {
+    $statement = $this->createMock(StatementInterface::class);
+    $statement->method('fetchObject')->willReturn(FALSE);
+    $statement->method('fetchField')->willReturn(NULL);
+
+    $select = $this->createMock(Select::class);
+    $select->method('fields')->willReturnSelf();
+    $select->method('condition')->willReturnSelf();
+    $select->method('orderBy')->willReturnSelf();
+    $select->method('range')->willReturnSelf();
+    $select->method('addExpression')->willReturnSelf();
+    $select->method('execute')->willReturn($statement);
+    $this->database->method('select')->willReturn($select);
+
+    $this->uuidGenerator->method('generate')->willReturn('cover-uuid-111');
+
+    $run_insert = $this->createMock(Insert::class);
+    $run_insert->expects($this->once())
+      ->method('fields')
+      ->with($this->callback(function ($fields) {
+        return $fields['run_type'] === TailoringRunService::RUN_TYPE_COVER_LETTER;
+      }))
+      ->willReturnSelf();
+    $run_insert->method('execute')->willReturn(77);
+
+    $outbox_insert = $this->createMock(Insert::class);
+    $outbox_insert->expects($this->once())
+      ->method('fields')
+      ->with($this->callback(function ($fields) {
+        return $fields['queue_name'] === 'job_hunter_cover_letter_tailoring'
+          && $fields['event_type'] === 'cover_letter.requested';
+      }))
+      ->willReturnSelf();
+    $outbox_insert->method('execute')->willReturn(88);
+
+    $this->database->method('insert')->willReturnOnConsecutiveCalls($run_insert, $outbox_insert);
+
+    $update = $this->createMock(Update::class);
+    $update->method('fields')->willReturnSelf();
+    $update->method('condition')->willReturnSelf();
+    $update->method('execute')->willReturn(1);
+    $this->database->method('update')->willReturn($update);
+
+    $this->queueFactory->expects($this->once())
+      ->method('get')
+      ->with('job_hunter_cover_letter_tailoring')
+      ->willReturn($this->queue);
+
+    $this->queue->expects($this->once())
+      ->method('createItem')
+      ->with(['run_id' => 'cover-uuid-111']);
+
+    $service = $this->buildService();
+    $result = $service->createOrReuseRun(7, 99, FALSE, TailoringRunService::RUN_TYPE_COVER_LETTER);
+
+    $this->assertFalse($result['reused']);
+    $this->assertSame('cover-uuid-111', $result['run_id']);
+    $this->assertSame(TailoringRunService::STATUS_QUEUED, $result['status']);
   }
 
 }

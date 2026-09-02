@@ -19,6 +19,54 @@ The module uses the following queue workers:
 | `job_hunter_cover_letter_tailoring` | Generate tailored cover letters | 25-50 seconds | AWS Bedrock |
 | `job_hunter_profile_text_extraction` | Extract profile data | 5-20 seconds | Various |
 
+## Tailoring Runs: Event-Driven Path
+
+Resume and cover-letter tailoring no longer wait on cron as their primary path.
+
+### What happens now
+
+1. `UserProfileController::tailorResumeAjax()` or `CompanyController::coverLetterGenerate()` calls `TailoringRunService`
+2. A row is written to `jobhunter_tailoring_runs`
+3. A matching event is written to `jobhunter_tailoring_outbox`
+4. A small queue payload containing only `{run_id}` is dispatched to:
+   - `job_hunter_resume_tailoring`, or
+   - `job_hunter_cover_letter_tailoring`
+5. `drush job-hunter:tailoring-consume` drains the queue and the worker updates both the result table and the run status
+6. Cron remains registered only as a fallback sweep if the supervised dispatcher/consumer is unavailable
+
+### Quick checks
+
+```bash
+# Inspect run records
+drush sql:query "SELECT id, run_uuid, run_type, status, version, created, updated FROM jobhunter_tailoring_runs ORDER BY id DESC LIMIT 20;"
+
+# Inspect outbox backlog
+drush sql:query "SELECT id, run_uuid, event_type, queue_name, status, attempts, created, dispatched_at FROM jobhunter_tailoring_outbox ORDER BY id DESC LIMIT 20;"
+
+# Count pending outbox events
+drush sql:query "SELECT status, COUNT(*) FROM jobhunter_tailoring_outbox GROUP BY status;"
+```
+
+### Manual recovery commands
+
+```bash
+# Re-dispatch pending outbox events (resume + cover letter)
+drush job-hunter:tailoring-outbox-dispatch --limit=100
+
+# Drain resume tailoring queue
+drush job-hunter:tailoring-consume --queue=job_hunter_resume_tailoring --time-limit=120
+
+# Drain cover-letter tailoring queue
+drush job-hunter:tailoring-consume --queue=job_hunter_cover_letter_tailoring --time-limit=120
+```
+
+### How to interpret status
+
+- `jobhunter_tailoring_runs.status` is the canonical lifecycle state for event-driven tailoring
+- `jobhunter_tailoring_outbox.status = pending` means the durable request exists but dispatch still needs reconciliation
+- `jobhunter_tailoring_outbox.status = dispatched` means the queue item was created successfully
+- A cron `queue:run` for tailoring is now a recovery tool, not the normal operating path
+
 ## Common Issues and Solutions
 
 ### 1. Queue Items Stuck in "Queued" Status

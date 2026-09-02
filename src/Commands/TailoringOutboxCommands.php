@@ -12,21 +12,21 @@ use Drupal\job_hunter\Service\TailoringRunService;
 use Drush\Commands\DrushCommands;
 
 /**
- * Drush commands for supervising the resume tailoring transactional outbox.
+ * Drush commands for supervising the tailoring transactional outbox.
  *
  * These commands provide a Drush-compatible dispatcher/consumer for the
- * event-driven resume tailoring outbox:
+ * event-driven tailoring outbox:
  * - dispatch(): the "dispatcher" — reconcilePendingOutbox() re-derives and
  *   re-enqueues any outbox event that was not confirmed dispatched (e.g.
  *   because the process crashed between the outbox write and the queue
  *   write).
- * - consume(): the "consumer" — drains the job_hunter_resume_tailoring
- *   queue directly (same claim/process/delete loop Drupal core uses for
+ * - consume(): the "consumer" — drains a tailoring queue directly (resume
+ *   or cover letter; same claim/process/delete loop Drupal core uses for
  *   cron queue processing), for use under a process supervisor (systemd
  *   timer, supervisord, etc.) as the primary async processing path. This
- *   is equivalent to Drush core's `queue:run job_hunter_resume_tailoring`
- *   and is provided here alongside dispatch() so a single supervised
- *   command can both reconcile the outbox and drain the queue.
+ *   is equivalent to Drush core's `queue:run <queue_name>` and is provided
+ *   here alongside dispatch() so a single supervised command can both
+ *   reconcile the outbox and drain the queue.
  *
  * Existing cron-driven queue processing (QueueWorker cron annotation)
  * remains as a secondary fallback/reconciliation mechanism and is not
@@ -48,7 +48,7 @@ class TailoringOutboxCommands extends DrushCommands {
   }
 
   /**
-   * Reconcile and (re-)dispatch pending resume tailoring outbox events.
+   * Reconcile and (re-)dispatch pending tailoring outbox events.
    *
    * Intended to be run supervised (e.g. via systemd timer / cron) as the
    * consumer for the transactional outbox. Safe to run frequently and
@@ -78,7 +78,7 @@ class TailoringOutboxCommands extends DrushCommands {
   }
 
   /**
-   * Consume (drain) the resume tailoring queue for a bounded time window.
+   * Consume (drain) a tailoring queue for a bounded time window.
    *
    * This is the supervised "consumer" side of the dispatcher/consumer pair:
    * run it under a process supervisor (systemd timer, supervisord, etc.) on
@@ -92,7 +92,7 @@ class TailoringOutboxCommands extends DrushCommands {
    * @option time-limit Maximum seconds to keep draining the queue.
    * @option queue Queue name to consume.
    * @usage drush job-hunter:tailoring-consume
-   *   Drain the resume tailoring queue for up to 60 seconds.
+   *   Drain the default resume tailoring queue for up to 60 seconds.
    * @usage drush job-hunter:tailoring-consume --time-limit=300
    *   Drain the resume tailoring queue for up to 5 minutes.
    */

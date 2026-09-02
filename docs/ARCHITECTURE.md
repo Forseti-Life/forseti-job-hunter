@@ -722,7 +722,10 @@ Return only the tailored resume content, no additional commentary.
 
 ### Queue Workers
 
-The module uses Drupal's Queue API for asynchronous processing of AI operations. Queue workers process items in the background via cron, preventing timeouts and providing automatic retry logic.
+The module uses Drupal's Queue API for asynchronous AI operations, but not all queues enter it the same way:
+
+- **Resume + cover-letter tailoring:** `TailoringRunService` creates a durable row in `jobhunter_tailoring_runs`, writes a matching event to `jobhunter_tailoring_outbox`, and dispatches a small `{run_id}` queue payload immediately. Supervised Drush commands (`job-hunter:tailoring-outbox-dispatch` and `job-hunter:tailoring-consume`) are the primary dispatcher/consumer path. Queue-worker cron annotations remain registered only as fallback reconciliation.
+- **Parsing/extraction queues:** Resume parsing, text extraction, profile extraction, and job-posting parsing still rely on Drupal cron / manual queue runs as their normal scheduling model.
 
 #### Queue Worker Base Trait
 
@@ -781,16 +784,16 @@ The module uses Drupal's Queue API for asynchronous processing of AI operations.
 **1. ResumeTailoringWorker**
 - **Queue ID:** `job_hunter_resume_tailoring`
 - **Purpose:** Generate tailored resumes for specific job postings
-- **Processing:** Calls GenAI with resume + job description, generates optimized resume
-- **Database:** Updates `jobhunter_resume_tailoring` table
-- **Retry Logic:** 3 attempts via trait, auto-suspends on failure
+- **Processing:** Accepts a `{run_id}` payload, resolves fresh inputs from `jobhunter_tailoring_runs` + profile/job tables, then generates the tailored resume
+- **Database:** Updates `jobhunter_tailored_resumes` and synchronizes run lifecycle in `jobhunter_tailoring_runs`
+- **Dispatch Model:** Submitted immediately via transactional outbox; cron is fallback only
 
 **2. CoverLetterTailoringWorker**
 - **Queue ID:** `job_hunter_cover_letter_tailoring`
 - **Purpose:** Generate customized cover letters for applications
-- **Processing:** Calls GenAI with context to create personalized cover letter
-- **Database:** Updates `jobhunter_cover_letter_tailoring` table
-- **Retry Logic:** 3 attempts via trait, auto-suspends on failure
+- **Processing:** Accepts a `{run_id}` payload, resolves fresh inputs from `jobhunter_tailoring_runs` + profile/job tables, then generates the cover letter
+- **Database:** Updates `jobhunter_cover_letters` and synchronizes run lifecycle in `jobhunter_tailoring_runs`
+- **Dispatch Model:** Submitted immediately via transactional outbox; cron is fallback only
 
 **3. ResumeGenAiParsingWorker**
 - **Queue ID:** `job_hunter_resume_genai_parsing`

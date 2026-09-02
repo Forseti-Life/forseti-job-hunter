@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\job_hunter\Service\TailoringRunService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -74,6 +75,13 @@ class CompanyController extends ControllerBase {
   protected $formBuilder;
 
   /**
+   * The tailoring run service.
+   *
+   * @var \Drupal\job_hunter\Service\TailoringRunService
+   */
+  protected $tailoringRunService;
+
+  /**
    * Constructs a CompanyController object.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -84,12 +92,15 @@ class CompanyController extends ControllerBase {
    *   The request stack.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
+   * @param \Drupal\job_hunter\Service\TailoringRunService $tailoring_run_service
+   *   The tailoring run service.
    */
-  public function __construct(Connection $database, AccountProxyInterface $current_user, RequestStack $request_stack, FormBuilderInterface $form_builder) {
+  public function __construct(Connection $database, AccountProxyInterface $current_user, RequestStack $request_stack, FormBuilderInterface $form_builder, TailoringRunService $tailoring_run_service) {
     $this->database = $database;
     $this->currentUser = $current_user;
     $this->requestStack = $request_stack;
     $this->formBuilder = $form_builder;
+    $this->tailoringRunService = $tailoring_run_service;
   }
 
   /**
@@ -100,7 +111,8 @@ class CompanyController extends ControllerBase {
       $container->get('database'),
       $container->get('current_user'),
       $container->get('request_stack'),
-      $container->get('form_builder')
+      $container->get('form_builder'),
+      $container->get('job_hunter.tailoring_run_service')
     );
   }
 
@@ -2496,7 +2508,18 @@ class CompanyController extends ControllerBase {
       ->execute()
       ->fetchObject();
 
-    $tailoring_status = $cover_letter ? (string) $cover_letter->tailoring_status : NULL;
+    $cover_canonical = $this->tailoringRunService->getCanonicalStatus($uid, $job_id, TailoringRunService::RUN_TYPE_COVER_LETTER);
+    $tailoring_status = $cover_canonical['status'] ?? ($cover_letter ? (string) $cover_letter->tailoring_status : NULL);
+    if ($cover_canonical && $cover_letter && $cover_letter->tailoring_status !== $tailoring_status) {
+      $fields = ['tailoring_status' => $tailoring_status, 'updated' => time()];
+      if ($this->database->schema()->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+        $fields['run_uuid'] = $cover_canonical['run_id'];
+      }
+      $this->database->update('jobhunter_cover_letters')
+        ->fields($fields)
+        ->condition('id', $cover_letter->id)
+        ->execute();
+    }
     $cover_letter_html = ($tailoring_status === 'completed' && $cover_letter)
       ? (string) ($cover_letter->cover_letter_html ?: '')
       : '';
@@ -2530,8 +2553,7 @@ class CompanyController extends ControllerBase {
   /**
    * Cover letter generate — POST /jobhunter/coverletter/{job_id}/generate.
    *
-   * Creates a jobhunter_cover_letters row (status=queued) if one does not exist
-   * (or re-enqueues on retry), then enqueues a queue item.
+   * Creates or reuses an event-driven cover-letter tailoring run.
    */
   public function coverLetterGenerate($job_id) {
     $uid = (int) $this->currentUser->id();
@@ -2552,34 +2574,36 @@ class CompanyController extends ControllerBase {
         ->fetchObject();
 
       $now = time();
+      $cover_run = $this->tailoringRunService->createOrReuseRun($uid, $job_id, FALSE, TailoringRunService::RUN_TYPE_COVER_LETTER);
+      $fields = [
+        'tailoring_status' => $cover_run['status'],
+        'updated' => $now,
+      ];
+      if ($this->database->schema()->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+        $fields['run_uuid'] = $cover_run['run_id'];
+      }
 
       if (!$existing) {
         $this->database->insert('jobhunter_cover_letters')
-          ->fields([
+          ->fields($fields + [
             'uid' => $uid,
             'job_id' => $job_id,
-            'tailoring_status' => 'queued',
             'created' => $now,
-            'updated' => $now,
           ])
           ->execute();
       }
       else {
         $this->database->update('jobhunter_cover_letters')
-          ->fields(['tailoring_status' => 'queued', 'updated' => $now])
+          ->fields($fields)
           ->condition('uid', $uid)
           ->condition('job_id', $job_id)
           ->execute();
       }
 
-      // Enqueue the cover letter generation item.
-      $queue = \Drupal::queue('job_hunter_cover_letter_tailoring');
-      $queue->createItem([
-        'uid' => $uid,
-        'job_id' => $job_id,
-      ]);
-
-      $this->messenger()->addStatus($this->t('Cover letter generation queued. Check back shortly.'));
+      $message = $cover_run['status'] === TailoringRunService::STATUS_PROCESSING
+        ? $this->t('Cover letter generation is already underway.')
+        : $this->t('Cover letter request submitted. Processing is starting automatically.');
+      $this->messenger()->addStatus($message);
     }
     catch (\Exception $e) {
       $this->getLogger('job_hunter')->error('Cover letter enqueue failed for job @id: @error', [

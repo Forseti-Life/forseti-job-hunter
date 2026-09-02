@@ -293,7 +293,8 @@ Business logic is encapsulated in services:
 
 ### Queue Workers & Background Processing
 The module uses Drupal's Queue API for asynchronous AI operations:
-- **Queue Workers:** Process items in background via cron
+- **Tailoring Runs:** Resume and cover-letter tailoring submit transactional outbox events via `TailoringRunService` and are consumed near-immediately by `job-hunter:tailoring-outbox-dispatch` + `job-hunter:tailoring-consume` (cron is fallback only)
+- **Queue Workers:** Resume parsing, text extraction, and job-posting parsing remain cron-driven background workers
 - **4 Active Workers:** Resume Tailoring, Cover Letter, Resume Parsing, Job Posting Parsing
 - **Shared Trait:** `QueueWorkerBaseTrait` centralizes common functionality (7 methods)
 - **3-Retry Logic:** Automatic retry with exponential backoff

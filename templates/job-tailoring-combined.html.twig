@@ -205,8 +205,8 @@
       'step': 1
     },
     'queued': {
-      'label': 'Queued for Processing'|t,
-      'description': 'Your tailoring request is in the queue'|t,
+      'label': 'Submitted'|t,
+      'description': 'Your tailoring request has been submitted and processing is starting automatically'|t,
       'icon': '⏳',
       'color_class': 'status-queued',
       'step': 2
@@ -264,7 +264,7 @@
         <div class="progress-line {% if current_status.step >= 2 %}line-active{% endif %}"></div>
         <div class="progress-step {% if current_status.step >= 2 %}step-active{% endif %} {% if current_status.step > 2 %}step-complete{% endif %}">
           <span class="step-dot">2</span>
-          <span class="step-label">Queued</span>
+          <span class="step-label">Submitted</span>
         </div>
         <div class="progress-line {% if current_status.step >= 3 %}line-active{% endif %}"></div>
         <div class="progress-step {% if current_status.step >= 3 %}step-active{% endif %} {% if current_status.step > 3 %}step-complete{% endif %}">
@@ -323,7 +323,7 @@
         {% if tailoring_status == 'pending' %}
           💡 {{ 'Click "Generate Tailored Resume" above to start the AI tailoring process.'|t }}
         {% elseif tailoring_status == 'queued' or tailoring_status == 'processing' %}
-          ⏳ {{ 'Tailoring in progress — check back shortly.'|t }}
+          ⏳ {{ 'Your request has been submitted and is moving into AI processing automatically.'|t }}
         {% elseif tailoring_status == 'failed' %}
           ⚠️ {{ 'The previous tailoring attempt failed. Click "Retry Tailoring" to try again.'|t }}
         {% endif %}

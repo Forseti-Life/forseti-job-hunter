@@ -2336,6 +2336,7 @@ function _job_hunter_create_cover_letters_table() {
       'cover_letter_html' => ['type' => 'text', 'size' => 'big', 'description' => 'HTML formatted cover letter'],
       'cover_letter_json' => ['type' => 'text', 'size' => 'big', 'description' => 'Structured cover letter data'],
       'tailoring_status' => ['type' => 'varchar', 'length' => 32, 'default' => 'pending', 'description' => 'pending, queued, processing, completed, failed'],
+      'run_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => FALSE, 'default' => NULL, 'description' => 'Most recent cover-letter tailoring run UUID for this uid/job_id.'],
       'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
       'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
       'pdf_path' => ['type' => 'varchar', 'length' => 512, 'description' => 'Path to generated PDF'],
@@ -2347,6 +2348,7 @@ function _job_hunter_create_cover_letters_table() {
     'indexes' => [
       'uid' => ['uid'],
       'job_id' => ['job_id'],
+      'run_uuid' => ['run_uuid'],
       'tailoring_status' => ['tailoring_status'],
     ],
   ];
@@ -3641,8 +3643,8 @@ function job_hunter_update_9060() {
 /**
  * Create jobhunter_tailoring_runs table.
  *
- * A versioned run record for resume tailoring requests. Each run represents
- * one attempt (or idempotent reuse) of tailoring a resume for a given
+ * A versioned run record for tailoring requests. Each run represents
+ * one attempt (or idempotent reuse) of tailoring content for a given
  * uid/job_id pair. The run_uuid is the public identifier returned to
  * clients (run_id) so that polling and dispatch can be correlated without
  * exposing internal serial IDs.
@@ -3655,13 +3657,13 @@ function _job_hunter_create_tailoring_runs_table() {
   }
 
   $table_schema = [
-    'description' => 'Versioned resume tailoring run records (event-driven tailoring).',
+    'description' => 'Versioned tailoring run records (event-driven resume and cover-letter tailoring).',
     'fields' => [
       'id' => ['type' => 'serial', 'not null' => TRUE],
       'run_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE, 'description' => 'Public run identifier (UUID).'],
       'uid' => ['type' => 'int', 'not null' => TRUE, 'description' => 'User ID.'],
       'job_id' => ['type' => 'int', 'not null' => TRUE, 'description' => 'Job requirement ID.'],
-      'run_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume_tailoring', 'description' => 'Type of tailoring run (resume_tailoring, cover_letter_tailoring).'],
+      'run_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume', 'description' => 'Type of tailoring run (resume, cover_letter).'],
       'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'queued', 'description' => 'queued, processing, completed, failed.'],
       'version' => ['type' => 'int', 'not null' => TRUE, 'default' => 1, 'description' => 'Attempt/regeneration version for this uid+job_id+run_type.'],
       'force' => ['type' => 'int', 'not null' => TRUE, 'default' => 0, 'description' => 'Whether this run was created via a forced regenerate request.'],
@@ -3675,7 +3677,7 @@ function _job_hunter_create_tailoring_runs_table() {
       'run_uuid' => ['run_uuid'],
     ],
     'indexes' => [
-      'uid_job' => ['uid', 'job_id'],
+      'uid_job_run_type' => ['uid', 'job_id', 'run_type'],
       'status' => ['status'],
       'job_id' => ['job_id'],
     ],
@@ -3702,12 +3704,12 @@ function _job_hunter_create_tailoring_outbox_table() {
   }
 
   $table_schema = [
-    'description' => 'Transactional outbox events for resume tailoring runs.',
+    'description' => 'Transactional outbox events for tailoring runs.',
     'fields' => [
       'id' => ['type' => 'serial', 'not null' => TRUE],
       'run_id' => ['type' => 'int', 'not null' => TRUE, 'description' => 'jobhunter_tailoring_runs.id this event belongs to.'],
       'run_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE, 'description' => 'Denormalized run_uuid for reconciliation queries.'],
-      'event_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume_tailoring.requested', 'description' => 'Event type identifier.'],
+      'event_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume.requested', 'description' => 'Event type identifier.'],
       'queue_name' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'job_hunter_resume_tailoring', 'description' => 'Target queue name for dispatch.'],
       'payload_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE, 'description' => 'Small JSON payload (run_id reference) to enqueue.'],
       'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'pending', 'description' => 'pending, dispatched, failed.'],
@@ -3758,4 +3760,64 @@ function job_hunter_update_9061() {
   }
 
   return t('Created jobhunter_tailoring_runs and jobhunter_tailoring_outbox tables; added run_uuid column to jobhunter_tailored_resumes.');
+}
+
+/**
+ * Normalize tailoring run types and add cover-letter run tracking metadata.
+ */
+function job_hunter_update_9062() {
+  $schema = \Drupal::database()->schema();
+  $database = \Drupal::database();
+  $messages = [];
+
+  if ($schema->tableExists('jobhunter_tailoring_runs')) {
+    if ($schema->fieldExists('jobhunter_tailoring_runs', 'run_type')) {
+      $database->update('jobhunter_tailoring_runs')
+        ->fields(['run_type' => 'resume'])
+        ->condition('run_type', ['', 'resume_tailoring'], 'IN')
+        ->execute();
+      $database->update('jobhunter_tailoring_runs')
+        ->fields(['run_type' => 'cover_letter'])
+        ->condition('run_type', 'cover_letter_tailoring')
+        ->execute();
+      $schema->changeField('jobhunter_tailoring_runs', 'run_type', 'run_type', [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => 'resume',
+        'description' => 'Type of tailoring run (resume, cover_letter).',
+      ]);
+    }
+
+    if (!$schema->indexExists('jobhunter_tailoring_runs', 'uid_job_run_type')) {
+      $schema->addIndex('jobhunter_tailoring_runs', 'uid_job_run_type', ['uid', 'job_id', 'run_type'], [
+        'fields' => [
+          'uid' => ['type' => 'int'],
+          'job_id' => ['type' => 'int'],
+          'run_type' => ['type' => 'varchar', 'length' => 64],
+        ],
+      ]);
+    }
+    $messages[] = 'Normalized tailoring run types to resume/cover_letter.';
+  }
+
+  if ($schema->tableExists('jobhunter_cover_letters') && !$schema->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+    $schema->addField('jobhunter_cover_letters', 'run_uuid', [
+      'type' => 'varchar',
+      'length' => 36,
+      'not null' => FALSE,
+      'default' => NULL,
+      'description' => 'Most recent cover-letter tailoring run UUID for this uid/job_id.',
+    ]);
+    if (!$schema->indexExists('jobhunter_cover_letters', 'run_uuid')) {
+      $schema->addIndex('jobhunter_cover_letters', 'run_uuid', ['run_uuid'], [
+        'fields' => [
+          'run_uuid' => ['type' => 'varchar', 'length' => 36],
+        ],
+      ]);
+    }
+    $messages[] = 'Added run_uuid tracking to jobhunter_cover_letters.';
+  }
+
+  return t($messages ? implode(' ', $messages) : 'No update needed for tailoring run metadata.');
 }

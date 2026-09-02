@@ -27,8 +27,8 @@
     'step': 1
   },
   'queued': {
-    'label': 'In Queue',
-    'description': 'Your tailoring request is queued. It will be processed shortly by our AI system.',
+    'label': 'Submitted',
+    'description': 'Your tailoring request has been submitted. Processing is starting automatically.',
     'icon': '⏳',
     'color': 'status-queued',
     'step': 2
@@ -101,7 +101,7 @@
         <div class="progress-line {% if current_status.step >= 2 %}line-active{% endif %}"></div>
         <div class="progress-step {% if current_status.step >= 2 %}step-active{% endif %} {% if current_status.step > 2 %}step-complete{% endif %}">
           <span class="step-dot">2</span>
-          <span class="step-label">Queued</span>
+          <span class="step-label">Submitted</span>
         </div>
         <div class="progress-line {% if current_status.step >= 3 %}line-active{% endif %}"></div>
         <div class="progress-step {% if current_status.step >= 3 %}step-active{% endif %} {% if current_status.step > 3 %}step-complete{% endif %}">

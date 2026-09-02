@@ -3,10 +3,14 @@
 namespace Drupal\job_hunter\Plugin\QueueWorker;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\job_hunter\Service\TailoringRunService;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 use Drupal\job_hunter\Traits\QueueWorkerBaseTrait;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\ServerException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -40,12 +44,20 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
   protected $aiApiService;
 
   /**
+   * The tailoring run service.
+   *
+   * @var \Drupal\job_hunter\Service\TailoringRunService
+   */
+  protected $tailoringRunService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->configFactory = $container->get('config.factory');
     $instance->aiApiService = $container->get('ai_conversation.ai_api_service');
+    $instance->tailoringRunService = $container->get('job_hunter.tailoring_run_service');
     return $instance;
   }
 
@@ -53,20 +65,65 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
    * {@inheritdoc}
    */
   public function processItem($data) {
-    $uid = $data['uid'];
-    $job_id = $data['job_id'];
-    $profile_json = $data['profile_json'];
-    $job_data = $data['job_data'];
-    $cover_letter_template = $data['cover_letter_template'] ?? '';
+    $retry_count = (int) ($data['retry_count'] ?? 0);
+    $process_after = (int) ($data['process_after'] ?? 0);
+    if ($process_after > time()) {
+      $job_id_for_log = $data['job_id'] ?? ('run ' . ($data['run_id'] ?? 'n/a'));
+      throw new DelayedRequeueException($process_after - time(), "Backoff delay not yet elapsed for job {$job_id_for_log}");
+    }
+
+    $run_id = $data['run_id'] ?? NULL;
+    if ($run_id) {
+      $resolved = $this->tailoringRunService->resolveRunInputs($run_id);
+      if (!$resolved) {
+        $this->logError('Queue: Cover letter tailoring discarded — could not resolve inputs for run @run_id', [
+          '@run_id' => $run_id,
+        ]);
+        return;
+      }
+    }
+    else {
+      if (empty($data['uid']) || empty($data['job_id'])) {
+        $this->logError('Queue: Cover letter tailoring discarded — missing required legacy uid/job_id fields.');
+        return;
+      }
+
+      $run_id = $this->tailoringRunService->adoptLegacyQueueItem(
+        (int) $data['uid'],
+        (int) $data['job_id'],
+        TailoringRunService::RUN_TYPE_COVER_LETTER
+      );
+
+      $this->logWarning('Queue: Adopted legacy cover letter queue item for uid @uid job @job_id into run @run_id. This path is for draining pre-existing items only.', [
+        '@uid' => (int) $data['uid'],
+        '@job_id' => (int) $data['job_id'],
+        '@run_id' => $run_id,
+      ]);
+
+      $resolved = $this->tailoringRunService->resolveRunInputs($run_id);
+      if (!$resolved) {
+        $this->logError('Queue: Cover letter tailoring discarded — could not resolve inputs after adopting legacy item for run @run_id', [
+          '@run_id' => $run_id,
+        ]);
+        return;
+      }
+    }
+
+    $uid = $resolved['uid'];
+    $job_id = $resolved['job_id'];
+    $profile_json = $resolved['profile_json'];
+    $job_data = $resolved['job_data'];
+    $cover_letter_template = $profile_json['job_search_preferences']['cover_letter_template'] ?? '';
 
     // Get logging context (username, company, job_title)
     $context = $this->getLoggingContext($uid, $job_data);
     
-    $this->logInfo('✉️ Queue: Starting cover letter generation for @username → "@title" at @company (job @job_id)', [
+    $this->logInfo('✉️ Queue: Starting cover letter generation for @username → "@title" at @company (job @job_id, attempt @attempt)', [
       '@username' => $context['username'],
       '@title' => $context['job_title'],
       '@company' => $context['company'],
       '@job_id' => $job_id,
+      '@attempt' => $retry_count + 1,
     ]);
     
     // Log what sources we have available
@@ -81,8 +138,12 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
     $connection = \Drupal::database();
 
     try {
-      // Update status to processing
-      $this->updateDatabaseStatus($connection, 'jobhunter_cover_letters', $uid, $job_id, 'processing');
+      $record_fields = [];
+      if ($connection->schema()->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+        $record_fields['run_uuid'] = $run_id;
+      }
+
+      $this->updateDatabaseStatus($connection, 'jobhunter_cover_letters', $uid, $job_id, 'processing', $record_fields);
 
       // Parse job data
       $skills = !empty($job_data['skills_required_json']) ? json_decode($job_data['skills_required_json'], TRUE) : [];
@@ -130,11 +191,10 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
       ];
 
       // Call AWS Bedrock
-      $cover_letter_result = $this->callGenAiCoverLetterService($genai_payload, $uid, $job_id);
+      $cover_letter_result = $this->callGenAiCoverLetterService($genai_payload);
 
       if (!$cover_letter_result || !isset($cover_letter_result['cover_letter_text'])) {
-        // Suspend queue - GenAI call may have succeeded but JSON parsing failed
-        throw new SuspendQueueException('Failed to generate cover letter from AI service. Check logs for JSON parsing errors. Clear cache if prompt needs adjustment.');
+        throw new \RuntimeException("GenAI returned no usable cover letter for job {$job_id}. Check prior log entries for parse details.");
       }
 
       // Save the cover letter
@@ -150,8 +210,10 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
         $uid,
         $job_id,
         'completed',
-        $fields
+        $record_fields + $fields
       );
+
+      $this->tailoringRunService->markRunStatus($run_id, 'completed');
 
       $this->logInfo('✅ Queue: Cover letter generation complete for @username → "@title" at @company (job @job_id)', [
         '@username' => $context['username'],
@@ -162,17 +224,98 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
 
     }
     catch (\Exception $e) {
-      // Use centralized exception handling
-      $this->handleQueueException(
-        $e,
-        $connection,
-        'jobhunter_cover_letters',
-        $uid,
-        $job_id,
-        $context,
-        'Cover letter generation'
-      );
+      $this->handleQueueExceptionWithRetry($e, $connection, $retry_count, $context, $uid, $job_id, $run_id);
     }
+  }
+
+  /**
+   * Classify an exception as transient or permanent for retry decisions.
+   */
+  private function classifyException(\Exception $e): string {
+    if ($e instanceof ServerException) {
+      return 'transient';
+    }
+    if ($e instanceof ConnectException) {
+      return 'transient';
+    }
+    if ($e instanceof ClientException) {
+      $code = $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
+      return ($code === 429) ? 'transient' : 'permanent';
+    }
+
+    $message = strtolower($e->getMessage());
+    $transient_patterns = ['timeout', 'timed out', 'connection', '503', '502', '500', '429', 'rate limit', 'throttl', 'unavailable', 'no usable cover letter'];
+    foreach ($transient_patterns as $pattern) {
+      if (strpos($message, $pattern) !== FALSE) {
+        return 'transient';
+      }
+    }
+
+    $permanent_patterns = ['unauthorized', '401', '403', 'forbidden', 'missing required'];
+    foreach ($permanent_patterns as $pattern) {
+      if (strpos($message, $pattern) !== FALSE) {
+        return 'permanent';
+      }
+    }
+
+    return 'transient';
+  }
+
+  /**
+   * Handle queue exception with retry/backoff logic.
+   */
+  private function handleQueueExceptionWithRetry(\Exception $e, $connection, int $retry_count, array $context, int $uid, int $job_id, string $run_id): void {
+    $error_type = $this->classifyException($e);
+
+    $this->logError('❌ Queue: Cover letter generation @error_type failure for @username → job @job_id (attempt @attempt/3): @error', [
+      '@error_type' => $error_type,
+      '@username' => $context['username'] ?? 'unknown',
+      '@job_id' => $job_id,
+      '@attempt' => $retry_count + 1,
+      '@error' => $e->getMessage(),
+    ]);
+
+    $max_retries = 3;
+
+    if ($error_type === 'transient' && $retry_count < $max_retries) {
+      $backoff_seconds = (int) pow(2, $retry_count) * 30;
+      \Drupal::queue('job_hunter_cover_letter_tailoring')->createItem([
+        'run_id' => $run_id,
+        'retry_count' => $retry_count + 1,
+        'process_after' => time() + $backoff_seconds,
+      ]);
+
+      $record_fields = ['error_message' => NULL];
+      if ($connection->schema()->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+        $record_fields['run_uuid'] = $run_id;
+      }
+
+      $this->updateDatabaseStatus($connection, 'jobhunter_cover_letters', $uid, $job_id, 'pending', $record_fields);
+      $this->tailoringRunService->markRunStatus($run_id, 'queued');
+
+      $this->logError('⏳ Queue: Scheduled cover letter retry @retry/@max for job @job_id in @backoff seconds', [
+        '@retry' => $retry_count + 1,
+        '@max' => $max_retries,
+        '@job_id' => $job_id,
+        '@backoff' => $backoff_seconds,
+      ]);
+      return;
+    }
+
+    $reason = ($error_type === 'transient') ? "max retries exhausted ({$max_retries}/{$max_retries})" : "permanent failure ({$error_type})";
+    $error_message = substr($e->getMessage(), 0, 500);
+    $record_fields = ['error_message' => $error_message];
+    if ($connection->schema()->fieldExists('jobhunter_cover_letters', 'run_uuid')) {
+      $record_fields['run_uuid'] = $run_id;
+    }
+
+    $this->updateDatabaseStatus($connection, 'jobhunter_cover_letters', $uid, $job_id, 'failed', $record_fields);
+    $this->tailoringRunService->markRunStatus($run_id, 'failed', ['error_message' => $error_message]);
+
+    $this->logError('🚫 Queue: Cover letter generation discarded for job @job_id — @reason', [
+      '@job_id' => $job_id,
+      '@reason' => $reason,
+    ]);
   }
 
   /**
