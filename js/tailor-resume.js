@@ -101,14 +101,24 @@
   /**
    * Poll for tailoring status.
    */
-  function startStatusPolling(jobId, button) {
+  function startStatusPolling(jobId, button, runId) {
     var pollInterval = setInterval(function() {
+      var pollData = { job_id: jobId };
+      if (runId) {
+        pollData.run_id = runId;
+      }
       $.ajax({
         url: getEndpoint('statusUrl', '/jobhunter/tailor-resume/status'),
         type: 'GET',
-        data: { job_id: jobId },
+        data: pollData,
         success: function(response) {
           $('#tailoring-status-text').text('🔄 ' + response.message);
+
+          // The status endpoint echoes back the authoritative run_id; keep
+          // polling with it even if it was not known when polling started.
+          if (response.run_id) {
+            runId = response.run_id;
+          }
           
           // Update status header based on response
           if (response.status === 'processing') {
@@ -172,11 +182,12 @@
         if (currentStatus === 'queued' || currentStatus === 'processing') {
           var jobId = $('#generate-tailored-resume').data('job-id') || 
                       $('#regenerate-resume-btn').data('job-id');
+          var runId = statusIndicator.data('run-id') || null;
           if (jobId) {
             console.log('Auto-starting status polling for job ' + jobId);
             $('#tailoring-status').show();
             $('#tailoring-status-text').text('🔄 Checking tailoring status...');
-            startStatusPolling(jobId, $());
+            startStatusPolling(jobId, $(), runId);
           }
         }
       });
@@ -218,7 +229,7 @@
                   // Queued or processing - start polling
                   $('#tailoring-status-text').text('🔄 ' + response.message);
                   addMessage(response.message, 'status');
-                  startStatusPolling(jobId, button);
+                  startStatusPolling(jobId, button, response.run_id);
                 }
               } else {
                 $('#tailoring-status').hide();
@@ -275,7 +286,7 @@
               if (response.success) {
                 $('#tailoring-status-text').text('🔄 ' + response.message);
                 addMessage(response.message, 'status');
-                startStatusPolling(jobId, button);
+                startStatusPolling(jobId, button, response.run_id);
               } else {
                 $('#tailoring-status').hide();
                 addMessage('Error: ' + (response.error || 'Unknown error occurred'), 'error');

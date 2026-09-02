@@ -11,3 +11,9 @@ services:
       - '@job_hunter.application_location_verification_service'
     tags:
       - { name: drush.command }
+
+  job_hunter.tailoring_outbox_commands:
+    class: Drupal\job_hunter\Commands\TailoringOutboxCommands
+    arguments: ['@job_hunter.tailoring_run_service', '@queue', '@plugin.manager.queue_worker']
+    tags:
+      - { name: drush.command }

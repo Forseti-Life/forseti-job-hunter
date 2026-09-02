@@ -73,6 +73,8 @@ function job_hunter_install() {
     _job_hunter_create_company_research_table();
     _job_hunter_create_contacts_table();
     _job_hunter_create_offers_table();
+    _job_hunter_create_tailoring_runs_table();
+    _job_hunter_create_tailoring_outbox_table();
     
     // Create content types and fields
     _job_hunter_create_error_queue_content_type();
@@ -3634,4 +3636,126 @@ function job_hunter_update_9060() {
   }
 
   return t('Added email and linkedin_url columns to jobhunter_contacts.');
+}
+
+/**
+ * Create jobhunter_tailoring_runs table.
+ *
+ * A versioned run record for resume tailoring requests. Each run represents
+ * one attempt (or idempotent reuse) of tailoring a resume for a given
+ * uid/job_id pair. The run_uuid is the public identifier returned to
+ * clients (run_id) so that polling and dispatch can be correlated without
+ * exposing internal serial IDs.
+ */
+function _job_hunter_create_tailoring_runs_table() {
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('jobhunter_tailoring_runs')) {
+    return;
+  }
+
+  $table_schema = [
+    'description' => 'Versioned resume tailoring run records (event-driven tailoring).',
+    'fields' => [
+      'id' => ['type' => 'serial', 'not null' => TRUE],
+      'run_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE, 'description' => 'Public run identifier (UUID).'],
+      'uid' => ['type' => 'int', 'not null' => TRUE, 'description' => 'User ID.'],
+      'job_id' => ['type' => 'int', 'not null' => TRUE, 'description' => 'Job requirement ID.'],
+      'run_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume_tailoring', 'description' => 'Type of tailoring run (resume_tailoring, cover_letter_tailoring).'],
+      'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'queued', 'description' => 'queued, processing, completed, failed.'],
+      'version' => ['type' => 'int', 'not null' => TRUE, 'default' => 1, 'description' => 'Attempt/regeneration version for this uid+job_id+run_type.'],
+      'force' => ['type' => 'int', 'not null' => TRUE, 'default' => 0, 'description' => 'Whether this run was created via a forced regenerate request.'],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'completed_at' => ['type' => 'int', 'not null' => FALSE, 'default' => 0, 'description' => 'Timestamp when run reached a terminal state.'],
+      'error_message' => ['type' => 'text', 'not null' => FALSE, 'description' => 'Last error message, if failed.'],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'run_uuid' => ['run_uuid'],
+    ],
+    'indexes' => [
+      'uid_job' => ['uid', 'job_id'],
+      'status' => ['status'],
+      'job_id' => ['job_id'],
+    ],
+  ];
+
+  $schema->createTable('jobhunter_tailoring_runs', $table_schema);
+}
+
+/**
+ * Create jobhunter_tailoring_outbox table.
+ *
+ * Implements the transactional outbox pattern: an outbox row is written in
+ * the same database transaction as the run record and the (small) queue
+ * payload, guaranteeing that the durable record of "this run was requested"
+ * survives even if delivery to the queue backend fails. A supervised
+ * dispatcher (drush job-hunter:tailoring-outbox-dispatch, or cron fallback)
+ * reconciles any outbox rows left 'pending' by re-creating the queue item.
+ */
+function _job_hunter_create_tailoring_outbox_table() {
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('jobhunter_tailoring_outbox')) {
+    return;
+  }
+
+  $table_schema = [
+    'description' => 'Transactional outbox events for resume tailoring runs.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'not null' => TRUE],
+      'run_id' => ['type' => 'int', 'not null' => TRUE, 'description' => 'jobhunter_tailoring_runs.id this event belongs to.'],
+      'run_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE, 'description' => 'Denormalized run_uuid for reconciliation queries.'],
+      'event_type' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'resume_tailoring.requested', 'description' => 'Event type identifier.'],
+      'queue_name' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'job_hunter_resume_tailoring', 'description' => 'Target queue name for dispatch.'],
+      'payload_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE, 'description' => 'Small JSON payload (run_id reference) to enqueue.'],
+      'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'pending', 'description' => 'pending, dispatched, failed.'],
+      'attempts' => ['type' => 'int', 'not null' => TRUE, 'default' => 0, 'description' => 'Number of dispatch attempts.'],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'dispatched_at' => ['type' => 'int', 'not null' => FALSE, 'default' => 0],
+      'error_message' => ['type' => 'text', 'not null' => FALSE, 'description' => 'Last dispatch error message, if failed.'],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'run_id' => ['run_id'],
+      'run_uuid' => ['run_uuid'],
+      'status' => ['status'],
+    ],
+  ];
+
+  $schema->createTable('jobhunter_tailoring_outbox', $table_schema);
+}
+
+/**
+ * Create jobhunter_tailoring_runs and jobhunter_tailoring_outbox tables, and
+ * add run_uuid tracking column to jobhunter_tailored_resumes for run-aware
+ * status lookups (event-driven resume tailoring, slice 1).
+ */
+function job_hunter_update_9061() {
+  _job_hunter_create_tailoring_runs_table();
+  _job_hunter_create_tailoring_outbox_table();
+
+  $schema = \Drupal::database()->schema();
+
+  if ($schema->tableExists('jobhunter_tailored_resumes') &&
+      !$schema->fieldExists('jobhunter_tailored_resumes', 'run_uuid')) {
+    $schema->addField('jobhunter_tailored_resumes', 'run_uuid', [
+      'type' => 'varchar',
+      'length' => 36,
+      'not null' => FALSE,
+      'default' => NULL,
+      'description' => 'Most recent tailoring run UUID for this uid/job_id (event-driven tailoring).',
+    ]);
+    if (!$schema->indexExists('jobhunter_tailored_resumes', 'run_uuid')) {
+      $schema->addIndex('jobhunter_tailored_resumes', 'run_uuid', ['run_uuid'], [
+        'fields' => [
+          'run_uuid' => ['type' => 'varchar', 'length' => 36],
+        ],
+      ]);
+    }
+  }
+
+  return t('Created jobhunter_tailoring_runs and jobhunter_tailoring_outbox tables; added run_uuid column to jobhunter_tailored_resumes.');
 }

@@ -71,6 +71,10 @@ services:
     class: Drupal\job_hunter\Service\ProfileCompletenessService
     arguments: ['@database']
 
+  job_hunter.tailoring_run_service:
+    class: Drupal\job_hunter\Service\TailoringRunService
+    arguments: ['@database', '@queue', '@uuid', '@logger.factory']
+
   job_hunter.commands:
     class: Drupal\job_hunter\Commands\JobApplicationAutomationCommands
     arguments: ['@entity_type.manager', '@logger.factory']
@@ -86,6 +90,12 @@ services:
   job_hunter.job_parsing_commands:
     class: Drupal\job_hunter\Commands\JobParsingCommands
     arguments: ['@database', '@queue']
+    tags:
+      - { name: drush.command }
+
+  job_hunter.tailoring_outbox_commands:
+    class: Drupal\job_hunter\Commands\TailoringOutboxCommands
+    arguments: ['@job_hunter.tailoring_run_service', '@queue', '@plugin.manager.queue_worker']
     tags:
       - { name: drush.command }
 

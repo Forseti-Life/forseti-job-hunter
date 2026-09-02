@@ -14,6 +14,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\job_hunter\Service\UserProfileService;
 use Drupal\job_hunter\Service\JobSeekerService;
+use Drupal\job_hunter\Service\TailoringRunService;
 
 /**
  * Controller for user profile management functionality.
@@ -77,6 +78,13 @@ class UserProfileController extends ControllerBase {
   protected $aiApiService;
 
   /**
+   * The tailoring run service.
+   *
+   * @var \Drupal\job_hunter\Service\TailoringRunService
+   */
+  protected $tailoringRunService;
+
+  /**
    * Constructs a new UserProfileController object.
    *
    * @param \Drupal\Core\Session\AccountInterface $current_user
@@ -87,14 +95,17 @@ class UserProfileController extends ControllerBase {
    *   The user profile service.
    * @param \Drupal\job_hunter\Service\JobSeekerService $job_seeker_service
    *   The job seeker service.
+   * @param \Drupal\job_hunter\Service\TailoringRunService $tailoring_run_service
+   *   The tailoring run service.
    * @param \Drupal\ai_conversation\Service\AIApiService $ai_api_service
    *   The AI API service.
    */
-  public function __construct(AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, UserProfileService $user_profile_service, JobSeekerService $job_seeker_service, $ai_api_service = NULL) {
+  public function __construct(AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, UserProfileService $user_profile_service, JobSeekerService $job_seeker_service, TailoringRunService $tailoring_run_service, $ai_api_service = NULL) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
     $this->userProfileService = $user_profile_service;
     $this->jobSeekerService = $job_seeker_service;
+    $this->tailoringRunService = $tailoring_run_service;
     $this->aiApiService = $ai_api_service;
   }
 
@@ -113,6 +124,7 @@ class UserProfileController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('job_hunter.user_profile_service'),
       $container->get('job_hunter.job_seeker_service'),
+      $container->get('job_hunter.tailoring_run_service'),
       $ai_service
     );
   }
@@ -1156,27 +1168,46 @@ class UserProfileController extends ControllerBase {
       ? json_decode($tailored_record->tailored_resume_json, TRUE) 
       : NULL;
     $tailoring_status = $tailored_record ? $tailored_record->tailoring_status : 'pending';
-    
-    // Get actual queue status by checking queue table, suspended queue, and database
-    $queue_status = $this->getActualQueueStatus($user->id(), $job);
-    
-    // Update status in database if it's out of sync
-    if ($queue_status['should_update_db']) {
-      $database->update('jobhunter_tailored_resumes')
-        ->fields(['tailoring_status' => $queue_status['status'], 'updated' => time()])
-        ->condition('uid', $user->id())
-        ->condition('job_id', $job)
-        ->execute();
-      $tailoring_status = $queue_status['status'];
-      
-      \Drupal::logger('job_hunter')->notice('Synced tailoring status from @old to @new for user @uid job @job (in_queue: @q, suspended: @s)', [
-        '@old' => $queue_status['db_status'],
-        '@new' => $tailoring_status,
-        '@uid' => $user->id(),
-        '@job' => $job,
-        '@q' => $queue_status['in_queue'] ? 'yes' : 'no',
-        '@s' => $queue_status['suspended'] ? 'yes' : 'no',
-      ]);
+    $run_uuid = $tailored_record->run_uuid ?? NULL;
+
+    // Canonical status source: the run record. Only fall back to the legacy
+    // queue-scan heuristic for records that predate the run/outbox model
+    // entirely (no run has ever existed for this uid/job_id).
+    $canonical = $this->tailoringRunService->getCanonicalStatus($user->id(), $job);
+    if ($canonical) {
+      $run_uuid = $canonical['run_id'];
+      if ($tailoring_status !== $canonical['status']) {
+        $database->update('jobhunter_tailored_resumes')
+          ->fields(['tailoring_status' => $canonical['status'], 'updated' => time()])
+          ->condition('uid', $user->id())
+          ->condition('job_id', $job)
+          ->execute();
+        $tailoring_status = $canonical['status'];
+      }
+    }
+    else {
+      // Narrow migration fallback: no run record exists at all for this
+      // uid/job_id (a pre-existing record from before the run/outbox model).
+      // Get actual queue status by checking queue table, suspended queue, and database.
+      $queue_status = $this->getActualQueueStatus($user->id(), $job);
+
+      if ($queue_status['should_update_db']) {
+        $database->update('jobhunter_tailored_resumes')
+          ->fields(['tailoring_status' => $queue_status['status'], 'updated' => time()])
+          ->condition('uid', $user->id())
+          ->condition('job_id', $job)
+          ->execute();
+        $tailoring_status = $queue_status['status'];
+
+        \Drupal::logger('job_hunter')->notice('Synced legacy tailoring status from @old to @new for user @uid job @job (in_queue: @q, suspended: @s)', [
+          '@old' => $queue_status['db_status'],
+          '@new' => $tailoring_status,
+          '@uid' => $user->id(),
+          '@job' => $job,
+          '@q' => $queue_status['in_queue'] ? 'yes' : 'no',
+          '@s' => $queue_status['suspended'] ? 'yes' : 'no',
+        ]);
+      }
     }
     
     // Get PDF info
@@ -1241,6 +1272,7 @@ class UserProfileController extends ControllerBase {
       '#pdf_generated' => $pdf_generated,
       '#pdf_history' => $pdf_history,
       '#tailored_resume_id' => $tailored_resume_id,
+      '#run_uuid' => $run_uuid,
       '#feedback_rating' => $existing_feedback ? $existing_feedback->rating : '',
       '#feedback_note' => $existing_feedback ? $existing_feedback->note : '',
       '#feedback_save_url' => $feedback_save_url,
@@ -1309,7 +1341,14 @@ class UserProfileController extends ControllerBase {
         ->execute()
         ->fetchObject();
 
-      if (!$force && $existing && $existing->tailoring_status === 'completed' && !empty($existing->tailored_resume_json)) {
+      // Canonical status source is the run record. Only fall back to the
+      // jobhunter_tailored_resumes.tailoring_status column for records that
+      // predate the run/outbox model (no run ever created).
+      $canonical = $this->tailoringRunService->getCanonicalStatus($user_id, (int) $job_id);
+      $current_status = $canonical['status'] ?? ($existing->tailoring_status ?? NULL);
+      $current_run_id = $canonical['run_id'] ?? ($existing->run_uuid ?? NULL);
+
+      if (!$force && $existing && $current_status === 'completed' && !empty($existing->tailored_resume_json)) {
         $tailored = json_decode($existing->tailored_resume_json, TRUE);
         $extracted = $job_data->extracted_json ? json_decode($job_data->extracted_json, TRUE) : [];
         $job_title = $extracted['position']['title'] ?? $extracted['job_title'] ?? 'this position';
@@ -1322,12 +1361,17 @@ class UserProfileController extends ControllerBase {
         ]);
       }
 
-      // Check if already processing (don't allow regenerate while processing)
-      if ($existing && $existing->tailoring_status === 'processing') {
+      // Check if already processing (don't allow regenerate while processing).
+      // Note: 'queued' is intentionally not short-circuited here — it falls
+      // through to createOrReuseRun() below, which idempotently reuses the
+      // existing queued run (and still allows the cover letter queue check
+      // to run, since cover letters are not yet part of the run/outbox model).
+      if (!$force && $current_status === 'processing') {
         return new \Symfony\Component\HttpFoundation\JsonResponse([
           'success' => TRUE,
           'status' => 'processing',
           'message' => 'Resume tailoring is already in progress. Please wait...',
+          'run_id' => $current_run_id,
         ]);
       }
 
@@ -1340,27 +1384,17 @@ class UserProfileController extends ControllerBase {
         $cover_letter_template = $profile['job_search_preferences']['cover_letter_template'];
       }
 
-      $resume_already_queued = $this->hasQueuedTailoringItem('job_hunter_resume_tailoring', $user_id, (int) $job_id);
       $cover_already_queued = $cover_letter_table_exists
         ? $this->hasQueuedTailoringItem('job_hunter_cover_letter_tailoring', $user_id, (int) $job_id)
         : FALSE;
 
-      // Queue the resume tailoring job for background processing
-      if (!$resume_already_queued) {
-        $resume_queue = \Drupal::queue('job_hunter_resume_tailoring');
-        $resume_queue->createItem([
-          'uid' => $user_id,
-          'job_id' => $job_id,
-          'profile_json' => $profile,
-          'job_data' => [
-            'extracted_json' => $job_data->extracted_json,
-            'skills_required_json' => $job_data->skills_required_json,
-            'keywords_json' => $job_data->keywords_json,
-            'raw_posting_text' => $job_data->raw_posting_text ?? '',
-          ],
-        ]);
-      }
-      
+      // Create/reuse an idempotent tailoring run. This persists a run
+      // record and a transactional outbox event, then dispatches a small
+      // {run_id} queue payload (see TailoringRunService::createOrReuseRun).
+      // Resume tailoring inputs (profile/job data) are resolved fresh by
+      // the worker from run_id, rather than duplicated into the queue item.
+      $tailoring_run = $this->tailoringRunService->createOrReuseRun($user_id, (int) $job_id, (bool) $force);
+
       // Queue the cover letter generation job if table exists.
       if ($cover_letter_table_exists) {
         if (!$cover_already_queued) {
@@ -1380,25 +1414,28 @@ class UserProfileController extends ControllerBase {
         }
       }
 
-      // Create/update pending record for resume
+      // Create/update pending record for resume, tagging it with the
+      // run_uuid so the status endpoint can be run-aware.
       $now = \Drupal::time()->getRequestTime();
+      $tailored_resumes_fields = [
+        'tailoring_status' => 'queued',
+        'updated' => $now,
+      ];
+      if ($database->schema()->fieldExists('jobhunter_tailored_resumes', 'run_uuid')) {
+        $tailored_resumes_fields['run_uuid'] = $tailoring_run['run_id'];
+      }
       if ($existing) {
         $database->update('jobhunter_tailored_resumes')
-          ->fields([
-            'tailoring_status' => 'queued',
-            'updated' => $now,
-          ])
+          ->fields($tailored_resumes_fields)
           ->condition('id', $existing->id)
           ->execute();
       }
       else {
         $database->insert('jobhunter_tailored_resumes')
-          ->fields([
+          ->fields($tailored_resumes_fields + [
             'uid' => $user_id,
             'job_id' => $job_id,
-            'tailoring_status' => 'queued',
             'created' => $now,
-            'updated' => $now,
           ])
           ->execute();
       }
@@ -1450,10 +1487,17 @@ class UserProfileController extends ControllerBase {
         ? "Resume and cover letter tailoring queued for {$job_title}. Processing will begin shortly..."
         : "Resume tailoring queued for {$job_title}. Processing will begin shortly...";
 
+      $status_url = Url::fromRoute('job_hunter.tailor_resume_status_ajax', [], [
+        'query' => ['job_id' => $job_id, 'run_id' => $tailoring_run['run_id']],
+      ])->toString();
+
       return new \Symfony\Component\HttpFoundation\JsonResponse([
         'success' => TRUE,
         'status' => 'queued',
         'message' => $queued_message,
+        'run_id' => $tailoring_run['run_id'],
+        'run_status' => $tailoring_run['status'],
+        'status_url' => $status_url,
       ]);
 
     } catch (\Exception $e) {
@@ -1472,36 +1516,39 @@ class UserProfileController extends ControllerBase {
     try {
       $request = \Drupal::request();
       $job_id = $request->query->get('job_id');
+      $run_id = $request->query->get('run_id');
       $user_id = $this->currentUser->id();
       $database = \Drupal::database();
       $cover_letter_table_exists = $database->schema()->tableExists('jobhunter_cover_letters');
 
-      // Get actual queue status by checking all sources
-      $queue_status = $this->getActualQueueStatus($user_id, $job_id);
-      
-      // Update database if status is out of sync
-      if ($queue_status['should_update_db']) {
-        $database->update('jobhunter_tailored_resumes')
-          ->fields(['tailoring_status' => $queue_status['status'], 'updated' => time()])
-          ->condition('uid', $user_id)
-          ->condition('job_id', $job_id)
-          ->execute();
-        
-        \Drupal::logger('job_hunter')->info('AJAX status check synced status from @old to @new for user @uid job @job', [
-          '@old' => $queue_status['db_status'],
-          '@new' => $queue_status['status'],
-          '@uid' => $user_id,
-          '@job' => $job_id,
-        ]);
+      // Run-aware resolution: when a run_id is supplied, look it up and use
+      // it as the source of truth for job_id (defense against a stale/absent
+      // job_id query param) as long as it belongs to the current user.
+      $run = NULL;
+      if ($run_id) {
+        $candidate_run = $this->tailoringRunService->getRunByUuid($run_id);
+        if ($candidate_run && (int) $candidate_run->uid === (int) $user_id) {
+          $run = $candidate_run;
+          if (!$job_id) {
+            $job_id = $run->job_id;
+          }
+        }
       }
-      
+
+      // No run_id was supplied (or it didn't resolve) — the run record is
+      // still the canonical status source, so look up the latest run for
+      // this uid/job_id before ever falling back to the legacy heuristic.
+      if (!$run && $job_id) {
+        $run = $this->tailoringRunService->getLatestRun($user_id, (int) $job_id);
+      }
+
       $record = $database->select('jobhunter_tailored_resumes', 'tr')
         ->fields('tr')
         ->condition('uid', $user_id)
         ->condition('job_id', $job_id)
         ->execute()
         ->fetchObject();
-        
+
       // Also check cover letter status when table exists.
       $cover_letter = NULL;
       if ($cover_letter_table_exists) {
@@ -1513,25 +1560,53 @@ class UserProfileController extends ControllerBase {
           ->fetchObject();
       }
 
-      if (!$record) {
-        return new \Symfony\Component\HttpFoundation\JsonResponse([
-          'status' => 'not_started',
-          'message' => 'No tailoring request found for this job.',
-          'cover_letter_status' => $cover_letter ? $cover_letter->tailoring_status : 'not_started',
-          'in_queue' => $queue_status['in_queue'],
-          'suspended' => $queue_status['suspended'],
-        ]);
+      // Canonical status resolution: the run record (written directly by
+      // the worker/service) is authoritative whenever one exists. The
+      // queue/suspended-table scan is only performed as a narrow migration
+      // fallback for records that predate the run/outbox model entirely
+      // (no run has ever existed for this uid/job_id).
+      $queue_status = NULL;
+      if ($run) {
+        $actual_status = $run->status;
+      }
+      else {
+        $queue_status = $this->getActualQueueStatus($user_id, $job_id);
+        $actual_status = $queue_status['status'];
+
+        if ($queue_status['should_update_db']) {
+          $database->update('jobhunter_tailored_resumes')
+            ->fields(['tailoring_status' => $queue_status['status'], 'updated' => time()])
+            ->condition('uid', $user_id)
+            ->condition('job_id', $job_id)
+            ->execute();
+
+          \Drupal::logger('job_hunter')->info('AJAX status check synced legacy status from @old to @new for user @uid job @job', [
+            '@old' => $queue_status['db_status'],
+            '@new' => $queue_status['status'],
+            '@uid' => $user_id,
+            '@job' => $job_id,
+          ]);
+        }
       }
 
-      // Use actual status from queue check
-      $actual_status = $queue_status['status'];
+      if (!$record) {
+        return new \Symfony\Component\HttpFoundation\JsonResponse([
+          'status' => $run ? $run->status : 'not_started',
+          'message' => 'No tailoring request found for this job.',
+          'cover_letter_status' => $cover_letter ? $cover_letter->tailoring_status : 'not_started',
+          'in_queue' => $queue_status['in_queue'] ?? FALSE,
+          'suspended' => $queue_status['suspended'] ?? FALSE,
+          'run_id' => $run ? $run->run_uuid : $run_id,
+        ]);
+      }
 
       $response = [
         'status' => $actual_status,
         'updated' => $record->updated,
         'cover_letter_status' => $cover_letter ? $cover_letter->tailoring_status : 'not_started',
-        'in_queue' => $queue_status['in_queue'],
-        'suspended' => $queue_status['suspended'],
+        'in_queue' => $queue_status['in_queue'] ?? FALSE,
+        'suspended' => $queue_status['suspended'] ?? FALSE,
+        'run_id' => $run ? $run->run_uuid : ($record->run_uuid ?? NULL),
       ];
 
       if ($actual_status === 'completed' && !empty($record->tailored_resume_json)) {
@@ -1554,9 +1629,14 @@ class UserProfileController extends ControllerBase {
         $response['message'] = 'Waiting in queue for processing...';
       }
       elseif ($actual_status === 'failed') {
-        $response['message'] = $queue_status['suspended'] 
-          ? 'Tailoring suspended after multiple failures. Check queue management page.'
-          : 'Tailoring failed. Please try again.';
+        if ($run && !empty($run->error_message)) {
+          $response['message'] = 'Tailoring failed: ' . $run->error_message;
+        }
+        else {
+          $response['message'] = !empty($queue_status['suspended'])
+            ? 'Tailoring suspended after multiple failures. Check queue management page.'
+            : 'Tailoring failed. Please try again.';
+        }
       }
       else {
         $response['message'] = 'Status: ' . $actual_status;

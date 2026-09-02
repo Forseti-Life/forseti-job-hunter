@@ -5,6 +5,7 @@ namespace Drupal\job_hunter\Plugin\QueueWorker;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\job_hunter\Service\TailoringRunService;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 use Drupal\job_hunter\Traits\QueueWorkerBaseTrait;
 use GuzzleHttp\Exception\ClientException;
@@ -43,12 +44,20 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   protected $aiApiService;
 
   /**
+   * The tailoring run service.
+   *
+   * @var \Drupal\job_hunter\Service\TailoringRunService
+   */
+  protected $tailoringRunService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->configFactory = $container->get('config.factory');
     $instance->aiApiService = $container->get('ai_conversation.ai_api_service');
+    $instance->tailoringRunService = $container->get('job_hunter.tailoring_run_service');
     return $instance;
   }
 
@@ -56,29 +65,70 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function processItem($data) {
-    // Validate required fields — permanent failure if malformed.
-    foreach (['uid', 'job_id', 'profile_json', 'job_data'] as $field) {
-      if (empty($data[$field])) {
-        $this->logError('Queue: Resume tailoring discarded — missing required field "@field" in queue item data (job @job_id)', [
-          '@field' => $field,
-          '@job_id' => $data['job_id'] ?? 'unknown',
-        ]);
-        return;
-      }
-    }
-
-    $uid = $data['uid'];
-    $job_id = $data['job_id'];
-    $profile_json = $data['profile_json'];
-    $job_data = $data['job_data'];
     $retry_count = (int) ($data['retry_count'] ?? 0);
 
     // Respect exponential backoff — if this is a retried item that should not
     // be processed yet, re-delay it and release back to the queue.
     $process_after = (int) ($data['process_after'] ?? 0);
     if ($process_after > time()) {
-      throw new DelayedRequeueException($process_after - time(), "Backoff delay not yet elapsed for job {$job_id}");
+      $job_id_for_log = $data['job_id'] ?? ('run ' . ($data['run_id'] ?? 'n/a'));
+      throw new DelayedRequeueException($process_after - time(), "Backoff delay not yet elapsed for job {$job_id_for_log}");
     }
+
+    $run_id = $data['run_id'] ?? NULL;
+
+    if ($run_id) {
+      // Canonical event-driven path: the queue payload only ever carries a
+      // run_id. Resolve the actual uid/job_id/profile/job inputs fresh from
+      // the database via the run record.
+      $resolved = $this->tailoringRunService->resolveRunInputs($run_id);
+      if (!$resolved) {
+        $this->logError('Queue: Resume tailoring discarded — could not resolve inputs for run @run_id', [
+          '@run_id' => $run_id,
+        ]);
+        return;
+      }
+      $uid = $resolved['uid'];
+      $job_id = $resolved['job_id'];
+      $profile_json = $resolved['profile_json'];
+      $job_data = $resolved['job_data'];
+    }
+    else {
+      // Narrow migration path only: adopts a full-payload queue item that
+      // predates the run/outbox model (or was enqueued by a producer that
+      // has not been migrated) into a run record, so that every subsequent
+      // lifecycle transition — including retries — is uniformly run-based.
+      // This is NOT a supported permanent producer path; all current
+      // dispatch goes through TailoringRunService::createOrReuseRun() and
+      // carries only a run_id.
+      foreach (['uid', 'job_id', 'profile_json', 'job_data'] as $field) {
+        if (empty($data[$field])) {
+          $this->logError('Queue: Resume tailoring discarded — missing required field "@field" in legacy queue item data (job @job_id)', [
+            '@field' => $field,
+            '@job_id' => $data['job_id'] ?? 'unknown',
+          ]);
+          return;
+        }
+      }
+
+      $uid = (int) $data['uid'];
+      $job_id = (int) $data['job_id'];
+      $profile_json = $data['profile_json'];
+      $job_data = $data['job_data'];
+
+      $run_id = $this->tailoringRunService->adoptLegacyQueueItem($uid, $job_id);
+
+      $this->logWarning('Queue: Adopted legacy full-payload queue item for uid @uid job @job_id into run @run_id. This path is for draining pre-existing items only.', [
+        '@uid' => $uid,
+        '@job_id' => $job_id,
+        '@run_id' => $run_id,
+      ]);
+    }
+
+    // From this point forward $run_id is always populated: all lifecycle
+    // transitions (processing/completed/failed/retry) are tracked on the
+    // run record, whether this item arrived via the canonical run_id
+    // payload or was just adopted from a legacy full payload above.
 
     // Get logging context (username, company, job_title)
     $context = $this->getLoggingContext($uid, $job_data);
@@ -138,6 +188,10 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
         ['tailored_resume_json' => json_encode($tailored_result['tailored_resume_json'])]
       );
 
+      if ($run_id) {
+        $this->tailoringRunService->markRunStatus($run_id, 'completed');
+      }
+
       $this->logInfo('✅ Queue: Resume tailoring complete for @username → "@title" at @company (job @job_id)', [
         '@username' => $context['username'],
         '@title' => $context['job_title'],
@@ -147,7 +201,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
 
     }
     catch (\Exception $e) {
-      $this->handleQueueExceptionWithRetry($e, $connection, $data, $retry_count, $context, $uid, $job_id);
+      $this->handleQueueExceptionWithRetry($e, $connection, $data, $retry_count, $context, $uid, $job_id, $run_id);
     }
   }
 
@@ -219,8 +273,12 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
    *   The user ID.
    * @param int $job_id
    *   The job ID.
+   * @param string $run_id
+   *   The tailoring run UUID. Always populated: canonical run_id payloads
+   *   carry it directly, and legacy full payloads are adopted into a run
+   *   before this method is ever reached (see processItem()).
    */
-  private function handleQueueExceptionWithRetry(\Exception $e, $connection, array $data, int $retry_count, array $context, int $uid, int $job_id): void {
+  private function handleQueueExceptionWithRetry(\Exception $e, $connection, array $data, int $retry_count, array $context, int $uid, int $job_id, string $run_id): void {
     $error_type = $this->classifyException($e);
 
     $this->logError('❌ Queue: Resume tailoring @error_type failure for @username → job @job_id (attempt @attempt/3): @error', [
@@ -237,10 +295,15 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       // Exponential backoff: 30s, 60s, 120s for attempts 1/2/3.
       $backoff_seconds = (int) pow(2, $retry_count) * 30;
 
-      $retry_data = array_merge($data, [
+      // Retry payload is always the canonical run_id-only shape, regardless
+      // of whether the original item arrived as a run_id payload or was
+      // adopted from a legacy full payload — this guarantees legacy items
+      // are drained into the canonical shape after their first retry.
+      $retry_data = [
+        'run_id' => $run_id,
         'retry_count' => $retry_count + 1,
         'process_after' => time() + $backoff_seconds,
-      ]);
+      ];
 
       \Drupal::queue('job_hunter_resume_tailoring')->createItem($retry_data);
 
@@ -253,6 +316,12 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
 
       // Reset DB status to pending so the item does not appear stuck as 'processing'.
       $this->updateDatabaseStatus($connection, 'jobhunter_tailored_resumes', $uid, $job_id, 'pending');
+
+      if ($run_id) {
+        // Reset run status back to 'queued' so status polling reflects the
+        // pending backoff retry rather than an indefinite 'processing'.
+        $this->tailoringRunService->markRunStatus($run_id, 'queued');
+      }
     }
     else {
       $reason = ($error_type === 'transient') ? "max retries exhausted ({$max_retries}/{$max_retries})" : "permanent failure ({$error_type})";
@@ -265,6 +334,12 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       $this->updateDatabaseStatus($connection, 'jobhunter_tailored_resumes', $uid, $job_id, 'failed', [
         'error_message' => substr($e->getMessage(), 0, 500),
       ]);
+
+      if ($run_id) {
+        $this->tailoringRunService->markRunStatus($run_id, 'failed', [
+          'error_message' => substr($e->getMessage(), 0, 500),
+        ]);
+      }
     }
     // Do NOT re-throw — item is consumed (deleted) from the queue.
   }

@@ -390,6 +390,7 @@ function job_hunter_theme() {
         'skills_gap' => [],
         'tailored_resume' => NULL,
         'tailoring_status' => 'pending',
+        'run_uuid' => NULL,
         'pdf_path' => NULL,
         'pdf_generated' => NULL,
         'pdf_history' => [],

@@ -78,7 +78,7 @@
       </div>
       
       {# Status Indicator #}
-      <div class="status-indicator" id="status-indicator" data-status="{{ tailoring_status }}">
+      <div class="status-indicator" id="status-indicator" data-status="{{ tailoring_status }}" data-run-id="{{ run_uuid }}">
         <span class="status-icon">{{ current_status.icon }}</span>
         <div class="status-details">
           <span class="status-label" id="status-label">{{ current_status.label|t }}</span>
