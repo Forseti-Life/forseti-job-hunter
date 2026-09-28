@@ -199,7 +199,7 @@
           <span class="pdf-size">{{ (pdf.filesize / 1024)|number_format(1) }} KB</span>
           <span class="pdf-date">{{ pdf.created|date('M j, Y g:i a') }}</span>
           <a href="{{ path('job_hunter.download_pdf_by_id', {'pdf_id': pdf.id}) }}" class="pdf-download-link">{{ 'Download'|t }}</a>
-          <button type="button" class="pdf-delete-btn" data-pdf-id="{{ pdf.id }}" title="{{ 'Delete this PDF'|t }}">🗑️</button>
+          <button type="button" class="pdf-delete-btn" data-pdf-id="{{ pdf.id }}" data-delete-url="{{ path('job_hunter.delete_pdf', {'pdf_id': pdf.id}) }}" title="{{ 'Delete this PDF'|t }}">🗑️</button>
         </div>
         {% endfor %}
       </div>

@@ -381,7 +381,15 @@ class ResumeController extends ControllerBase {
 
     if ($realPath && file_exists($realPath)) {
       if (!unlink($realPath)) {
-        $this->logger->warning('Failed to delete PDF file: @path', ['@path' => $realPath]);
+        $this->logger->error('Failed to delete PDF file @path for PDF @pdf_id (uid @uid); history row retained.', [
+          '@path' => $realPath,
+          '@pdf_id' => $pdf_id,
+          '@uid' => $userId,
+        ]);
+        return new \Symfony\Component\HttpFoundation\JsonResponse([
+          'success' => FALSE,
+          'message' => 'Failed to delete the PDF file from storage.',
+        ], 500);
       }
     }
 

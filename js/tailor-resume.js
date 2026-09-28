@@ -478,6 +478,11 @@
           
           const button = $(this);
           const pdfId = button.data('pdf-id');
+          // Server-rendered route URL carries the CSRF ?token= required by the route.
+          const deleteUrl = button.data('delete-url');
+          if (!deleteUrl) {
+            throw new Error('PDF delete button for PDF ' + pdfId + ' is missing data-delete-url; template must render it via path(job_hunter.delete_pdf).');
+          }
           const pdfItem = button.closest('.pdf-item');
           const filename = pdfItem.find('.pdf-filename').text();
           
@@ -488,7 +493,7 @@
           button.prop('disabled', true).text('...');
           
           $.ajax({
-            url: '/jobhunter/resume/pdf/' + pdfId + '/delete',
+            url: deleteUrl,
             type: 'POST',
             dataType: 'json',
             headers: { 'X-CSRF-Token': drupalSettings.csrf_token || '' },
