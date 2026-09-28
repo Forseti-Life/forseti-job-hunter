@@ -74,19 +74,9 @@ class ResumePdfService {
    *   The PDF content as a string, or NULL on failure.
    */
   public function generatePdf(array $content, string $style_schema_name = 'keith_aumiller'): ?string {
-    $this->content = $content;
-
-    // Load the style schema.
-    if (!$this->loadStyleSchema($style_schema_name)) {
+    if (!$this->render($content, $style_schema_name)) {
       return NULL;
     }
-
-    // Initialize PDF.
-    $this->initializePdf();
-
-    // Render each section.
-    $this->renderContactInfo();
-    $this->renderSections();
 
     if (
       isset($content['tailoring_metadata'])
@@ -101,6 +91,35 @@ class ResumePdfService {
 
     // Return PDF content.
     return $this->pdf->Output('', 'S');
+  }
+
+  /**
+   * Count the pages resume content renders to, without producing a PDF.
+   *
+   * @throws \RuntimeException
+   *   When the style schema cannot be loaded.
+   */
+  public function countPages(array $content, string $style_schema_name = 'keith_aumiller'): int {
+    if (!$this->render($content, $style_schema_name)) {
+      throw new \RuntimeException("Resume style schema '{$style_schema_name}' could not be loaded for page counting.");
+    }
+    return $this->pdf->getNumPages();
+  }
+
+  /**
+   * Lay out resume content into the PDF document.
+   */
+  protected function render(array $content, string $style_schema_name): bool {
+    $this->content = $content;
+
+    if (!$this->loadStyleSchema($style_schema_name)) {
+      return FALSE;
+    }
+
+    $this->initializePdf();
+    $this->renderContactInfo();
+    $this->renderSections();
+    return TRUE;
   }
 
   /**

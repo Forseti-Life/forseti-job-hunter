@@ -5,6 +5,7 @@ namespace Drupal\job_hunter\Plugin\QueueWorker;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\job_hunter\Service\ResumeLengthPolicy;
 use Drupal\job_hunter\Service\TailoringRunService;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 use Drupal\job_hunter\Traits\QueueWorkerBaseTrait;
@@ -16,7 +17,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Resume Tailoring GenAI queue worker.
  *
- * Processes resume tailoring via AWS Bedrock in the background.
+ * Processes resume tailoring via DeepSeek in the background: section
+ * drafts, then a final whole-resume editing pass verified against the
+ * rendered page count.
  *
  * @QueueWorker(
  *   id = "job_hunter_resume_tailoring",
@@ -58,6 +61,31 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   protected $resumeLengthPolicy;
 
   /**
+   * The resume PDF service, used to verify the rendered page count.
+   *
+   * @var \Drupal\job_hunter\Service\ResumePdfService
+   */
+  protected $resumePdfService;
+
+  /**
+   * DeepSeek model used for every resume tailoring call.
+   */
+  private const TAILORING_MODEL = 'deepseek-v4-pro';
+
+  /**
+   * Output budgets. Thinking is disabled for section drafts so reasoning
+   * tokens cannot consume the budget meant for the JSON response.
+   */
+  private const SECTION_MAX_TOKENS = 8000;
+  private const FINAL_PASS_MAX_TOKENS = 32000;
+
+  /**
+   * Total word budget for the final pass; about 1,200 words renders to four
+   * pages in the default resume style.
+   */
+  private const FINAL_PASS_WORD_BUDGET = 1400;
+
+  /**
    * Concise-writing rules shared by every tailoring prompt.
    */
   private const WRITING_RULES = <<<'RULES'
@@ -77,6 +105,7 @@ RULES;
     $instance->aiApiService = $container->get('ai_conversation.ai_api_service');
     $instance->tailoringRunService = $container->get('job_hunter.tailoring_run_service');
     $instance->resumeLengthPolicy = $container->get('job_hunter.resume_length_policy');
+    $instance->resumePdfService = $container->get('job_hunter.resume_pdf_service');
     return $instance;
   }
 
@@ -247,6 +276,9 @@ RULES;
    *   'transient' or 'permanent'.
    */
   private function classifyException(\Exception $e): string {
+    if ($e instanceof \LengthException) {
+      return 'permanent';
+    }
     // Guzzle HTTP server errors (5xx) are always transient.
     if ($e instanceof ServerException) {
       return 'transient';
@@ -477,10 +509,15 @@ RULES;
       $tailored_resume = $this->normalizeTailoredResumeSchema($tailored_resume, $resume);
       $tailored_resume = $this->normalizeTechnicalExpertise($tailored_resume, $resume);
       $tailored_resume = $this->resumeLengthPolicy->apply($tailored_resume);
-      
-      $this->logInfo('✅ Successfully combined @count batches into final tailored resume', [
+
+      $this->logInfo('✅ Combined @count batches into a draft; starting final whole-resume pass', [
         '@count' => $final_batch_num,
       ]);
+
+      $tailored_resume = $this->finalizeResume($payload, $tailored_resume, $resume, $uid, $job_id);
+      if ($tailored_resume === NULL) {
+        return NULL;
+      }
       
       return [
         'tailored_resume_json' => $tailored_resume,
@@ -1113,12 +1150,14 @@ RULES;
   /**
    * Call AI API for a specific batched section.
    */
-  private function callBatchedSection(string $prompt, int $uid, int $job_id, string $section_name) {
+  private function callBatchedSection(string $prompt, int $uid, int $job_id, string $section_name, array $options = []) {
     try {
-      // Get max_tokens from centralized ai_conversation config
-      // Use lower limit since we're generating smaller sections
-      $config = $this->configFactory->get('ai_conversation.settings');
-      $max_tokens = 4000; // Stay under Claude's 4,096 hard limit
+      $options += [
+        'provider' => 'deepseek',
+        'model_id' => self::TAILORING_MODEL,
+        'thinking' => 'disabled',
+        'max_tokens' => self::SECTION_MAX_TOKENS,
+      ];
 
       // Use centralized AIApiService (with automatic caching)
       $result = $this->aiApiService->invokeModelDirect(
@@ -1131,9 +1170,7 @@ RULES;
           'queue' => 'job_hunter_resume_tailoring',
           'item_key' => "resume_tailoring_{$uid}_{$job_id}_{$section_name}",
         ],
-        [
-          'max_tokens' => $max_tokens,
-        ]
+        $options
       );
 
       if (!$result['success']) {
@@ -1167,8 +1204,8 @@ RULES;
           '@cpos' => $closing_brace_pos !== FALSE ? $closing_brace_pos : 'NONE',
         ]);
         
-        // Check if response was truncated due to max_tokens limit
-        if ($stop_reason === 'max_tokens') {
+        // Truncated output: Claude reports 'max_tokens', DeepSeek 'length'.
+        if (in_array($stop_reason, ['max_tokens', 'length'], TRUE)) {
           $this->logError('❌ Section @section hit max_tokens limit! Response truncated at @len chars. This should not happen with batched generation.', [
             '@section' => $section_name,
             '@len' => strlen($ai_response),
@@ -1238,6 +1275,139 @@ RULES;
   }
 
 
+
+  /**
+   * Run the final whole-resume pass and verify the rendered page count.
+   *
+   * One corrective pass is allowed when the edited resume still renders over
+   * the page limit; after that the run fails with the measured page count.
+   *
+   * @return array|null
+   *   The finalized resume, or NULL when the model returned no usable JSON.
+   *
+   * @throws \LengthException
+   *   When the resume still exceeds the page limit after the corrective pass.
+   */
+  private function finalizeResume(array $payload, array $draft, array $source_resume, int $uid, int $job_id): ?array {
+    $feedback = NULL;
+
+    for ($attempt = 1; $attempt <= 2; $attempt++) {
+      $edited = $this->callBatchedSection(
+        $this->buildFinalPassPrompt($payload, $draft, $feedback),
+        $uid,
+        $job_id,
+        "final_pass_{$attempt}",
+        [
+          'max_tokens' => self::FINAL_PASS_MAX_TOKENS,
+          'skip_cache' => TRUE,
+        ]
+      );
+      if (!$edited) {
+        $this->logError('❌ Final pass @attempt returned no usable JSON for job @job_id', [
+          '@attempt' => $attempt,
+          '@job_id' => $job_id,
+        ]);
+        return NULL;
+      }
+
+      $this->assertFinalPassKeptFacts($draft, $edited, $job_id);
+
+      $edited['tailoring_metadata'] = $draft['tailoring_metadata'];
+      $edited = $this->normalizeTailoredResumeSchema($edited, $source_resume);
+      $edited = $this->normalizeTechnicalExpertise($edited, $source_resume);
+      $edited = $this->resumeLengthPolicy->apply($edited);
+
+      $pages = $this->resumePdfService->countPages($edited);
+      $this->logInfo('📄 Final pass @attempt for job @job_id renders to @pages pages', [
+        '@attempt' => $attempt,
+        '@job_id' => $job_id,
+        '@pages' => $pages,
+      ]);
+      if ($pages <= ResumeLengthPolicy::MAX_PAGES) {
+        return $edited;
+      }
+
+      $draft = $edited;
+      $feedback = sprintf(
+        'The previous edit rendered to %d pages. It must be at most %d. Remove the least job-relevant content until it fits.',
+        $pages,
+        ResumeLengthPolicy::MAX_PAGES
+      );
+    }
+
+    throw new \LengthException(sprintf(
+      'Tailored resume for job %d still rendered over %d pages after the corrective final pass.',
+      $job_id,
+      ResumeLengthPolicy::MAX_PAGES
+    ));
+  }
+
+  /**
+   * Fail when the final pass invents employers or changes role dates.
+   *
+   * The final pass may drop roles to fit the page budget; it may not add or
+   * alter them.
+   */
+  private function assertFinalPassKeptFacts(array $draft, array $edited, int $job_id): void {
+    if (!isset($edited['professional_experience']) || !is_array($edited['professional_experience']) || $edited['professional_experience'] === []) {
+      throw new \RuntimeException("Final pass for job {$job_id} returned no professional_experience; the draft had " . count($draft['professional_experience'] ?? []) . ' roles.');
+    }
+
+    $key = static fn(array $role): string => strtolower(trim((string) ($role['company'] ?? ''))) . '|' . trim((string) ($role['start_date'] ?? '')) . '|' . trim((string) ($role['end_date'] ?? ''));
+    $draft_roles = array_map($key, array_filter($draft['professional_experience'] ?? [], 'is_array'));
+
+    foreach ($edited['professional_experience'] as $role) {
+      if (!is_array($role) || !in_array($key($role), $draft_roles, TRUE)) {
+        throw new \RuntimeException(sprintf(
+          'Final pass for job %d returned a role not present in the draft (%s); it may only drop roles, not add or change them.',
+          $job_id,
+          is_array($role) ? $key($role) : gettype($role)
+        ));
+      }
+    }
+  }
+
+  /**
+   * Build the final whole-resume editing prompt.
+   */
+  private function buildFinalPassPrompt(array $payload, array $draft, ?string $feedback): string {
+    $job = $payload['job_requisition'] ?? [];
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
+    $job_description = $job['raw_posting_text'] ?? '';
+    $writing_rules = self::WRITING_RULES;
+    $word_budget = self::FINAL_PASS_WORD_BUDGET;
+    $max_pages = ResumeLengthPolicy::MAX_PAGES;
+    $unedited = $draft;
+    unset($unedited['tailoring_metadata']);
+    $draft_json = json_encode($unedited, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $feedback_block = $feedback !== NULL ? "\nCorrection required: {$feedback}\n" : '';
+
+    return <<<PROMPT
+You are the final editor of a tailored resume. Return only valid JSON with no markdown fences and no prose.
+
+Target role: {$job_title}
+Target company: {$company_name}
+
+Job description:
+{$job_description}
+
+{$writing_rules}
+{$feedback_block}
+Edit the complete draft below as one document:
+- The whole resume must fit within {$max_pages} pages: at most {$word_budget} words of content in total.
+- Remove achievements and claims repeated across roles or sections; keep the strongest instance.
+- Make the executive profile and strategic differentiators consistent with the experience that follows.
+- Use one consistent voice and tense: past tense for past roles, present tense for current roles, no first person.
+- To meet the budget, drop the least job-relevant items first, starting with the oldest roles; do not shorten sentences into fragments.
+- You may remove roles, but never add roles or change any company, title, start_date, or end_date.
+- Do not invent facts, metrics, or qualifications.
+- Return the same JSON structure and keys as the draft.
+
+Draft resume JSON:
+{$draft_json}
+PROMPT;
+  }
 
   /**
    * Candidate profile limited to the experience the resume will include.

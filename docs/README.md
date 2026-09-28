@@ -264,17 +264,22 @@ Complete permissions reference and role configuration guide:
 ## 🔑 Key Concepts
 
 ### AI-Powered Resume Tailoring
-The module uses AWS Bedrock with Claude 3.5 Sonnet to automatically tailor resumes to specific job postings. When a job posting is created, the system:
-1. Loads the configured "Original Resume"
-2. Extracts job details (title, company, description)
-3. Sends a prompt to Claude AI with context
-4. Receives an optimized resume tailored to that job
-5. Saves the tailored resume to the job posting node
+The module uses DeepSeek `deepseek-v4-pro` (via `ai_conversation`'s
+`AIApiService`) for every resume tailoring call. The queue worker:
+1. Loads the consolidated profile and the job posting
+2. Selects roles by recency (last ten years first) and drafts each section
+   (metadata/profile, one call per role, other sections)
+3. Merges and normalizes the draft, then runs a final whole-resume editing
+   pass that removes duplication, aligns the summary with the experience,
+   unifies tone and tense, and cuts to the five-page budget. The final pass
+   may drop roles but may not add roles or change companies or dates.
+4. Counts the rendered PDF pages; if over five, runs one corrective pass,
+   then fails permanently if the resume still does not fit
+5. Saves the tailored resume JSON
 
 Tailored resumes are constrained to five pages. Professional experience from
 the most recent ten years receives the largest content budget; earlier career
-history is limited to concise, relevant context. The queue worker enforces
-section and achievement limits after generation, and the PDF service refuses
+history is limited to concise, relevant context. The PDF service also refuses
 to emit a tailored document that exceeds five pages.
 
 **Learn more:** [Process Flow - AI Resume Tailoring](PROCESS_FLOW.md#ai-resume-tailoring-service-flow)
