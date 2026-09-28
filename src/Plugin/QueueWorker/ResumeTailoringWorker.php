@@ -29,12 +29,6 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   use JobHunterLoggerTrait;
   use QueueWorkerBaseTrait;
 
-  private const RECENT_EXPERIENCE_YEARS = 10;
-  private const MAX_RECENT_EXPERIENCE_ENTRIES = 6;
-  private const MAX_EARLIER_EXPERIENCE_ENTRIES = 2;
-  private const MAX_RECENT_ACHIEVEMENTS = 4;
-  private const MAX_EARLIER_ACHIEVEMENTS = 1;
-
   /**
    * The config factory.
    *
@@ -57,6 +51,24 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   protected $tailoringRunService;
 
   /**
+   * The tailored resume length policy.
+   *
+   * @var \Drupal\job_hunter\Service\ResumeLengthPolicy
+   */
+  protected $resumeLengthPolicy;
+
+  /**
+   * Concise-writing rules shared by every tailoring prompt.
+   */
+  private const WRITING_RULES = <<<'RULES'
+Writing rules (the complete resume must fit within 5 pages and focus on the most recent 10 years):
+- Write complete, clear sentences. Lead with the outcome, then how it was achieved.
+- One idea per sentence and per bullet. Use concrete metrics from the candidate data when available.
+- No filler, buzzword chains, ellipses, or content repeated across sections.
+- If content does not fit the budget, leave out the least job-relevant item instead of compressing it into fragments.
+RULES;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -64,6 +76,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     $instance->configFactory = $container->get('config.factory');
     $instance->aiApiService = $container->get('ai_conversation.ai_api_service');
     $instance->tailoringRunService = $container->get('job_hunter.tailoring_run_service');
+    $instance->resumeLengthPolicy = $container->get('job_hunter.resume_length_policy');
     return $instance;
   }
 
@@ -398,7 +411,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       
       // BATCH 2-N: One batch per company in professional_experience
       $experience_entries = [];
-      $companies = $this->selectExperienceForTailoring($resume['professional_experience'] ?? []);
+      $companies = $this->resumeLengthPolicy->selectExperience($resume['professional_experience'] ?? []);
       $company_count = count($companies);
       
       $this->logInfo('📦 Batches 2-{$count}: Generating {$count} professional experience entries', [
@@ -463,7 +476,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       // persisted record matches the actual consumer contract.
       $tailored_resume = $this->normalizeTailoredResumeSchema($tailored_resume, $resume);
       $tailored_resume = $this->normalizeTechnicalExpertise($tailored_resume, $resume);
-      $tailored_resume = $this->applyResumeLengthPolicy($tailored_resume);
+      $tailored_resume = $this->resumeLengthPolicy->apply($tailored_resume);
       
       $this->logInfo('✅ Successfully combined @count batches into final tailored resume', [
         '@count' => $final_batch_num,
@@ -582,7 +595,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
 
         $location = trim((string) ($position['location'] ?? $entry['location'] ?? ''));
         $tenure = $position['tenure'] ?? $position['duration'] ?? $entry['tenure'] ?? $entry['duration'] ?? null;
-        $range = $this->parseDateRange($tenure, $position['start_date'] ?? $entry['start_date'] ?? null, $position['end_date'] ?? $entry['end_date'] ?? null);
+        $range = $this->resumeLengthPolicy->parseDateRange($tenure, $position['start_date'] ?? $entry['start_date'] ?? null, $position['end_date'] ?? $entry['end_date'] ?? null);
         $company_context = trim((string) ($position['company_context'] ?? $position['summary'] ?? $entry['company_context'] ?? $entry['summary'] ?? ''));
 
         $responsibility_categories = $this->normalizeResponsibilityCategories($position['responsibility_categories'] ?? $entry['responsibility_categories'] ?? []);
@@ -720,34 +733,6 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   }
 
   /**
-   * Parse a date-range string into start_date/end_date values.
-   */
-  private function parseDateRange($tenure, $start_date = NULL, $end_date = NULL): array {
-    $start = trim((string) ($start_date ?? ''));
-    $end = trim((string) ($end_date ?? ''));
-
-    if ($tenure !== NULL && $tenure !== '') {
-      $tenure_text = trim((string) $tenure);
-      if (preg_match('/^(.*?)(?:\s*[–-]\s*|\s+to\s+)(.*)$/u', $tenure_text, $matches)) {
-        $start = trim((string) ($matches[1] ?? $start));
-        $end = trim((string) ($matches[2] ?? $end));
-      }
-    }
-
-    if ($start === '' && !empty($start_date)) {
-      $start = trim((string) $start_date);
-    }
-    if ($end === '' && !empty($end_date)) {
-      $end = trim((string) $end_date);
-    }
-
-    return [
-      'start_date' => $start,
-      'end_date' => $end === '' ? 'Present' : $end,
-    ];
-  }
-
-  /**
    * Convert mixed responsibility category shapes to the canonical array.
    */
   private function normalizeResponsibilityCategories(array $categories): array {
@@ -805,237 +790,6 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     }
 
     return $normalized;
-  }
-
-  /**
-   * Select the experience entries that fit the tailored resume history policy.
-   */
-  private function selectExperienceForTailoring(array $entries): array {
-    $ranked = [];
-
-    foreach ($entries as $index => $entry) {
-      if (!is_array($entry)) {
-        continue;
-      }
-
-      $ranked[] = [
-        'entry' => $entry,
-        'index' => $index,
-        'end_timestamp' => $this->experienceEndTimestamp($entry),
-      ];
-    }
-
-    usort($ranked, static function (array $left, array $right): int {
-      $date_order = $right['end_timestamp'] <=> $left['end_timestamp'];
-      return $date_order !== 0 ? $date_order : $left['index'] <=> $right['index'];
-    });
-
-    $cutoff = strtotime('-' . self::RECENT_EXPERIENCE_YEARS . ' years');
-    $recent = [];
-    $earlier = [];
-
-    foreach ($ranked as $item) {
-      $is_recent = $item['end_timestamp'] === PHP_INT_MAX || $item['end_timestamp'] >= $cutoff;
-      $selection = [
-        'entry' => $item['entry'],
-        'is_recent' => $is_recent,
-      ];
-
-      if ($is_recent && count($recent) < self::MAX_RECENT_EXPERIENCE_ENTRIES) {
-        $recent[] = $selection;
-      }
-      elseif (!$is_recent && count($earlier) < self::MAX_EARLIER_EXPERIENCE_ENTRIES) {
-        $earlier[] = $selection;
-      }
-    }
-
-    return array_merge($recent, $earlier);
-  }
-
-  /**
-   * Resolve an experience entry's latest end date for recency ordering.
-   */
-  private function experienceEndTimestamp(array $entry): int {
-    $end_dates = [];
-
-    if (!empty($entry['positions']) && is_array($entry['positions'])) {
-      foreach ($entry['positions'] as $position) {
-        if (is_array($position)) {
-          $end_dates[] = $this->experienceEndDate($position);
-        }
-      }
-    }
-
-    $end_dates[] = $this->experienceEndDate($entry);
-    if (in_array(PHP_INT_MAX, $end_dates, TRUE)) {
-      return PHP_INT_MAX;
-    }
-
-    return max($end_dates);
-  }
-
-  /**
-   * Convert an experience end date into a timestamp.
-   */
-  private function experienceEndDate(array $entry): int {
-    $range = $this->parseDateRange(
-      $entry['tenure'] ?? $entry['duration'] ?? NULL,
-      $entry['start_date'] ?? NULL,
-      $entry['end_date'] ?? NULL
-    );
-    $end_date = trim((string) ($range['end_date'] ?? ''));
-
-    if ($end_date === '' || preg_match('/^(present|current|now)$/i', $end_date)) {
-      return PHP_INT_MAX;
-    }
-
-    $timestamp = strtotime($end_date);
-    if ($timestamp !== FALSE) {
-      return $timestamp;
-    }
-
-    if (preg_match_all('/\b(?:19|20)\d{2}\b/', $end_date, $matches) && $matches[0] !== []) {
-      $year = end($matches[0]);
-      return strtotime($year . '-12-31');
-    }
-
-    return PHP_INT_MAX;
-  }
-
-  /**
-   * Apply deterministic content limits that keep tailored resumes near five pages.
-   */
-  private function applyResumeLengthPolicy(array $resume): array {
-    if (!isset($resume['tailoring_metadata']) || !is_array($resume['tailoring_metadata'])) {
-      $resume['tailoring_metadata'] = [];
-    }
-    $resume['tailoring_metadata']['document_constraints'] = [
-      'max_pages' => 5,
-      'recent_experience_years' => self::RECENT_EXPERIENCE_YEARS,
-    ];
-
-    $selected_experience = $this->selectExperienceForTailoring($resume['professional_experience'] ?? []);
-    $resume['professional_experience'] = [];
-
-    foreach ($selected_experience as $selection) {
-      $entry = $selection['entry'];
-      $is_recent = $selection['is_recent'];
-      $achievement_limit = $is_recent
-        ? self::MAX_RECENT_ACHIEVEMENTS
-        : self::MAX_EARLIER_ACHIEVEMENTS;
-      $category_limit = $is_recent ? 2 : 1;
-      $remaining_achievements = $achievement_limit;
-      $categories = [];
-
-      foreach (array_slice($entry['responsibility_categories'] ?? [], 0, $category_limit) as $category) {
-        if (!is_array($category) || $remaining_achievements === 0) {
-          continue;
-        }
-
-        $achievements = array_slice(
-          $category['achievements'] ?? [],
-          0,
-          $remaining_achievements
-        );
-        foreach ($achievements as &$achievement) {
-          if (is_array($achievement) && isset($achievement['text'])) {
-            $achievement['text'] = $this->limitWords((string) $achievement['text'], 32);
-          }
-        }
-        unset($achievement);
-
-        if ($achievements !== []) {
-          $category['achievements'] = $achievements;
-          $categories[] = $category;
-          $remaining_achievements -= count($achievements);
-        }
-      }
-
-      $entry['company_context'] = $this->limitWords(
-        (string) ($entry['company_context'] ?? ''),
-        $is_recent ? 45 : 20
-      );
-      $entry['responsibility_categories'] = $categories;
-      $resume['professional_experience'][] = $entry;
-    }
-
-    $resume['strategic_differentiators'] = array_slice($resume['strategic_differentiators'] ?? [], 0, 4);
-    foreach ($resume['strategic_differentiators'] as &$differentiator) {
-      if (is_array($differentiator) && isset($differentiator['description'])) {
-        $differentiator['description'] = $this->limitWords((string) $differentiator['description'], 25);
-      }
-    }
-    unset($differentiator);
-
-    $resume['demonstration_projects'] = array_slice($resume['demonstration_projects'] ?? [], 0, 2);
-    foreach ($resume['demonstration_projects'] as &$project) {
-      if (is_array($project) && isset($project['description'])) {
-        $project['description'] = $this->limitWords((string) $project['description'], 30);
-      }
-    }
-    unset($project);
-
-    $resume['education'] = array_slice($resume['education'] ?? [], 0, 3);
-    $resume['certifications'] = array_slice($resume['certifications'] ?? [], 0, 6);
-    $resume['publications'] = array_slice($resume['publications'] ?? [], 0, 3);
-    $resume['awards_and_honors'] = array_slice($resume['awards_and_honors'] ?? [], 0, 3);
-    $resume['languages'] = array_slice($resume['languages'] ?? [], 0, 4);
-
-    if (!empty($resume['executive_profile']['summary'])) {
-      $resume['executive_profile']['summary'] = $this->limitWords(
-        (string) $resume['executive_profile']['summary'],
-        90
-      );
-    }
-
-    if (!empty($resume['technical_expertise']['categories'])) {
-      $resume['technical_expertise']['categories'] = array_slice(
-        $resume['technical_expertise']['categories'],
-        0,
-        6
-      );
-      foreach ($resume['technical_expertise']['categories'] as &$category) {
-        if (is_array($category)) {
-          $category['skills'] = array_slice($category['skills'] ?? [], 0, 10);
-        }
-      }
-      unset($category);
-    }
-
-    if (!empty($resume['consulting_practice']['engagements'])) {
-      $resume['consulting_practice']['engagements'] = array_slice(
-        $resume['consulting_practice']['engagements'],
-        0,
-        2
-      );
-      foreach ($resume['consulting_practice']['engagements'] as &$engagement) {
-        if (is_array($engagement) && isset($engagement['description'])) {
-          $engagement['description'] = $this->limitWords((string) $engagement['description'], 30);
-        }
-      }
-      unset($engagement);
-    }
-
-    if (!empty($resume['leadership_philosophy'])) {
-      $resume['leadership_philosophy'] = $this->limitWords(
-        (string) $resume['leadership_philosophy'],
-        30
-      );
-    }
-
-    return $resume;
-  }
-
-  /**
-   * Limit prose to a word budget without cutting through a word.
-   */
-  private function limitWords(string $text, int $limit): string {
-    $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-    if ($words === FALSE || count($words) <= $limit) {
-      return trim($text);
-    }
-
-    return implode(' ', array_slice($words, 0, $limit)) . '...';
   }
 
   /**
@@ -1486,6 +1240,20 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
 
 
   /**
+   * Candidate profile limited to the experience the resume will include.
+   *
+   * Keeps older roles out of the model context so generated summaries focus
+   * on the most recent ten years.
+   */
+  private function focusedProfile(array $resume): array {
+    $resume['professional_experience'] = array_column(
+      $this->resumeLengthPolicy->selectExperience($resume['professional_experience'] ?? []),
+      'entry'
+    );
+    return $resume;
+  }
+
+  /**
    * Build the metadata-focused prompt for the first resume tailoring batch.
    */
   private function buildMetadataPrompt(array $payload): string {
@@ -1496,14 +1264,15 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $job_description = $job['raw_posting_text'] ?? '';
-    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $resume_json = json_encode($this->focusedProfile($resume), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $writing_rules = self::WRITING_RULES;
 
     return <<<PROMPT
 You are an expert resume-tailoring assistant. Return only valid JSON with no markdown fences and no prose.
 
 Target role: {$job_title}
 Target company: {$company_name}
-Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
+{$writing_rules}
 
 Job requirements:
 {$job_skills}
@@ -1517,7 +1286,7 @@ Job description:
 Candidate profile JSON:
 {$resume_json}
 
-Keep the executive profile to 90 words, return no more than 4 strategic differentiators with 25 words per description, and return no more than 2 demonstration projects with 30 words per description. Preserve candidate facts and do not invent qualifications.
+Budgets: executive profile summary is 3 sentences and at most 70 words; at most 4 strategic differentiators, each description one sentence of at most 25 words; leadership philosophy is one sentence of at most 30 words; at most 2 demonstration projects, each description one sentence of at most 30 words. Preserve candidate facts and do not invent qualifications.
 
 Return a JSON object that matches the canonical resume schema exactly. Use these field names and structures:
 {
@@ -1539,9 +1308,9 @@ Return a JSON object that matches the canonical resume schema exactly. Use these
     "websites": [{"url": "https://example.com"}],
     "linkedin": {"url": "https://linkedin.com/in/name", "followers": 0}
   },
-  "executive_profile": {"summary": "Rewrite this summary in 3-5 lines to align with the role."},
+  "executive_profile": {"summary": "3 sentences, at most 70 words, aligned to the role."},
   "strategic_differentiators": [{"title": "Differentiator", "description": "short description aligned to requirements"}],
-  "leadership_philosophy": "Short impact-oriented statement",
+  "leadership_philosophy": "One sentence, at most 30 words.",
   "demonstration_projects": [{"name": "Project name", "description": "relevant project summary"}]
 }
 PROMPT;
@@ -1557,18 +1326,19 @@ PROMPT;
     $position_title = $company['title'] ?? 'Senior leader';
     $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
     $company_json = json_encode($company, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $resume_json = json_encode($this->focusedProfile($resume), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $writing_rules = self::WRITING_RULES;
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $history_guidance = $is_recent
-      ? 'This role falls within the most recent 10 years. Give it priority with no more than 2 responsibility categories and 4 achievements total.'
-      : 'This is earlier career history. Keep it concise: 1 short context sentence, 1 category, and 1 achievement.';
+      ? 'This role falls within the most recent 10 years. Give it priority: company_context is one sentence of at most 30 words; no more than 2 responsibility categories and 4 achievements total.'
+      : 'This is earlier career history. Keep it brief: company_context is one sentence of at most 20 words; 1 category and 1 achievement.';
 
     return <<<PROMPT
 You are an expert resume-tailoring assistant. Return only valid JSON with no markdown fences and no prose.
 
 Target role: {$job_title}
 Current company being tailored: {$company_name}
-Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
+{$writing_rules}
 History guidance: {$history_guidance}
 
 Company experience JSON to tailor:
@@ -1580,7 +1350,7 @@ Relevant job keywords:
 Candidate resume JSON:
 {$resume_json}
 
-Preserve dates, employers, titles, and facts from the candidate data. Do not invent qualifications. Keep every achievement to 32 words or fewer.
+Each achievement is one sentence of at most 25 words. Preserve dates, employers, titles, and facts from the candidate data. Do not invent qualifications.
 
 Return a JSON object describing only this experience entry in the canonical resume schema. Use this exact structure:
 {
@@ -1589,7 +1359,7 @@ Return a JSON object describing only this experience entry in the canonical resu
   "location": "Location or null",
   "start_date": "YYYY-MM or YYYY-MM-DD",
   "end_date": "YYYY-MM or Present",
-  "company_context": "Impact-oriented context paragraph",
+  "company_context": "One sentence of context",
   "responsibility_categories": [
     {
       "category": "Category name",
@@ -1608,7 +1378,8 @@ PROMPT;
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
     $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
     $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
-    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $resume_json = json_encode($this->focusedProfile($resume), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $writing_rules = self::WRITING_RULES;
     $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
@@ -1617,7 +1388,7 @@ You are an expert resume-tailoring assistant. Return only valid JSON with no mar
 
 Target role: {$job_title}
 Target company: {$company_name}
-Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
+{$writing_rules}
 
 Required skills:
 {$job_skills}
@@ -1628,7 +1399,7 @@ Priority keywords:
 Candidate profile JSON:
 {$resume_json}
 
-Prioritize only job-relevant content. Return no more than 3 education entries, 6 technical categories with 10 skills each, 2 consulting engagements, 6 certifications, 3 publications, 3 awards, and 4 languages. Keep descriptions to 30 words or fewer. Preserve candidate facts and do not invent qualifications.
+Prioritize only job-relevant content. Return no more than 3 education entries, 6 technical categories with 10 skills each, 2 consulting engagements, 6 certifications, 3 publications, 3 awards, and 4 languages. Each description is one sentence of at most 30 words. Preserve candidate facts and do not invent qualifications.
 
 Return a JSON object with the final resume sections using the canonical schema. Include keys like:
 {

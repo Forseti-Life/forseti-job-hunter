@@ -202,3 +202,6 @@ services:
       - '@job_hunter.apply_url_resolver'
       - '@job_hunter.application_form_mapper'
       - '@job_hunter.job_seeker_service'
+
+  job_hunter.resume_length_policy:
+    class: Drupal\job_hunter\Service\ResumeLengthPolicy

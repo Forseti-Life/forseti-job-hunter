@@ -158,7 +158,20 @@ class ResumeController extends ControllerBase {
     $filename = $this->generateFilename($content, $companyName, $jobTitle, TRUE);
 
     // Generate and save PDF.
-    $pdfContent = $this->pdfService->generatePdf($content);
+    try {
+      $pdfContent = $this->pdfService->generatePdf($content);
+    }
+    catch (\LengthException $e) {
+      $this->logger->error('Tailored PDF over page limit for user @uid, job @job_id: @error', [
+        '@uid' => $userId,
+        '@job_id' => $job_id,
+        '@error' => $e->getMessage(),
+      ]);
+      return new \Symfony\Component\HttpFoundation\JsonResponse([
+        'success' => FALSE,
+        'message' => $e->getMessage() . ' Re-run resume tailoring for this job to produce a shorter version.',
+      ], 422);
+    }
     if ($pdfContent === NULL) {
       $this->logger->error('Failed to generate PDF for user @uid, job @job_id', [
         '@uid' => $userId,

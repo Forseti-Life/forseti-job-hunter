@@ -3848,3 +3848,35 @@ function job_hunter_update_9063() {
 
   return t('Added error_message column to jobhunter_tailored_resumes.');
 }
+
+/**
+ * Apply the five-page / ten-year length policy to stored tailored resumes.
+ */
+function job_hunter_update_9064() {
+  $policy = \Drupal::service('job_hunter.resume_length_policy');
+  $database = \Drupal::database();
+  $rows = $database->select('jobhunter_tailored_resumes', 'tr')
+    ->fields('tr', ['id', 'tailored_resume_json'])
+    ->condition('tailoring_status', 'completed')
+    ->isNotNull('tailored_resume_json')
+    ->execute()
+    ->fetchAllKeyed();
+
+  $updated = 0;
+  foreach ($rows as $id => $json) {
+    $resume = json_decode((string) $json, TRUE);
+    if (!is_array($resume)) {
+      throw new \UnexpectedValueException("jobhunter_tailored_resumes row {$id} holds invalid tailored_resume_json; fix the producing tailoring run before applying the length policy.");
+    }
+    if (isset($resume['tailoring_metadata']['document_constraints'])) {
+      continue;
+    }
+    $database->update('jobhunter_tailored_resumes')
+      ->fields(['tailored_resume_json' => json_encode($policy->apply($resume))])
+      ->condition('id', $id)
+      ->execute();
+    $updated++;
+  }
+
+  return t('Applied the tailored resume length policy to @count stored resumes.', ['@count' => $updated]);
+}
