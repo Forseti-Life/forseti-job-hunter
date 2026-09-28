@@ -271,6 +271,12 @@ The module uses AWS Bedrock with Claude 3.5 Sonnet to automatically tailor resum
 4. Receives an optimized resume tailored to that job
 5. Saves the tailored resume to the job posting node
 
+Tailored resumes are constrained to five pages. Professional experience from
+the most recent ten years receives the largest content budget; earlier career
+history is limited to concise, relevant context. The queue worker enforces
+section and achievement limits after generation, and the PDF service refuses
+to emit a tailored document that exceeds five pages.
+
 **Learn more:** [Process Flow - AI Resume Tailoring](PROCESS_FLOW.md#ai-resume-tailoring-service-flow)
 
 ### Content Types and Data Storage

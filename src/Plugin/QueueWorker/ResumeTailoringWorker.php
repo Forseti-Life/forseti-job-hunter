@@ -29,6 +29,12 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   use JobHunterLoggerTrait;
   use QueueWorkerBaseTrait;
 
+  private const RECENT_EXPERIENCE_YEARS = 10;
+  private const MAX_RECENT_EXPERIENCE_ENTRIES = 6;
+  private const MAX_EARLIER_EXPERIENCE_ENTRIES = 2;
+  private const MAX_RECENT_ACHIEVEMENTS = 4;
+  private const MAX_EARLIER_ACHIEVEMENTS = 1;
+
   /**
    * The config factory.
    *
@@ -392,14 +398,16 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       
       // BATCH 2-N: One batch per company in professional_experience
       $experience_entries = [];
-      $companies = $resume['professional_experience'] ?? [];
+      $companies = $this->selectExperienceForTailoring($resume['professional_experience'] ?? []);
       $company_count = count($companies);
       
       $this->logInfo('📦 Batches 2-{$count}: Generating {$count} professional experience entries', [
         '{$count}' => $company_count,
       ]);
       
-      foreach ($companies as $index => $company) {
+      foreach ($companies as $index => $experience_selection) {
+        $company = $experience_selection['entry'];
+        $is_recent = $experience_selection['is_recent'];
         $batch_num = $index + 2;
         $company_name = $company['company'] ?? 'Unknown';
         $this->logInfo('📦 Batch @num/@total: Generating experience for @company', [
@@ -409,7 +417,7 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
         ]);
         
         $exp_result = $this->callBatchedSection(
-          $this->buildExperiencePrompt($payload, $company, $index),
+          $this->buildExperiencePrompt($payload, $company, $index, $is_recent),
           $uid,
           $job_id,
           "experience_{$index}"
@@ -449,10 +457,13 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
         $other_result
       );
 
-      // Normalize technical_expertise to renderer-safe structure.
-      // Some model responses still return categories as bare strings. Convert
-      // to objects ({name, skills[]}) and backfill skills from source profile.
+      // Normalize schema drift before saving. The model is allowed to return
+      // a plausible JSON structure that still does not match the canonical
+      // renderer contract expected by the UI/PDF layer. Normalize here so the
+      // persisted record matches the actual consumer contract.
+      $tailored_resume = $this->normalizeTailoredResumeSchema($tailored_resume, $resume);
       $tailored_resume = $this->normalizeTechnicalExpertise($tailored_resume, $resume);
+      $tailored_resume = $this->applyResumeLengthPolicy($tailored_resume);
       
       $this->logInfo('✅ Successfully combined @count batches into final tailored resume', [
         '@count' => $final_batch_num,
@@ -467,6 +478,564 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
       $this->logError('Batched resume generation failed: @error', ['@error' => $e->getMessage()]);
       throw $e;
     }
+  }
+
+  /**
+   * Normalize the model's response into the canonical resume schema consumed by
+   * the UI and PDF renderer.
+   *
+   * @param array $tailored_resume
+   *   Tailored resume JSON assembled from model batches.
+   * @param array $source_resume
+   *   Source consolidated profile JSON.
+   *
+   * @return array
+   *   Tailored resume normalized to the canonical schema.
+   */
+  private function normalizeTailoredResumeSchema(array $tailored_resume, array $source_resume): array {
+    $normalized = $tailored_resume;
+
+    if (isset($normalized['contact_info']) && is_array($normalized['contact_info'])) {
+      $contact = $normalized['contact_info'];
+      $source_contact = is_array($source_resume['contact_info'] ?? NULL) ? $source_resume['contact_info'] : [];
+
+      $full_name = trim((string) ($contact['full_name'] ?? $contact['name'] ?? $source_contact['full_name'] ?? $source_contact['name'] ?? ''));
+      $email = trim((string) ($contact['email'] ?? $source_contact['email'] ?? ''));
+      $phone = trim((string) ($contact['phone'] ?? $source_contact['phone'] ?? ''));
+      $headline = trim((string) ($contact['headline'] ?? $source_contact['headline'] ?? ''));
+      $location = $contact['location'] ?? $source_contact['location'] ?? [];
+      $websites = [];
+      if (!empty($contact['websites']) && is_array($contact['websites'])) {
+        $websites = $this->normalizeWebsites($contact['websites']);
+      }
+      elseif (!empty($contact['website'])) {
+        $websites = $this->normalizeWebsites([$contact['website']]);
+      }
+      elseif (!empty($source_contact['websites']) && is_array($source_contact['websites'])) {
+        $websites = $this->normalizeWebsites($source_contact['websites']);
+      }
+
+      $linkedin = $contact['linkedin'] ?? $source_contact['linkedin'] ?? [];
+      if (is_string($linkedin)) {
+        $linkedin = ['url' => $linkedin, 'followers' => 0];
+      }
+      elseif (!is_array($linkedin)) {
+        $linkedin = [];
+      }
+
+      $normalized['contact_info'] = [
+        'full_name' => $full_name,
+        'credentials' => array_values(array_filter(array_map('trim', (array) ($contact['credentials'] ?? [])))),
+        'headline' => $headline,
+        'location' => $this->normalizeLocationObject($location),
+        'phone' => $phone,
+        'email' => $email,
+        'websites' => $websites,
+        'linkedin' => $linkedin,
+      ];
+    }
+
+    if (!empty($normalized['professional_experience'])) {
+      $normalized['professional_experience'] = $this->normalizeProfessionalExperienceEntries($normalized['professional_experience']);
+    }
+
+    if (!empty($normalized['strategic_differentiators'])) {
+      $normalized['strategic_differentiators'] = $this->normalizeStrategicDifferentiators($normalized['strategic_differentiators']);
+    }
+
+    if (!empty($normalized['executive_profile']) && is_string($normalized['executive_profile'])) {
+      $normalized['executive_profile'] = ['summary' => $normalized['executive_profile']];
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Normalize professional experience entries into canonical schema.
+   */
+  private function normalizeProfessionalExperienceEntries(array $entries): array {
+    $normalized = [];
+
+    foreach ($entries as $entry) {
+      if (!is_array($entry)) {
+        continue;
+      }
+
+      $position_entries = [];
+      if (!empty($entry['positions']) && is_array($entry['positions'])) {
+        $position_entries = $entry['positions'];
+      }
+      else {
+        $position_entries[] = $entry;
+      }
+
+      foreach ($position_entries as $position) {
+        if (!is_array($position)) {
+          continue;
+        }
+
+        $company = trim((string) ($position['company'] ?? $entry['company'] ?? ''));
+        $title = trim((string) ($position['title'] ?? $position['role'] ?? $position['position'] ?? $entry['title'] ?? ''));
+        if ($company === '' && $title !== '') {
+          $company = trim((string) ($entry['company'] ?? ''));
+        }
+
+        $location = trim((string) ($position['location'] ?? $entry['location'] ?? ''));
+        $tenure = $position['tenure'] ?? $position['duration'] ?? $entry['tenure'] ?? $entry['duration'] ?? null;
+        $range = $this->parseDateRange($tenure, $position['start_date'] ?? $entry['start_date'] ?? null, $position['end_date'] ?? $entry['end_date'] ?? null);
+        $company_context = trim((string) ($position['company_context'] ?? $position['summary'] ?? $entry['company_context'] ?? $entry['summary'] ?? ''));
+
+        $responsibility_categories = $this->normalizeResponsibilityCategories($position['responsibility_categories'] ?? $entry['responsibility_categories'] ?? []);
+        if ($responsibility_categories === [] && !empty($position['achievements']) && is_array($position['achievements'])) {
+          $responsibility_categories[] = [
+            'category' => 'Key Achievements',
+            'achievements' => $this->normalizeAchievementList($position['achievements']),
+          ];
+        }
+        if ($responsibility_categories === [] && !empty($entry['achievements']) && is_array($entry['achievements'])) {
+          $responsibility_categories[] = [
+            'category' => 'Key Achievements',
+            'achievements' => $this->normalizeAchievementList($entry['achievements']),
+          ];
+        }
+
+        $normalized[] = [
+          'title' => $title,
+          'company' => $company,
+          'start_date' => $range['start_date'] ?? '',
+          'end_date' => $range['end_date'] ?? 'Present',
+          'location' => $location,
+          'company_context' => $company_context,
+          'responsibility_categories' => $responsibility_categories,
+        ];
+      }
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Normalize strategic differentiator strings/objects to the canonical schema.
+   */
+  private function normalizeStrategicDifferentiators(array $items): array {
+    $normalized = [];
+
+    foreach ($items as $item) {
+      if (is_array($item)) {
+        $title = trim((string) ($item['title'] ?? ''));
+        $description = trim((string) ($item['description'] ?? $item['summary'] ?? ''));
+        if ($title !== '' || $description !== '') {
+          $normalized[] = [
+            'title' => $title,
+            'description' => $description,
+          ];
+        }
+        continue;
+      }
+
+      $text = trim((string) $item);
+      if ($text === '') {
+        continue;
+      }
+
+      $parts = preg_split('/\s*:\s*/', $text, 2);
+      $title = trim((string) ($parts[0] ?? ''));
+      $description = trim((string) ($parts[1] ?? $text));
+      $normalized[] = [
+        'title' => $title,
+        'description' => $description,
+      ];
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Normalize websites into the canonical array of {url} objects.
+   */
+  private function normalizeWebsites(array $items): array {
+    $normalized = [];
+    foreach ($items as $item) {
+      if (is_array($item) && !empty($item['url'])) {
+        $url = $this->coerceString($item['url']);
+        if ($url !== '') {
+          $normalized[] = ['url' => $url];
+        }
+        continue;
+      }
+
+      $url = $this->coerceString($item);
+      if ($url !== '') {
+        $normalized[] = ['url' => $url];
+      }
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Normalize a location value to the object schema used by the renderer.
+   */
+  private function normalizeLocationObject($location): array {
+    if (is_array($location)) {
+      return [
+        'city' => $this->coerceString($location['city'] ?? $location['name'] ?? ''),
+        'state' => $this->coerceString($location['state'] ?? ''),
+        'country' => $this->coerceString($location['country'] ?? ''),
+      ];
+    }
+
+    $location_text = $this->coerceString($location);
+    if ($location_text === '') {
+      return [];
+    }
+
+    $parts = preg_split('/\s*,\s*/', $location_text, 2);
+    return [
+      'city' => $this->coerceString($parts[0] ?? $location_text),
+      'state' => $this->coerceString($parts[1] ?? ''),
+      'country' => '',
+    ];
+  }
+
+  /**
+   * Coerce mixed scalar/array values into a safe string.
+   */
+  private function coerceString($value): string {
+    if (is_array($value)) {
+      foreach ($value as $candidate) {
+        $text = $this->coerceString($candidate);
+        if ($text !== '') {
+          return $text;
+        }
+      }
+      return '';
+    }
+
+    if ($value === NULL) {
+      return '';
+    }
+
+    return trim((string) $value);
+  }
+
+  /**
+   * Parse a date-range string into start_date/end_date values.
+   */
+  private function parseDateRange($tenure, $start_date = NULL, $end_date = NULL): array {
+    $start = trim((string) ($start_date ?? ''));
+    $end = trim((string) ($end_date ?? ''));
+
+    if ($tenure !== NULL && $tenure !== '') {
+      $tenure_text = trim((string) $tenure);
+      if (preg_match('/^(.*?)(?:\s*[–-]\s*|\s+to\s+)(.*)$/u', $tenure_text, $matches)) {
+        $start = trim((string) ($matches[1] ?? $start));
+        $end = trim((string) ($matches[2] ?? $end));
+      }
+    }
+
+    if ($start === '' && !empty($start_date)) {
+      $start = trim((string) $start_date);
+    }
+    if ($end === '' && !empty($end_date)) {
+      $end = trim((string) $end_date);
+    }
+
+    return [
+      'start_date' => $start,
+      'end_date' => $end === '' ? 'Present' : $end,
+    ];
+  }
+
+  /**
+   * Convert mixed responsibility category shapes to the canonical array.
+   */
+  private function normalizeResponsibilityCategories(array $categories): array {
+    $normalized = [];
+
+    foreach ($categories as $category) {
+      if (!is_array($category)) {
+        continue;
+      }
+
+      $name = trim((string) ($category['category'] ?? $category['name'] ?? 'Key Responsibilities'));
+      if ($name === '') {
+        $name = 'Key Responsibilities';
+      }
+
+      $achievement_entries = [];
+      if (!empty($category['achievements']) && is_array($category['achievements'])) {
+        $achievement_entries = $this->normalizeAchievementList($category['achievements']);
+      }
+      elseif (!empty($category['items']) && is_array($category['items'])) {
+        $achievement_entries = $this->normalizeAchievementList($category['items']);
+      }
+      elseif (!empty($category['description'])) {
+        $achievement_entries = [['text' => trim((string) $category['description'])]];
+      }
+
+      $normalized[] = [
+        'category' => $name,
+        'achievements' => $achievement_entries,
+      ];
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Convert mixed achievement values into canonical {text} objects.
+   */
+  private function normalizeAchievementList(array $items): array {
+    $normalized = [];
+
+    foreach ($items as $item) {
+      if (is_array($item)) {
+        $text = trim((string) ($item['text'] ?? $item['description'] ?? $item['achievement'] ?? ''));
+        if ($text !== '') {
+          $normalized[] = ['text' => $text];
+        }
+        continue;
+      }
+
+      $text = trim((string) $item);
+      if ($text !== '') {
+        $normalized[] = ['text' => $text];
+      }
+    }
+
+    return $normalized;
+  }
+
+  /**
+   * Select the experience entries that fit the tailored resume history policy.
+   */
+  private function selectExperienceForTailoring(array $entries): array {
+    $ranked = [];
+
+    foreach ($entries as $index => $entry) {
+      if (!is_array($entry)) {
+        continue;
+      }
+
+      $ranked[] = [
+        'entry' => $entry,
+        'index' => $index,
+        'end_timestamp' => $this->experienceEndTimestamp($entry),
+      ];
+    }
+
+    usort($ranked, static function (array $left, array $right): int {
+      $date_order = $right['end_timestamp'] <=> $left['end_timestamp'];
+      return $date_order !== 0 ? $date_order : $left['index'] <=> $right['index'];
+    });
+
+    $cutoff = strtotime('-' . self::RECENT_EXPERIENCE_YEARS . ' years');
+    $recent = [];
+    $earlier = [];
+
+    foreach ($ranked as $item) {
+      $is_recent = $item['end_timestamp'] === PHP_INT_MAX || $item['end_timestamp'] >= $cutoff;
+      $selection = [
+        'entry' => $item['entry'],
+        'is_recent' => $is_recent,
+      ];
+
+      if ($is_recent && count($recent) < self::MAX_RECENT_EXPERIENCE_ENTRIES) {
+        $recent[] = $selection;
+      }
+      elseif (!$is_recent && count($earlier) < self::MAX_EARLIER_EXPERIENCE_ENTRIES) {
+        $earlier[] = $selection;
+      }
+    }
+
+    return array_merge($recent, $earlier);
+  }
+
+  /**
+   * Resolve an experience entry's latest end date for recency ordering.
+   */
+  private function experienceEndTimestamp(array $entry): int {
+    $end_dates = [];
+
+    if (!empty($entry['positions']) && is_array($entry['positions'])) {
+      foreach ($entry['positions'] as $position) {
+        if (is_array($position)) {
+          $end_dates[] = $this->experienceEndDate($position);
+        }
+      }
+    }
+
+    $end_dates[] = $this->experienceEndDate($entry);
+    if (in_array(PHP_INT_MAX, $end_dates, TRUE)) {
+      return PHP_INT_MAX;
+    }
+
+    return max($end_dates);
+  }
+
+  /**
+   * Convert an experience end date into a timestamp.
+   */
+  private function experienceEndDate(array $entry): int {
+    $range = $this->parseDateRange(
+      $entry['tenure'] ?? $entry['duration'] ?? NULL,
+      $entry['start_date'] ?? NULL,
+      $entry['end_date'] ?? NULL
+    );
+    $end_date = trim((string) ($range['end_date'] ?? ''));
+
+    if ($end_date === '' || preg_match('/^(present|current|now)$/i', $end_date)) {
+      return PHP_INT_MAX;
+    }
+
+    $timestamp = strtotime($end_date);
+    if ($timestamp !== FALSE) {
+      return $timestamp;
+    }
+
+    if (preg_match_all('/\b(?:19|20)\d{2}\b/', $end_date, $matches) && $matches[0] !== []) {
+      $year = end($matches[0]);
+      return strtotime($year . '-12-31');
+    }
+
+    return PHP_INT_MAX;
+  }
+
+  /**
+   * Apply deterministic content limits that keep tailored resumes near five pages.
+   */
+  private function applyResumeLengthPolicy(array $resume): array {
+    if (!isset($resume['tailoring_metadata']) || !is_array($resume['tailoring_metadata'])) {
+      $resume['tailoring_metadata'] = [];
+    }
+    $resume['tailoring_metadata']['document_constraints'] = [
+      'max_pages' => 5,
+      'recent_experience_years' => self::RECENT_EXPERIENCE_YEARS,
+    ];
+
+    $selected_experience = $this->selectExperienceForTailoring($resume['professional_experience'] ?? []);
+    $resume['professional_experience'] = [];
+
+    foreach ($selected_experience as $selection) {
+      $entry = $selection['entry'];
+      $is_recent = $selection['is_recent'];
+      $achievement_limit = $is_recent
+        ? self::MAX_RECENT_ACHIEVEMENTS
+        : self::MAX_EARLIER_ACHIEVEMENTS;
+      $category_limit = $is_recent ? 2 : 1;
+      $remaining_achievements = $achievement_limit;
+      $categories = [];
+
+      foreach (array_slice($entry['responsibility_categories'] ?? [], 0, $category_limit) as $category) {
+        if (!is_array($category) || $remaining_achievements === 0) {
+          continue;
+        }
+
+        $achievements = array_slice(
+          $category['achievements'] ?? [],
+          0,
+          $remaining_achievements
+        );
+        foreach ($achievements as &$achievement) {
+          if (is_array($achievement) && isset($achievement['text'])) {
+            $achievement['text'] = $this->limitWords((string) $achievement['text'], 32);
+          }
+        }
+        unset($achievement);
+
+        if ($achievements !== []) {
+          $category['achievements'] = $achievements;
+          $categories[] = $category;
+          $remaining_achievements -= count($achievements);
+        }
+      }
+
+      $entry['company_context'] = $this->limitWords(
+        (string) ($entry['company_context'] ?? ''),
+        $is_recent ? 45 : 20
+      );
+      $entry['responsibility_categories'] = $categories;
+      $resume['professional_experience'][] = $entry;
+    }
+
+    $resume['strategic_differentiators'] = array_slice($resume['strategic_differentiators'] ?? [], 0, 4);
+    foreach ($resume['strategic_differentiators'] as &$differentiator) {
+      if (is_array($differentiator) && isset($differentiator['description'])) {
+        $differentiator['description'] = $this->limitWords((string) $differentiator['description'], 25);
+      }
+    }
+    unset($differentiator);
+
+    $resume['demonstration_projects'] = array_slice($resume['demonstration_projects'] ?? [], 0, 2);
+    foreach ($resume['demonstration_projects'] as &$project) {
+      if (is_array($project) && isset($project['description'])) {
+        $project['description'] = $this->limitWords((string) $project['description'], 30);
+      }
+    }
+    unset($project);
+
+    $resume['education'] = array_slice($resume['education'] ?? [], 0, 3);
+    $resume['certifications'] = array_slice($resume['certifications'] ?? [], 0, 6);
+    $resume['publications'] = array_slice($resume['publications'] ?? [], 0, 3);
+    $resume['awards_and_honors'] = array_slice($resume['awards_and_honors'] ?? [], 0, 3);
+    $resume['languages'] = array_slice($resume['languages'] ?? [], 0, 4);
+
+    if (!empty($resume['executive_profile']['summary'])) {
+      $resume['executive_profile']['summary'] = $this->limitWords(
+        (string) $resume['executive_profile']['summary'],
+        90
+      );
+    }
+
+    if (!empty($resume['technical_expertise']['categories'])) {
+      $resume['technical_expertise']['categories'] = array_slice(
+        $resume['technical_expertise']['categories'],
+        0,
+        6
+      );
+      foreach ($resume['technical_expertise']['categories'] as &$category) {
+        if (is_array($category)) {
+          $category['skills'] = array_slice($category['skills'] ?? [], 0, 10);
+        }
+      }
+      unset($category);
+    }
+
+    if (!empty($resume['consulting_practice']['engagements'])) {
+      $resume['consulting_practice']['engagements'] = array_slice(
+        $resume['consulting_practice']['engagements'],
+        0,
+        2
+      );
+      foreach ($resume['consulting_practice']['engagements'] as &$engagement) {
+        if (is_array($engagement) && isset($engagement['description'])) {
+          $engagement['description'] = $this->limitWords((string) $engagement['description'], 30);
+        }
+      }
+      unset($engagement);
+    }
+
+    if (!empty($resume['leadership_philosophy'])) {
+      $resume['leadership_philosophy'] = $this->limitWords(
+        (string) $resume['leadership_philosophy'],
+        30
+      );
+    }
+
+    return $resume;
+  }
+
+  /**
+   * Limit prose to a word budget without cutting through a word.
+   */
+  private function limitWords(string $text, int $limit): string {
+    $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+    if ($words === FALSE || count($words) <= $limit) {
+      return trim($text);
+    }
+
+    return implode(' ', array_slice($words, 0, $limit)) . '...';
   }
 
   /**
@@ -662,6 +1231,132 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
   }
 
   /**
+   * Extract JSON from AI response that may contain markdown or text.
+   */
+  private function extractJsonFromResponse($response) {
+    $response_text = trim((string) $response);
+    $original_length = strlen($response_text);
+
+    \Drupal::logger('job_hunter')->info('🔍 extractJsonFromResponse START: input_length=@len', ['@len' => $original_length]);
+
+    if ($response_text === '') {
+      \Drupal::logger('job_hunter')->error('❌ extractJsonFromResponse: Empty response after trim');
+      return NULL;
+    }
+
+    // Aggressively normalize string-escaped JSON returned by models.
+    $has_literal_newlines = strpos($response_text, "\n") !== FALSE;
+    $has_literal_quotes = strpos($response_text, '\"') !== FALSE;
+    $has_literal_tabs = strpos($response_text, "\t") !== FALSE;
+    if ($has_literal_newlines || $has_literal_quotes || $has_literal_tabs) {
+      $before_length = strlen($response_text);
+      $response_text = stripcslashes($response_text);
+      $response_text = trim($response_text);
+      \Drupal::logger('job_hunter')->warning('🟡 APPLIED stripcslashes normalization: before_len=@before, after_len=@after', [
+        '@before' => $before_length,
+        '@after' => strlen($response_text),
+      ]);
+    }
+
+    // Strip markdown fences if present.
+    if (preg_match('/^```(?:json)?\s*(\{[\s\S]*\})\s*```\s*$/', $response_text, $matches)) {
+      $response_text = trim($matches[1]);
+      \Drupal::logger('job_hunter')->info('✅ Removed markdown wrapper before parse');
+    }
+
+    $decoded = $this->decodeJsonCandidate($response_text);
+    if ($decoded !== NULL) {
+      return $decoded;
+    }
+
+    $start_pos = strpos($response_text, '{');
+    if ($start_pos === FALSE) {
+      \Drupal::logger('job_hunter')->error('❌ BRACE COUNTING: No opening brace found in response');
+      return NULL;
+    }
+
+    $len = strlen($response_text);
+    $depth = 0;
+    $in_string = FALSE;
+    $escape_next = FALSE;
+    $last_close_brace_pos = -1;
+
+    for ($i = $start_pos; $i < $len; $i++) {
+      $char = $response_text[$i];
+
+      if ($escape_next) {
+        $escape_next = FALSE;
+        continue;
+      }
+      if ($char === '\\') {
+        $escape_next = TRUE;
+        continue;
+      }
+      if ($char === '"') {
+        $in_string = !$in_string;
+        continue;
+      }
+      if ($in_string) {
+        continue;
+      }
+      if ($char === '{') {
+        $depth++;
+      }
+      elseif ($char === '}') {
+        $depth--;
+        $last_close_brace_pos = $i;
+
+        // A valid JSON object may exist before a later malformed tail.
+        $candidate = substr($response_text, $start_pos, $i - $start_pos + 1);
+        $decoded = $this->decodeJsonCandidate($candidate);
+        if ($decoded !== NULL) {
+          \Drupal::logger('job_hunter')->info('✅ RECOVERY SUCCESS: Found valid JSON candidate ending at position @pos', ['@pos' => $i]);
+          return $decoded;
+        }
+      }
+    }
+
+    // Final fallback: trim recoverable trailing defects before a final decode.
+    if ($last_close_brace_pos > $start_pos) {
+      $candidate = substr($response_text, $start_pos, $last_close_brace_pos - $start_pos + 1);
+      $sanitized = preg_replace('/,\s*([}\]])/', '$1', $candidate);
+      $decoded = $this->decodeJsonCandidate($sanitized ?? $candidate);
+      if ($decoded !== NULL) {
+        \Drupal::logger('job_hunter')->info('✅ RECOVERY SUCCESS: Sanitized trailing comma JSON');
+        return $decoded;
+      }
+    }
+
+    \Drupal::logger('job_hunter')->warning('🟡 extractJsonFromResponse could not recover a valid JSON candidate');
+    return NULL;
+  }
+
+  /**
+   * Try to decode a JSON candidate while stripping recoverable defects.
+   */
+  private function decodeJsonCandidate(string $candidate): ?string {
+    $candidate = trim($candidate);
+    if ($candidate === '') {
+      return NULL;
+    }
+
+    $decoded = json_decode($candidate, TRUE);
+    if (json_last_error() === JSON_ERROR_NONE && $decoded !== NULL) {
+      return $candidate;
+    }
+
+    $sanitized = preg_replace('/,\s*([}\]])/', '$1', $candidate);
+    if ($sanitized !== NULL && $sanitized !== $candidate) {
+      $decoded = json_decode($sanitized, TRUE);
+      if (json_last_error() === JSON_ERROR_NONE && $decoded !== NULL) {
+        return $sanitized;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
    * Call AI API for a specific batched section.
    */
   private function callBatchedSection(string $prompt, int $uid, int $job_id, string $section_name) {
@@ -788,579 +1483,167 @@ class ResumeTailoringWorker extends QueueWorkerBase implements ContainerFactoryP
     }
   }
 
+
+
   /**
-   * Build the prompt for generating a tailored resume JSON.
+   * Build the metadata-focused prompt for the first resume tailoring batch.
    */
-  private function buildTailoredResumePrompt(array $payload) {
+  private function buildMetadataPrompt(array $payload): string {
     $job = $payload['job_requisition'] ?? [];
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
-
     $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
     $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
-    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT);
-    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT);
+    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $job_description = $job['raw_posting_text'] ?? '';
-    // Use compact JSON encoding to reduce prompt size
-    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES);
-    $job_id = $job['id'] ?? 0;
-    
-    // Log prompt size for debugging
-    $prompt_size = strlen($resume_json) + strlen($job_description) + 2000;
-    $this->logInfo('Queue: Building prompt with resume JSON size: @resume_size chars, job desc: @job_size chars, estimated total: @total chars', [
-      '@resume_size' => strlen($resume_json),
-      '@job_size' => strlen($job_description),
-      '@total' => $prompt_size,
-    ]);
+    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
     return <<<PROMPT
-You are an expert resume tailoring AI. Your task is to create a tailored version of the candidate's resume optimized for a specific job posting.
+You are an expert resume-tailoring assistant. Return only valid JSON with no markdown fences and no prose.
 
-## Job Information
-**Position:** {$job_title}
-**Company:** {$company_name}
+Target role: {$job_title}
+Target company: {$company_name}
+Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
 
-**Required Skills:**
+Job requirements:
 {$job_skills}
 
-**Key Keywords:**
+Priority keywords:
 {$job_keywords}
 
-**Job Description:**
+Job description:
 {$job_description}
 
-## Candidate's Current Resume (JSON)
+Candidate profile JSON:
 {$resume_json}
 
-## Your Task
+Keep the executive profile to 90 words, return no more than 4 strategic differentiators with 25 words per description, and return no more than 2 demonstration projects with 30 words per description. Preserve candidate facts and do not invent qualifications.
 
-Generate a TAILORED version of the candidate's resume as a JSON object. The output must:
-
-1. **Match the RESUME_JSON_SCHEMA.md structure** exactly with these sections:
-   - `schema_version`: "1.0"
-   - `tailoring_metadata`: Object with job_id, job_title, company, tailored_at timestamp, and guidance array
-   - `contact_info`: Keep unchanged from original
-   - `executive_profile`: Rewrite summary to emphasize relevant experience for this role
-   - `strategic_differentiators`: Prioritize/reword to match job requirements
-   - `professional_experience`: Reorder achievements, emphasize relevant technologies/metrics
-   - `consulting_practice`: Include if relevant to role
-   - `early_career`: Include if relevant
-   - `education`: Keep unchanged
-   - `technical_expertise`: Reorder categories to prioritize job-relevant skills. Each category must be an object with "name" (string) and "skills" (array of skill name strings). Preserve all skills from the source profile.
-   - `leadership_philosophy`: Tailor if relevant
-   - `demonstration_projects`: Include if relevant
-   - `publications`: Include if candidate has publications and they're relevant to the role
-   - `patents`: Include if candidate has patents and they're relevant to the role
-   - `certifications`: Include if candidate has certifications and they're relevant to the role
-   - `awards_and_honors`: Include if relevant to demonstrate excellence in the field
-   - `languages`: Include if job requires or values language skills
-
-2. **Tailoring Guidelines:**
-   - Incorporate keywords from the job posting naturally
-   - Prioritize achievements that match required skills
-   - Quantified metrics should be preserved and highlighted when relevant
-   - Technologies mentioned in job posting should be emphasized
-   - Maintain professional tone and factual accuracy
-   - DO NOT fabricate information - only reorganize and emphasize existing content
-   - For publications, patents, certifications, awards, and languages: only include if they exist in source resume AND are relevant to the position
-   - **Be concise**: Keep descriptions focused and impactful. Avoid unnecessary verbosity while maintaining professional quality.
-   - **Optimize length**: Aim for a balanced, professional resume that highlights the most relevant content for this role.
-
-3. **Add tailoring_metadata section:**
-   ```json
-   "tailoring_metadata": {
-     "job_id": {$job_id},
-     "job_title": "{$job_title}",
-     "company": "{$company_name}",
-     "tailored_at": "ISO-8601 timestamp",
-     "match_score": 0-100,
-     "guidance": [
-       "Key suggestion 1",
-       "Key suggestion 2"
-     ],
-     "emphasized_skills": ["skill1", "skill2"],
-     "emphasized_achievements": ["achievement summary 1"]
-   }
-   ```
-
-## Output Format
-
-**CRITICAL**: Return ONLY valid JSON conforming to RFC 8259:
-- Start immediately with `{` and end with `}`
-- NO markdown code blocks (no ```json or ```)
-- NO explanatory text before or after the JSON
-- NO double-escaping (don't wrap JSON as a string)
-- **USE PROPER JSON ESCAPING**: `\n` for newlines, `\t` for tabs, `\"` for quotes within strings
-- Ensure all braces, brackets, and quotes are properly balanced
-- Multi-line string values MUST use `\n` escape sequences, NOT literal newlines
-- All special characters in strings MUST be properly escaped per JSON spec
-
-The output must parse successfully with `json_decode()` without any preprocessing.
-
-PROMPT;
-  }
-
-  /**
-   * Build prompt for metadata + contact + profile + differentiators sections.
-   * 
-   * This is Batch 1 of the batched resume generation.
-   */
-  private function buildMetadataPrompt(array $payload) {
-    $job = $payload['job_requisition'] ?? [];
-    $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
-
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
-    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    // Extract only needed sections (NO raw_posting_text)
-    $extracted_position = json_encode($job['extracted_json']['position'] ?? [], JSON_UNESCAPED_SLASHES);
-    $extracted_requirements = json_encode($job['extracted_json']['requirements'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    $contact_json = json_encode($resume['contact_info'] ?? [], JSON_UNESCAPED_SLASHES);
-    $profile_text = $resume['executive_profile']['summary'] ?? '';
-    $differentiators = json_encode($resume['strategic_differentiators'] ?? [], JSON_UNESCAPED_SLASHES);
-    $job_id = $job['id'] ?? 0;
-    
-    return <<<PROMPT
-You are an expert resume tailoring AI. Generate the METADATA + CONTACT + PROFILE + DIFFERENTIATORS sections of a tailored resume.
-
-## Job Context
-**Position:** {$job_title}
-**Company:** {$company_name}
-**Position Details:** {$extracted_position}
-**Requirements:** {$extracted_requirements}
-**Skills:** {$job_skills}
-**Keywords:** {$job_keywords}
-
-## Current Resume Data
-**Contact Info:** {$contact_json}
-**Executive Profile Summary:** {$profile_text}
-**Strategic Differentiators:** {$differentiators}
-
-## Your Task
-Generate ONLY these sections as valid JSON:
-```
+Return a JSON object that matches the canonical resume schema exactly. Use these field names and structures:
 {
   "schema_version": "1.0",
   "tailoring_metadata": {
-    "job_id": {$job_id},
-    "job_title": "{$job_title}",
-    "company": "{$company_name}",
-    "tailored_at": "ISO-8601 timestamp",
-    "match_score": 0-100,
-    "guidance": ["Key suggestion 1", "Key suggestion 2"],
-    "emphasized_skills": ["skill1", "skill2"],
-    "emphasized_achievements": ["achievement 1"]
+    "job_id": "job id",
+    "job_title": "matching title",
+    "company": "company name",
+    "tailored_at": "ISO timestamp",
+    "guidance": ["brief guidance strings"]
   },
-  "contact_info": { ...keep unchanged from source... },
-  "executive_profile": {
-    "summary": "TAILORED version emphasizing relevance to this role"
+  "contact_info": {
+    "full_name": "candidate name",
+    "credentials": ["credential 1", "credential 2"],
+    "headline": "targeted headline",
+    "location": {"city": "city", "state": "state", "country": "country"},
+    "phone": "phone number",
+    "email": "email",
+    "websites": [{"url": "https://example.com"}],
+    "linkedin": {"url": "https://linkedin.com/in/name", "followers": 0}
   },
-  "strategic_differentiators": [
-    "TAILORED differentiator 1 (prioritize job-relevant items)",
-    "TAILORED differentiator 2"
-  ]
+  "executive_profile": {"summary": "Rewrite this summary in 3-5 lines to align with the role."},
+  "strategic_differentiators": [{"title": "Differentiator", "description": "short description aligned to requirements"}],
+  "leadership_philosophy": "Short impact-oriented statement",
+  "demonstration_projects": [{"name": "Project name", "description": "relevant project summary"}]
 }
-```
-
-**CRITICAL**: 
-- Return ONLY valid JSON (start with `{`, end with `}`)
-- NO markdown code blocks
-- Rewrite executive_profile summary to emphasize fit for this role
-- Reorder/reword strategic_differentiators to match job requirements
-- Keep contact_info unchanged
-- Use proper JSON escaping for special characters
 PROMPT;
   }
 
   /**
-   * Build prompt for a single professional experience entry (one company).
-   * 
-   * This is Batch 2-N of the batched resume generation.
+   * Build the experience-specific prompt for a single company entry.
    */
-  private function buildExperiencePrompt(array $payload,Array $company, int $index) {
-    $job = $payload['job_requisition'] ?? [];
-
-    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
-    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    // Extract only needed sections (NO raw_posting_text)
-    $extracted_position = json_encode($job['extracted_json']['position'] ?? [], JSON_UNESCAPED_SLASHES);
-    $extracted_requirements = json_encode($job['extracted_json']['requirements'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    $company_json = json_encode($company, JSON_UNESCAPED_SLASHES);
-    $company_employer_name = $company['company'] ?? 'Unknown Company';
-    
-    return <<<PROMPT
-You are an expert resume tailoring AI. Generate a SINGLE professional experience entry tailored for a specific job.
-
-## Job Context
-**Position:** {$job_title}
-**Company:** {$company_name}
-**Position Details:** {$extracted_position}
-**Requirements:** {$extracted_requirements}
-**Skills:** {$job_skills}
-**Keywords:** {$job_keywords}
-
-## Experience Entry to Tailor
-**Company:** {$company_employer_name}
-**Original Entry:** {$company_json}
-
-## Your Task
-Generate a TAILORED version of this ONE experience entry as valid JSON:
-```
-{
-  "company": "Company Name",
-  "positions": [
-    {
-      "title": "Title",
-      "start_date": "YYYY-MM",
-      "end_date": "YYYY-MM or Present",
-      "duration": "X years Y months",
-      "location": "City, State",
-      "achievements": [
-        "TAILORED achievement emphasizing job-relevant skills/metrics",
-        "Another tailored achievement"
-      ],
-      "technologies": ["tech1", "tech2"],
-      "business_impact": {
-        "revenue": "...",
-        "efficiency": "...",
-        "team_size": "..."
-      }
-    }
-  ]
-}
-```
-
-**CRITICAL**:
-- Return ONLY valid JSON (start with `{`, end with `}`)
-- NO markdown code blocks
-- Emphasize achievements matching job requirements
-- Incorporate job keywords naturally
-- Preserve quantified metrics
-- Highlight technologies mentioned in job posting
-- DO NOT fabricate information - only reorganize and emphasize existing content
-PROMPT;
-  }
-
-  /**
-   * Build prompt for education + technical + other sections.
-   * 
-   * This is the final batch of the batched resume generation.
-   */
-  private function buildOtherSectionsPrompt(array $payload) {
+  private function buildExperiencePrompt(array $payload, array $company, int $index, bool $is_recent): string {
     $job = $payload['job_requisition'] ?? [];
     $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
-
+    $company_name = $company['company'] ?? 'Unknown Company';
+    $position_title = $company['title'] ?? 'Senior leader';
     $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
-    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
-    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    // Extract only needed sections (NO raw_posting_text)
-    $extracted_position = json_encode($job['extracted_json']['position'] ?? [], JSON_UNESCAPED_SLASHES);
-    $extracted_requirements = json_encode($job['extracted_json']['requirements'] ?? [], JSON_UNESCAPED_SLASHES);
-    
-    $education = json_encode($resume['education'] ?? [], JSON_UNESCAPED_SLASHES);
-    $technical = json_encode($resume['technical_expertise'] ?? [], JSON_UNESCAPED_SLASHES);
-    $consulting = json_encode($resume['consulting_practice'] ?? [], JSON_UNESCAPED_SLASHES);
-    $early_career = json_encode($resume['early_career'] ?? [], JSON_UNESCAPED_SLASHES);
-    $leadership = json_encode($resume['leadership_philosophy'] ?? [], JSON_UNESCAPED_SLASHES);
-    $demos = json_encode($resume['demonstration_projects'] ?? [], JSON_UNESCAPED_SLASHES);
-    
+    $company_json = json_encode($company, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $history_guidance = $is_recent
+      ? 'This role falls within the most recent 10 years. Give it priority with no more than 2 responsibility categories and 4 achievements total.'
+      : 'This is earlier career history. Keep it concise: 1 short context sentence, 1 category, and 1 achievement.';
+
     return <<<PROMPT
-You are an expert resume tailoring AI. Generate EDUCATION + TECHNICAL SKILLS + OTHER SECTIONS tailored for a specific job.
+You are an expert resume-tailoring assistant. Return only valid JSON with no markdown fences and no prose.
 
-## Job Context
-**Position:** {$job_title}
-**Company:** {$company_name}
-**Position Details:** {$extracted_position}
-**Requirements:** {$extracted_requirements}
-**Skills:** {$job_skills}
-**Keywords:** {$job_keywords}
+Target role: {$job_title}
+Current company being tailored: {$company_name}
+Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
+History guidance: {$history_guidance}
 
-## Current Resume Data
-**Education:** {$education}
-**Technical Expertise:** {$technical}
-**Consulting Practice:** {$consulting}
-**Early Career:** {$early_career}
-**Leadership Philosophy:** {$leadership}
-**Demonstration Projects:** {$demos}
+Company experience JSON to tailor:
+{$company_json}
 
-## Your Task
-Generate ONLY these sections as valid JSON:
-```
+Relevant job keywords:
+{$job_keywords}
+
+Candidate resume JSON:
+{$resume_json}
+
+Preserve dates, employers, titles, and facts from the candidate data. Do not invent qualifications. Keep every achievement to 32 words or fewer.
+
+Return a JSON object describing only this experience entry in the canonical resume schema. Use this exact structure:
 {
-  "education": [...keep unchanged or omit if not relevant...],
-  "technical_expertise": {
-    "categories": [
-      {
-        "name": "Category Name",
-        "skills": ["Skill 1", "Skill 2", "Skill 3"]
-      }
-    ]
-  },
-  "consulting_practice": {...include if relevant...},
-  "early_career": {...include if relevant...},
-  "leadership_philosophy": {...tailor if relevant...},
-  "demonstration_projects": [...include if relevant...]
+  "company": "Company name",
+  "title": "Role title",
+  "location": "Location or null",
+  "start_date": "YYYY-MM or YYYY-MM-DD",
+  "end_date": "YYYY-MM or Present",
+  "company_context": "Impact-oriented context paragraph",
+  "responsibility_categories": [
+    {
+      "category": "Category name",
+      "achievements": [{"text": "achievement text with metrics when available"}]
+    }
+  ]
 }
-```
-
-**CRITICAL**:
-- Return ONLY valid JSON (start with `{`, end with `}`)
-- NO markdown code blocks
-- technical_expertise.categories MUST be an array of objects, each with "name" (string) and "skills" (array of strings). Do NOT return bare strings.
-- Reorder categories to prioritize job-relevant skills. Consolidate the source data into logical groups.
-- Pull actual skill names from the source Technical Expertise data — do NOT drop them. Every skill from the source should appear under an appropriate category.
-- Include optional sections (consulting, early_career, leadership, demos) ONLY if relevant to this role
-- Keep education unchanged unless specific optimization needed
-- Use proper JSON escaping
 PROMPT;
   }
 
   /**
-   * Extract JSON from AI response that may contain markdown or text.
+   * Build the prompt for the final resume sections (education, technical expertise, etc.).
    */
-  private function extractJsonFromResponse($response) {
-    $response_text = trim($response);
-    $original_length = strlen($response_text);
-    
-    \Drupal::logger('job_hunter')->info('🔍 extractJsonFromResponse START: input_length=@len', ['@len' => $original_length]);
-    
-    if (empty($response_text)) {
-      \Drupal::logger('job_hunter')->error('❌ extractJsonFromResponse: Empty response after trim');
-      return NULL;
-    }
+  private function buildOtherSectionsPrompt(array $payload): string {
+    $job = $payload['job_requisition'] ?? [];
+    $resume = $payload['user_resume']['consolidated_profile_json'] ?? [];
+    $job_title = $job['extracted_json']['position']['title'] ?? $job['extracted_json']['job_title'] ?? 'the position';
+    $company_name = $job['extracted_json']['company']['name'] ?? $job['extracted_json']['company_name'] ?? 'the company';
+    $resume_json = json_encode($resume, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $job_skills = json_encode($job['skills_required_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $job_keywords = json_encode($job['keywords_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-    // AGGRESSIVE normalization of escaped sequences
-    // The AI sometimes returns JSON with literal escape sequences that need to be processed
-    $has_literal_newlines = strpos($response_text, "\\n") !== FALSE;
-    $has_literal_quotes = strpos($response_text, '\\"') !== FALSE;
-    $has_literal_tabs = strpos($response_text, "\\t") !== FALSE;
-    $has_actual_newlines = strpos($response_text, "\n") !== FALSE;
-    
-    \Drupal::logger('job_hunter')->info('🔍 ESCAPE DETECTION: literal_newlines=@ln, literal_quotes=@lq, literal_tabs=@lt, actual_newlines=@an', [
-      '@ln' => $has_literal_newlines ? 'YES' : 'NO',
-      '@lq' => $has_literal_quotes ? 'YES' : 'NO',
-      '@lt' => $has_literal_tabs ? 'YES' : 'NO',
-      '@an' => $has_actual_newlines ? 'YES' : 'NO',
-    ]);
-    
-    // If we have literal escapes without actual whitespace, the response is string-escaped
-    if ($has_literal_newlines || $has_literal_quotes || $has_literal_tabs) {
-      $before_length = strlen($response_text);
-      $response_text = stripcslashes($response_text);
-      $response_text = trim($response_text);
-      $after_length = strlen($response_text);
-      
-      \Drupal::logger('job_hunter')->warning('🟡 APPLIED stripcslashes normalization: before_len=@before, after_len=@after, diff=@diff (literal escape sequences: newlines=@n, quotes=@q, tabs=@t)', [
-        '@before' => $before_length,
-        '@after' => $after_length,
-        '@diff' => $before_length - $after_length,
-        '@n' => $has_literal_newlines ? 'YES' : 'NO',
-        '@q' => $has_literal_quotes ? 'YES' : 'NO',
-        '@t' => $has_literal_tabs ? 'YES' : 'NO',
-      ]);
-    }
-    else {
-      \Drupal::logger('job_hunter')->info('🔍 SKIPPED escape normalization (no literal escapes detected)');
-    }
-    
-    // If the response starts with { and ends with }, try parsing it directly first
-    $first_char = isset($response_text[0]) ? $response_text[0] : 'EMPTY';
-    $last_char = strlen($response_text) > 0 ? $response_text[strlen($response_text) - 1] : 'EMPTY';
-    
-    \Drupal::logger('job_hunter')->info('🔍 DIRECT PARSE CHECK: first_char="@first", last_char="@last", length=@len', [
-      '@first' => $first_char,
-      '@last' => $last_char,
-      '@len' => strlen($response_text),
-    ]);
-    
-    if ($response_text[0] === '{' && $response_text[strlen($response_text) - 1] === '}') {
-      \Drupal::logger('job_hunter')->info('🔍 ATTEMPTING direct json_decode (response starts with { and ends with })');
-      
-      // Test if it's valid JSON by trying to decode it
-      $test_decode = json_decode($response_text, TRUE);
-      $error_code = json_last_error();
-      $error_msg = json_last_error_msg();
-      
-      if ($error_code === JSON_ERROR_NONE) {
-        \Drupal::logger('job_hunter')->info('✅ DIRECT PARSE SUCCESS! Returning valid JSON');
-        return $response_text; // It's already valid JSON!
-      }
-      
-      // Log why direct parsing failed with detailed context
-      \Drupal::logger('job_hunter')->warning('🟡 DIRECT PARSE FAILED: error=@error (code: @code), First 200 chars: "@start", Last 200 chars: "@end"', [
-        '@error' => $error_msg,
-        '@code' => $error_code,
-        '@start' => substr($response_text, 0, 200),
-        '@end' => substr($response_text, -200),
-      ]);
-    }
-    else {
-      // Log why we didn't try direct parsing
-      \Drupal::logger('job_hunter')->warning('🟡 SKIPPED direct parse. First: "@first" (expected: "{"), Last: "@last" (expected: "}"), First 100: "@start", Last 100: "@end"', [
-        '@first' => $first_char,
-        '@last' => $last_char,
-        '@start' => substr($response_text, 0, 100),
-        '@end' => substr($response_text, -100),
-      ]);
-    }
-    
-    // Try markdown code fence
-    \Drupal::logger('job_hunter')->info('🔍 CHECKING for markdown code fence...');
-    if (preg_match('/```(?:json)?\s*(\{[\s\S]*?\})\s*```/s', $response_text, $matches)) {
-      $extracted = trim($matches[1]);
-      \Drupal::logger('job_hunter')->info('✅ FOUND markdown code fence! Extracted @len chars', ['@len' => strlen($extracted)]);
-      return $extracted;
-    }
-    \Drupal::logger('job_hunter')->info('🔍 No markdown code fence found, proceeding to brace counting');
-    
-    // Find balanced JSON using brace counting (handles truncated responses)
-    $start_pos = strpos($response_text, '{');
-    if ($start_pos === FALSE) {
-      \Drupal::logger('job_hunter')->error('❌ BRACE COUNTING: No opening brace found in response');
-      return NULL;
-    }
-    
-    \Drupal::logger('job_hunter')->info('🔍 BRACE COUNTING START: opening_brace at position @pos, will scan @chars chars', [
-      '@pos' => $start_pos,
-      '@chars' => strlen($response_text) - $start_pos,
-    ]);
+    return <<<PROMPT
+You are an expert resume-tailoring assistant. Return only valid JSON with no markdown fences and no prose.
 
-    $depth = 0;
-    $in_string = FALSE;
-    $escape_next = FALSE;
-    $len = strlen($response_text);
-    $last_quote_pos = -1;
-    $last_open_brace_pos = -1;
-    $last_close_brace_pos = -1;
-    $last_logged_at = 0;
+Target role: {$job_title}
+Target company: {$company_name}
+Document constraint: the complete resume must fit within 5 pages and focus on the most recent 10 years.
 
-    for ($i = $start_pos; $i < $len; $i++) {
-      $char = $response_text[$i];
+Required skills:
+{$job_skills}
 
-      // Log progress every 10000 characters
-      if ($i - $last_logged_at >= 10000) {
-        \Drupal::logger('job_hunter')->info('🔍 BRACE COUNTING PROGRESS: position @pos/@total (@pct%), depth=@depth, in_string=@str, last_char="@char"', [
-          '@pos' => $i,
-          '@total' => $len,
-          '@pct' => round(($i / $len) * 100, 1),
-          '@depth' => $depth,
-          '@str' => $in_string ? 'YES' : 'NO',
-          '@char' => $char,
-        ]);
-        $last_logged_at = $i;
-      }
+Priority keywords:
+{$job_keywords}
 
-      if ($escape_next) {
-        $escape_next = FALSE;
-        continue;
-      }
-      if ($char === '\\') {
-        $escape_next = TRUE;
-        continue;
-      }
-      if ($char === '"') {
-        $in_string = !$in_string;
-        $last_quote_pos = $i;
-        continue;
-      }
-      if ($in_string) {
-        continue;
-      }
-      if ($char === '{') {
-        $depth++;
-        $last_open_brace_pos = $i;
-      }
-      elseif ($char === '}') {
-        $depth--;
-        $last_close_brace_pos = $i;
-        if ($depth === 0) {
-          $extracted_json = substr($response_text, $start_pos, $i - $start_pos + 1);
-          \Drupal::logger('job_hunter')->info('✅ BRACE COUNTING SUCCESS: Found complete JSON at positions @start to @end (@len chars)', [
-            '@start' => $start_pos,
-            '@end' => $i,
-            '@len' => strlen($extracted_json),
-          ]);
-          return $extracted_json;
-        }
-      }
-    }
+Candidate profile JSON:
+{$resume_json}
 
-    // If we got here, loop completed without finding balanced JSON
-    \Drupal::logger('job_hunter')->warning('🟡 BRACE COUNTING ENDED: Loop completed without finding balanced JSON');
-    \Drupal::logger('job_hunter')->warning('🟡 FINAL STATE: depth=@depth, in_string=@str, escape_next=@esc, last_quote_pos=@qpos, last_open_brace=@opos, last_close_brace=@cpos', [
-      '@depth' => $depth,
-      '@str' => $in_string ? 'YES' : 'NO',
-      '@esc' => $escape_next ? 'YES' : 'NO',
-      '@qpos' => $last_quote_pos,
-      '@opos' => $last_open_brace_pos,
-      '@cpos' => $last_close_brace_pos,
-    ]);
-    
-    // If we got here AND we're stuck in_string, it might be a parsing error
-    // Try to validate if the JSON up to the last quote is valid
-    if ($in_string && $last_quote_pos > 0 && $depth > 0) {
-      \Drupal::logger('job_hunter')->warning('🟡 Stuck in string state. Attempting JSON recovery by scanning backwards from last close brace...');
-      
-      // Try to find the last valid complete JSON object by working backwards
-      $recovery_attempts = 0;
-      for ($i = $len - 1; $i > $start_pos; $i--) {
-        if ($response_text[$i] === '}') {
-          $recovery_attempts++;
-          $candidate = substr($response_text, $start_pos, $i - $start_pos + 1);
-          $test = json_decode($candidate, TRUE);
-          $test_error = json_last_error();
-          
-          if ($test_error === JSON_ERROR_NONE) {
-            \Drupal::logger('job_hunter')->info('✅ RECOVERY SUCCESS: Found valid JSON by truncating at position @pos (after @attempts attempts)', [
-              '@pos' => $i,
-              '@attempts' => $recovery_attempts,
-            ]);
-            return $candidate;
-          }
-          
-          // Log first few failed recovery attempts
-          if ($recovery_attempts <= 3) {
-            \Drupal::logger('job_hunter')->info('🔍 Recovery attempt @num at pos @pos failed: @error', [
-              '@num' => $recovery_attempts,
-              '@pos' => $i,
-              '@error' => json_last_error_msg(),
-            ]);
-          }
-        }
-      }
-      \Drupal::logger('job_hunter')->warning('🟡 JSON recovery failed after @attempts attempts', ['@attempts' => $recovery_attempts]);
-    }
+Prioritize only job-relevant content. Return no more than 3 education entries, 6 technical categories with 10 skills each, 2 consulting engagements, 6 certifications, 3 publications, 3 awards, and 4 languages. Keep descriptions to 30 words or fewer. Preserve candidate facts and do not invent qualifications.
 
-    // If we got here, brace counting failed but response looks like JSON
-    // Log the final state for debugging with maximum context
-    $context_radius = 200;
-    $last_char_pos = $len - 1;
-    \Drupal::logger('job_hunter')->error('❌ BRACE COUNTING FAILED - Final state: depth=@depth, in_string=@str, total_length=@len', [
-      '@depth' => $depth,
-      '@str' => $in_string ? 'YES' : 'NO',
-      '@len' => $len,
-    ]);
-    \Drupal::logger('job_hunter')->error('❌ CONTEXT at failure: Last @radius chars: "@end"', [
-      '@radius' => $context_radius,
-      '@end' => substr($response_text, -$context_radius),
-    ]);
-    
-    if ($last_close_brace_pos > 0) {
-      \Drupal::logger('job_hunter')->error('❌ Last closing brace at position @pos, context around it: "@context"', [
-        '@pos' => $last_close_brace_pos,
-        '@context' => substr($response_text, max(0, $last_close_brace_pos - 50), 100),
-      ]);
-    }
-
-    return NULL;
+Return a JSON object with the final resume sections using the canonical schema. Include keys like:
+{
+  "education": [{"institution": "...", "degree": "...", "field": "...", "end_date": "..."}],
+  "technical_expertise": {"categories": [{"name": "Category", "skills": ["skill1", "skill2"]}]},
+  "consulting_practice": {"engagements": [{"name": "...", "description": "..."}]},
+  "certifications": [{"name": "...", "issuer": "..."}],
+  "publications": [{"title": "...", "source": "..."}],
+  "awards_and_honors": [{"title": "...", "organization": "..."}],
+  "languages": [{"language": "...", "proficiency": "..."}],
+  "leadership_philosophy": "Tailored statement",
+  "executive_profile": {"summary": "Tailored summary"}
+}
+PROMPT;
   }
+
 
 }

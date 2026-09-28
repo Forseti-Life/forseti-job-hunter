@@ -491,6 +491,7 @@
             url: '/jobhunter/resume/pdf/' + pdfId + '/delete',
             type: 'POST',
             dataType: 'json',
+            headers: { 'X-CSRF-Token': drupalSettings.csrf_token || '' },
             success: function(response) {
               if (response.success) {
                 pdfItem.fadeOut(300, function() {

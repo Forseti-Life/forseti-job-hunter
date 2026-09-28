@@ -11,6 +11,8 @@ use TCPDF;
  */
 class ResumePdfService {
 
+  private const MAX_TAILORED_RESUME_PAGES = 5;
+
   /**
    * The file system service.
    *
@@ -87,6 +89,17 @@ class ResumePdfService {
     // Render each section.
     $this->renderContactInfo();
     $this->renderSections();
+
+    if (
+      isset($content['tailoring_metadata'])
+      && $this->pdf->getNumPages() > self::MAX_TAILORED_RESUME_PAGES
+    ) {
+      throw new \LengthException(sprintf(
+        'Tailored resume rendered to %d pages; the maximum is %d.',
+        $this->pdf->getNumPages(),
+        self::MAX_TAILORED_RESUME_PAGES
+      ));
+    }
 
     // Return PDF content.
     return $this->pdf->Output('', 'S');
