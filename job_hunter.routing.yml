@@ -1267,6 +1267,17 @@ job_hunter.cover_letter:
     _user_is_logged_in: 'TRUE'
     job_id: \d+
 
+job_hunter.cover_letter_download:
+  path: '/jobhunter/coverletter/{job_id}/pdf'
+  defaults:
+    _controller: '\Drupal\job_hunter\Controller\CompanyController::downloadCoverLetter'
+    _title: 'Download Cover Letter PDF'
+  methods: [GET]
+  requirements:
+    _permission: 'access job hunter'
+    _user_is_logged_in: 'TRUE'
+    job_id: \d+
+
 job_hunter.cover_letter_generate:
   path: '/jobhunter/coverletter/{job_id}/generate'
   defaults:

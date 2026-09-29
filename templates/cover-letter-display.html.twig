@@ -67,9 +67,9 @@
         <button type="button" class="btn btn-secondary btn-sm js-copy-cover-letter">
           {{ 'Copy to Clipboard'|t }}
         </button>
-        {% if pdf_path %}
-          <a href="{{ pdf_path }}" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
-            {{ 'Download PDF'|t }}
+        {% if cover_letter_pdf_url %}
+          <a href="{{ cover_letter_pdf_url }}" class="btn btn-outline-primary btn-sm">
+            {{ 'Download Cover Letter PDF'|t }}
           </a>
         {% endif %}
       </div>

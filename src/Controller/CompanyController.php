@@ -13,7 +13,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Controller for company and job requirement management.
@@ -2552,6 +2555,9 @@ class CompanyController extends ControllerBase {
 
     $generate_url = Url::fromRoute('job_hunter.cover_letter_generate', ['job_id' => $job_id])->toString();
     $save_url = Url::fromRoute('job_hunter.cover_letter_save', ['job_id' => $job_id])->toString();
+    $cover_letter_pdf_url = $tailoring_status === 'completed' && $cover_letter_html !== ''
+      ? Url::fromRoute('job_hunter.cover_letter_download', ['job_id' => $job_id])->toString()
+      : '';
     $tailored_resume = $this->database->select('jobhunter_tailored_resumes', 'tr')
       ->fields('tr', ['tailoring_status', 'pdf_path'])
       ->condition('tr.uid', $uid)
@@ -2572,7 +2578,7 @@ class CompanyController extends ControllerBase {
       '#cover_letter' => $cover_letter,
       '#tailoring_status' => $tailoring_status,
       '#cover_letter_html' => $cover_letter_html,
-      '#pdf_path' => $cover_letter ? $cover_letter->pdf_path : NULL,
+      '#cover_letter_pdf_url' => $cover_letter_pdf_url,
       '#generate_url' => $generate_url,
       '#save_url' => $save_url,
       '#resume_url' => $resume_url,
@@ -2588,6 +2594,65 @@ class CompanyController extends ControllerBase {
     ];
 
     return $this->wrapWithNavigation($build);
+  }
+
+  /**
+   * Download the completed cover letter as a PDF.
+   */
+  public function downloadCoverLetter($job_id): Response {
+    $uid = (int) $this->currentUser->id();
+    $job_id = (int) $job_id;
+
+    if (!$this->loadOwnedSavedJob($uid, $job_id)) {
+      throw new AccessDeniedHttpException();
+    }
+
+    $cover_letter = $this->database->select('jobhunter_cover_letters', 'cl')
+      ->fields('cl', ['cover_letter_text', 'tailoring_status'])
+      ->condition('cl.uid', $uid)
+      ->condition('cl.job_id', $job_id)
+      ->execute()
+      ->fetchObject();
+
+    if (!$cover_letter ||
+        $cover_letter->tailoring_status !== 'completed' ||
+        trim((string) $cover_letter->cover_letter_text) === '') {
+      throw new NotFoundHttpException('Completed cover letter not found.');
+    }
+
+    $job_title = (string) $this->database->select('jobhunter_job_requirements', 'j')
+      ->fields('j', ['job_title'])
+      ->condition('j.id', $job_id)
+      ->execute()
+      ->fetchField();
+
+    $pdf = new \TCPDF('P', 'pt', 'LETTER', TRUE, 'UTF-8', FALSE);
+    $pdf->SetCreator('Forseti Job Hunter');
+    $pdf->SetTitle('Cover Letter - ' . ($job_title ?: 'Job ' . $job_id));
+    $pdf->setPrintHeader(FALSE);
+    $pdf->setPrintFooter(FALSE);
+    $pdf->SetMargins(54, 54, 54);
+    $pdf->SetAutoPageBreak(TRUE, 54);
+    $pdf->AddPage();
+    $pdf->SetFont('helvetica', '', 11);
+
+    $letter_html = nl2br(htmlspecialchars(
+      trim((string) $cover_letter->cover_letter_text),
+      ENT_QUOTES | ENT_SUBSTITUTE,
+      'UTF-8'
+    ));
+    $pdf->writeHTML($letter_html, TRUE, FALSE, TRUE, FALSE, '');
+
+    $safe_title = trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '_', $job_title), '_');
+    $filename = 'Cover_Letter_' . ($safe_title ?: (string) $job_id) . '.pdf';
+    $response = new Response($pdf->Output('', 'S'));
+    $response->headers->set('Content-Type', 'application/pdf');
+    $response->headers->set(
+      'Content-Disposition',
+      $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename)
+    );
+
+    return $response;
   }
 
   /**

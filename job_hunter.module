@@ -436,7 +436,7 @@ function job_hunter_theme() {
         'cover_letter' => NULL,
         'tailoring_status' => 'pending',
         'cover_letter_html' => '',
-        'pdf_path' => NULL,
+        'cover_letter_pdf_url' => '',
         'generate_url' => '',
         'save_url' => '',
         'resume_url' => '',
