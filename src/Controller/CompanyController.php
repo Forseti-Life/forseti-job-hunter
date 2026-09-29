@@ -880,6 +880,22 @@ class CompanyController extends ControllerBase {
     ];
 
     if ($saved_job) {
+      // Cover letter page requires an owned saved job (see coverLetter()).
+      $cover_letter_status = $this->database->select('jobhunter_cover_letters', 'cl')
+        ->fields('cl', ['tailoring_status'])
+        ->condition('cl.uid', $current_user->id())
+        ->condition('cl.job_id', $job_id)
+        ->execute()
+        ->fetchField();
+      $content['header']['actions']['cover_letter'] = [
+        '#type' => 'link',
+        '#title' => $cover_letter_status === 'completed'
+          ? $this->t('View Cover Letter')
+          : $this->t('Generate Cover Letter'),
+        '#url' => Url::fromRoute('job_hunter.cover_letter', ['job_id' => $job_id]),
+        '#attributes' => ['class' => ['button']],
+      ];
+
       $content['header']['actions']['archive'] = [
         '#type' => 'link',
         '#title' => $saved_job_is_archived ? $this->t('Restore') : $this->t('Archive'),
