@@ -3927,3 +3927,173 @@ function job_hunter_update_9065() {
     '@updated' => $updated,
   ]);
 }
+
+/**
+ * Resolve placeholders in stored cover letters and profile templates.
+ */
+function job_hunter_update_9066() {
+  $database = \Drupal::database();
+  $letters = $database->select('jobhunter_cover_letters', 'cl')
+    ->fields('cl', ['id', 'uid', 'job_id', 'cover_letter_text'])
+    ->condition('tailoring_status', 'completed')
+    ->isNotNull('cover_letter_text')
+    ->execute()
+    ->fetchAll();
+
+  $updated_letters = 0;
+  foreach ($letters as $letter) {
+    $job = $database->select('jobhunter_job_requirements', 'j')
+      ->fields('j', ['job_title', 'extracted_json'])
+      ->condition('id', $letter->job_id)
+      ->execute()
+      ->fetchObject();
+    $profile_json = $database->select('jobhunter_job_seeker', 'js')
+      ->fields('js', ['consolidated_profile_json'])
+      ->condition('uid', $letter->uid)
+      ->execute()
+      ->fetchField();
+
+    $profile = json_decode((string) $profile_json, TRUE);
+    if (!$job || !is_array($profile)) {
+      throw new \UnexpectedValueException("Cannot resolve cover letter {$letter->id}: missing job or invalid profile JSON.");
+    }
+    $extracted = json_decode((string) ($job->extracted_json ?? ''), TRUE);
+    $extracted = is_array($extracted) ? $extracted : [];
+
+    $job_title = trim((string) (
+      $extracted['position']['title']
+      ?? $extracted['job_title']
+      ?? $job->job_title
+      ?? ''
+    ));
+    $company = trim((string) (
+      $extracted['company']['name']
+      ?? $extracted['company_name']
+      ?? ''
+    ));
+    $candidate_name = trim((string) ($profile['contact_info']['full_name'] ?? ''));
+    $resolved = \Drupal\job_hunter\Service\CoverLetterContentPolicy::resolvePlaceholders(
+      (string) $letter->cover_letter_text,
+      $job_title,
+      $company,
+      $candidate_name
+    );
+    \Drupal\job_hunter\Service\CoverLetterContentPolicy::assertNoPlaceholders($resolved);
+    if ($resolved === $letter->cover_letter_text) {
+      continue;
+    }
+
+    $paragraphs = preg_split('/\n\n+/', $resolved);
+    $html = '';
+    foreach ($paragraphs as $paragraph) {
+      $paragraph = trim($paragraph);
+      if ($paragraph !== '') {
+        $html .= '<p>' . nl2br(htmlspecialchars($paragraph)) . '</p>' . "\n";
+      }
+    }
+    $database->update('jobhunter_cover_letters')
+      ->fields([
+        'cover_letter_text' => $resolved,
+        'cover_letter_html' => $html,
+        'cover_letter_json' => json_encode([
+          'paragraphs' => $paragraphs,
+          'word_count' => str_word_count($resolved),
+          'char_count' => strlen($resolved),
+        ]),
+        'pdf_path' => NULL,
+        'pdf_generated' => 0,
+        'updated' => time(),
+      ])
+      ->condition('id', $letter->id)
+      ->execute();
+    $updated_letters++;
+  }
+
+  $profiles = $database->select('jobhunter_job_seeker', 'js')
+    ->fields('js', ['id', 'consolidated_profile_json'])
+    ->execute()
+    ->fetchAll();
+  $updated_profiles = 0;
+  foreach ($profiles as $row) {
+    $profile = json_decode((string) $row->consolidated_profile_json, TRUE);
+    if (!is_array($profile)) {
+      throw new \UnexpectedValueException("jobhunter_job_seeker row {$row->id} holds invalid consolidated_profile_json.");
+    }
+    $template = $profile['job_search_preferences']['cover_letter_template'] ?? '';
+    if (!is_string($template) || $template === '') {
+      continue;
+    }
+    $candidate_name = trim((string) ($profile['contact_info']['full_name'] ?? ''));
+    $resolved = \Drupal\job_hunter\Service\CoverLetterContentPolicy::resolvePlaceholders(
+      $template,
+      '',
+      '',
+      $candidate_name
+    );
+    \Drupal\job_hunter\Service\CoverLetterContentPolicy::assertNoPlaceholders($resolved);
+    if ($resolved === $template) {
+      continue;
+    }
+    $profile['job_search_preferences']['cover_letter_template'] = $resolved;
+    $database->update('jobhunter_job_seeker')
+      ->fields([
+        'consolidated_profile_json' => json_encode($profile, JSON_UNESCAPED_SLASHES),
+        'changed' => time(),
+      ])
+      ->condition('id', $row->id)
+      ->execute();
+    $updated_profiles++;
+  }
+
+  return t('Resolved cover-letter placeholders in @letters generated letters and @profiles profile templates; invalidated affected cover-letter PDFs.', [
+    '@letters' => $updated_letters,
+    '@profiles' => $updated_profiles,
+  ]);
+}
+
+/**
+ * Remove the generic company header left by the initial template cleanup.
+ */
+function job_hunter_update_9067() {
+  $database = \Drupal::database();
+  $rows = $database->select('jobhunter_job_seeker', 'js')
+    ->fields('js', ['id', 'consolidated_profile_json'])
+    ->execute()
+    ->fetchAll();
+
+  $updated = 0;
+  foreach ($rows as $row) {
+    $profile = json_decode((string) $row->consolidated_profile_json, TRUE);
+    if (!is_array($profile)) {
+      throw new \UnexpectedValueException("jobhunter_job_seeker row {$row->id} holds invalid consolidated_profile_json.");
+    }
+    $template = $profile['job_search_preferences']['cover_letter_template'] ?? '';
+    if (!is_string($template) || $template === '') {
+      continue;
+    }
+
+    $cleaned = preg_replace(
+      '/(\R{2})[ \t]*the organization[ \t]*(\R{2}Dear Hiring Manager,)/i',
+      '$1Dear Hiring Manager,',
+      $template,
+      1
+    );
+    $cleaned = trim((string) preg_replace("/\R{3,}/", "\n\n", (string) $cleaned));
+    if ($cleaned === $template) {
+      continue;
+    }
+    $profile['job_search_preferences']['cover_letter_template'] = $cleaned;
+    $database->update('jobhunter_job_seeker')
+      ->fields([
+        'consolidated_profile_json' => json_encode($profile, JSON_UNESCAPED_SLASHES),
+        'changed' => time(),
+      ])
+      ->condition('id', $row->id)
+      ->execute();
+    $updated++;
+  }
+
+  return t('Removed generic company header artifacts from @count cover-letter templates.', [
+    '@count' => $updated,
+  ]);
+}

@@ -439,6 +439,8 @@ function job_hunter_theme() {
         'pdf_path' => NULL,
         'generate_url' => '',
         'save_url' => '',
+        'resume_url' => '',
+        'resume_pdf_url' => '',
       ],
       'template' => 'cover-letter-display',
     ],

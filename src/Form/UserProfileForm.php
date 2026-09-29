@@ -2285,10 +2285,6 @@ class UserProfileForm extends FormBase {
       $template .= "{$location}\n";
     }
     $template .= "{$email} | {$phone}\n\n";
-    $template .= "[Date]\n\n";
-    $template .= "[Hiring Manager Name]\n";
-    $template .= "[Company Name]\n";
-    $template .= "[Company Address]\n\n";
     $template .= "Dear Hiring Manager,\n\n";
     
     // Opening paragraph - Express interest and highlight experience
@@ -2302,7 +2298,7 @@ class UserProfileForm extends FormBase {
     }
     
     $years = $consolidated['job_search_preferences']['experience_years'] ?? '10+';
-    $template .= "I am writing to express my strong interest in the [Position Title] role at [Company Name]. ";
+    $template .= "I am writing to express my strong interest in this role. ";
     $template .= "As a {$exec_profile}, I bring {$years} years of proven expertise in delivering transformative results. ";
     $template .= "I am excited about the opportunity to contribute to your organization's continued success.\n\n";
     
@@ -2364,7 +2360,7 @@ class UserProfileForm extends FormBase {
     $template .= "I am confident that my experience, technical expertise, and proven track record of ";
     $template .= "delivering measurable business impact make me an ideal candidate for this role. ";
     $template .= "I would welcome the opportunity to discuss how my skills and background align with ";
-    $template .= "[Company Name]'s goals and how I can contribute to your team's continued success.\n\n";
+    $template .= "the organization's goals and how I can contribute to your team's continued success.\n\n";
     
     $template .= "Thank you for considering my application. I look forward to speaking with you soon.\n\n";
     $template .= "Sincerely,\n";

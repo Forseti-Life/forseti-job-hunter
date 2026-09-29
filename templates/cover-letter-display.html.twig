@@ -10,6 +10,18 @@
     {% if job %}
       <p class="job-title-context">{{ 'For:'|t }} <strong>{{ job.job_title }}</strong></p>
     {% endif %}
+    {% if resume_url %}
+      <div class="cover-letter-role-actions">
+        <a href="{{ resume_url }}" class="btn btn-primary btn-sm">
+          {{ 'View Tailored Resume'|t }}
+        </a>
+        {% if resume_pdf_url %}
+          <a href="{{ resume_pdf_url }}" class="btn btn-outline-primary btn-sm">
+            {{ 'Download Resume PDF'|t }}
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 
   {% if tailoring_status is null %}

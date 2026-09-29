@@ -5,6 +5,7 @@ namespace Drupal\job_hunter\Plugin\QueueWorker;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\job_hunter\Service\CoverLetterContentPolicy;
 use Drupal\job_hunter\Service\TailoringRunService;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 use Drupal\job_hunter\Traits\QueueWorkerBaseTrait;
@@ -384,7 +385,24 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
       ]);
 
       // Parse the cover letter from response
-      $cover_letter_data = $this->parseCoverLetterResponse($ai_response);
+      $extracted = $payload['job_requisition']['extracted_json'] ?? [];
+      $job_title = trim((string) (
+        $extracted['position']['title']
+        ?? $extracted['job_title']
+        ?? ''
+      ));
+      $company = trim((string) (
+        $extracted['company']['name']
+        ?? $extracted['company_name']
+        ?? ''
+      ));
+      $candidate_name = trim((string) ($payload['user_profile']['consolidated_profile_json']['contact_info']['full_name'] ?? ''));
+      $cover_letter_data = $this->parseCoverLetterResponse(
+        $ai_response,
+        $job_title,
+        $company,
+        $candidate_name
+      );
       
       if ($cover_letter_data) {
           return $cover_letter_data;
@@ -412,8 +430,24 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
     // Extract profile highlights
     $profile_summary = is_array($profile) ? json_encode($profile, JSON_PRETTY_PRINT) : $profile;
     $job_description = $job_data['raw_posting_text'] ?? 'No job description provided';
-    $job_title = $job_data['extracted_json']['job_title'] ?? 'the position';
-    $company = $job_data['extracted_json']['company_name'] ?? 'your company';
+    $job_title = trim((string) (
+      $job_data['extracted_json']['position']['title']
+      ?? $job_data['extracted_json']['job_title']
+      ?? ''
+    ));
+    $company = trim((string) (
+      $job_data['extracted_json']['company']['name']
+      ?? $job_data['extracted_json']['company_name']
+      ?? ''
+    ));
+    $candidate_name = trim((string) ($profile['contact_info']['full_name'] ?? ''));
+    $template = CoverLetterContentPolicy::resolvePlaceholders(
+      (string) $template,
+      $job_title,
+      $company,
+      $candidate_name
+    );
+    CoverLetterContentPolicy::assertNoPlaceholders($template);
     
     // If tailored resume is available, include it for alignment
     $tailored_resume_section = '';
@@ -476,14 +510,15 @@ $profile_summary
 10. Avoid generic statements - be specific to THIS job and THIS candidate
 11. The cover letter should complement (not duplicate) the resume - expand on key points with context and enthusiasm
 12. If no template is provided, create a professional letter from scratch - do NOT skip this step
+13. Do not include a date line, recipient mailing-address block, or bracketed template variables. Use only real values supplied above.
 
 **OUTPUT FORMAT**:
 Return the cover letter as plain text, ready to use. Include:
 - Opening salutation (use "Dear Hiring Manager" if no name available)
 - 3-4 well-structured paragraphs
-- Professional closing (Sincerely, [Name])
+- Professional closing using the candidate's real name
 
-Do NOT include any JSON, markdown formatting, or code blocks. Just the plain text cover letter.
+Do NOT include any JSON, markdown formatting, code blocks, bracketed placeholders, or template variables. Just the final plain text cover letter.
 
 PROMPT;
   }
@@ -491,13 +526,24 @@ PROMPT;
   /**
    * Parse cover letter from AI response.
    */
-  private function parseCoverLetterResponse($response) {
-    $cover_letter_text = trim($response);
+  private function parseCoverLetterResponse(
+    $response,
+    string $job_title,
+    string $company,
+    string $candidate_name,
+  ) {
+    $cover_letter_text = CoverLetterContentPolicy::resolvePlaceholders(
+      trim((string) $response),
+      $job_title,
+      $company,
+      $candidate_name
+    );
     
     if (empty($cover_letter_text)) {
       $this->logError('❌ Empty cover letter response from AI');
       return NULL;
     }
+    CoverLetterContentPolicy::assertNoPlaceholders($cover_letter_text);
 
     // Generate HTML version (simple paragraph wrapping)
     $html_version = '';

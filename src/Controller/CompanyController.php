@@ -2552,6 +2552,18 @@ class CompanyController extends ControllerBase {
 
     $generate_url = Url::fromRoute('job_hunter.cover_letter_generate', ['job_id' => $job_id])->toString();
     $save_url = Url::fromRoute('job_hunter.cover_letter_save', ['job_id' => $job_id])->toString();
+    $tailored_resume = $this->database->select('jobhunter_tailored_resumes', 'tr')
+      ->fields('tr', ['tailoring_status', 'pdf_path'])
+      ->condition('tr.uid', $uid)
+      ->condition('tr.job_id', $job_id)
+      ->execute()
+      ->fetchObject();
+    $resume_url = $tailored_resume && $tailored_resume->tailoring_status === 'completed'
+      ? Url::fromRoute('job_hunter.tailor_resume', ['job' => $job_id])->toString()
+      : '';
+    $resume_pdf_url = $resume_url !== '' && !empty($tailored_resume->pdf_path)
+      ? Url::fromRoute('job_hunter.download_tailored_resume_pdf', ['job_id' => $job_id])->toString()
+      : '';
 
     $build = [
       '#theme' => 'cover_letter_display',
@@ -2563,6 +2575,8 @@ class CompanyController extends ControllerBase {
       '#pdf_path' => $cover_letter ? $cover_letter->pdf_path : NULL,
       '#generate_url' => $generate_url,
       '#save_url' => $save_url,
+      '#resume_url' => $resume_url,
+      '#resume_pdf_url' => $resume_pdf_url,
       '#attached' => [
         'drupalSettings' => [
           'jobHunterCoverLetter' => [
