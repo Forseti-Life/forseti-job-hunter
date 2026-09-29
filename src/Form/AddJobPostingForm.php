@@ -291,7 +291,7 @@ Benefits:
       
       \Drupal::logger('job_hunter')->info('📋 Queued job posting @id for AI parsing', ['@id' => $job_id]);
       
-      $this->messenger->addMessage($this->t('Job posting "@title" has been saved and queued for AI parsing. Job ID: @id', [
+      $this->messenger->addMessage($this->t('Job posting "@title" has been saved. AI parsing is queued and will start automatically, usually within 5 minutes. Job ID: @id', [
         '@title' => $job_title,
         '@id' => $job_id,
       ]));
