@@ -3880,3 +3880,50 @@ function job_hunter_update_9064() {
 
   return t('Applied the tailored resume length policy to @count stored resumes.', ['@count' => $updated]);
 }
+
+/**
+ * Remove URL-less demonstration projects from stored tailored resumes.
+ */
+function job_hunter_update_9065() {
+  $database = \Drupal::database();
+  $rows = $database->select('jobhunter_tailored_resumes', 'tr')
+    ->fields('tr', ['id', 'tailored_resume_json'])
+    ->isNotNull('tailored_resume_json')
+    ->execute()
+    ->fetchAllKeyed();
+
+  $updated = 0;
+  $removed = 0;
+  foreach ($rows as $id => $json) {
+    $resume = json_decode((string) $json, TRUE);
+    if (!is_array($resume)) {
+      throw new \UnexpectedValueException("jobhunter_tailored_resumes row {$id} holds invalid tailored_resume_json; fix the producing tailoring run before applying the demonstration-project policy.");
+    }
+
+    $projects = is_array($resume['demonstration_projects'] ?? NULL)
+      ? $resume['demonstration_projects']
+      : [];
+    $filtered = \Drupal\job_hunter\Service\DemonstrationProjectPolicy::filter($projects);
+    if ($filtered === $projects) {
+      continue;
+    }
+
+    $removed += count($projects) - count($filtered);
+    $resume['demonstration_projects'] = $filtered;
+    $database->update('jobhunter_tailored_resumes')
+      ->fields([
+        'tailored_resume_json' => json_encode($resume, JSON_UNESCAPED_SLASHES),
+        'pdf_path' => NULL,
+        'pdf_generated' => 0,
+        'updated' => time(),
+      ])
+      ->condition('id', $id)
+      ->execute();
+    $updated++;
+  }
+
+  return t('Removed @removed URL-less demonstration projects from @updated tailored resumes and invalidated their stale PDFs.', [
+    '@removed' => $removed,
+    '@updated' => $updated,
+  ]);
+}

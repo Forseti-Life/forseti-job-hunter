@@ -169,24 +169,28 @@ class ResumePdfServiceSectionNormalizationTest extends UnitTestCase {
   /**
    * @covers ::normalizeDemonstrationProjects
    */
-  public function testDemonstrationProjectsDedupesSubsumedNames() {
+  public function testDemonstrationProjectsRequiresUrlAndDedupesByUrl() {
     $result = $this->prepare('demonstration_projects', [
-      ['name' => 'GenAI Demo Site - The Truth Perspective', 'description' => '', 'url' => '', 'technologies' => []],
-      ['name' => 'The Truth Perspective', 'description' => '', 'url' => '', 'technologies' => []],
-      ['name' => 'GenAI Demo Site', 'description' => '', 'url' => '', 'technologies' => []],
+      ['name' => 'Professional Initiative', 'description' => 'Completed in a professional role.', 'url' => '', 'technologies' => []],
+      ['name' => 'Demo Site', 'description' => '', 'url' => 'https://demo.example/project', 'technologies' => ['PHP']],
+      ['name' => 'Longer Demo Site Name', 'description' => 'Public demonstration.', 'url' => 'https://demo.example/project/', 'technologies' => ['Drupal']],
     ]);
 
     $this->assertNotNull($result);
     $this->assertCount(1, $result);
-    $this->assertSame('GenAI Demo Site - The Truth Perspective', $result[0]['name']);
+    $this->assertSame('Longer Demo Site Name', $result[0]['name']);
+    $this->assertSame('https://demo.example/project', $result[0]['url']);
+    $this->assertSame(['PHP', 'Drupal'], $result[0]['technologies']);
   }
 
   /**
    * @covers ::normalizeDemonstrationProjects
    */
-  public function testDemonstrationProjectsDropsCompletelyEmptyItems() {
+  public function testDemonstrationProjectsDropsUrlLessAndInvalidUrlItems() {
     $result = $this->prepare('demonstration_projects', [
       ['name' => '', 'description' => '', 'url' => '', 'technologies' => []],
+      ['name' => 'Professional project', 'description' => 'Real work, not a public demo.', 'url' => '', 'technologies' => ['SQL']],
+      ['name' => 'Unsafe link', 'description' => '', 'url' => 'javascript:alert(1)', 'technologies' => []],
     ]);
 
     $this->assertNull($result);

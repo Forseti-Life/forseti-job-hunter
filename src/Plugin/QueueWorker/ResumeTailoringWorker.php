@@ -6,6 +6,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\job_hunter\Service\ResumeLengthPolicy;
+use Drupal\job_hunter\Service\DemonstrationProjectPolicy;
 use Drupal\job_hunter\Service\TailoringRunService;
 use Drupal\job_hunter\Traits\JobHunterLoggerTrait;
 use Drupal\job_hunter\Traits\QueueWorkerBaseTrait;
@@ -592,6 +593,13 @@ RULES;
     if (!empty($normalized['strategic_differentiators'])) {
       $normalized['strategic_differentiators'] = $this->normalizeStrategicDifferentiators($normalized['strategic_differentiators']);
     }
+
+    $normalized['demonstration_projects'] = DemonstrationProjectPolicy::filter(
+      $normalized['demonstration_projects'] ?? [],
+      is_array($source_resume['demonstration_projects'] ?? NULL)
+        ? $source_resume['demonstration_projects']
+        : []
+    );
 
     if (!empty($normalized['executive_profile']) && is_string($normalized['executive_profile'])) {
       $normalized['executive_profile'] = ['summary' => $normalized['executive_profile']];
@@ -1404,6 +1412,7 @@ Edit the complete draft below as one document:
 - Use one consistent voice and tense: past tense for past roles, present tense for current roles, no first person.
 - To meet the budget, drop the least job-relevant items first, starting with the oldest roles; do not shorten sentences into fragments.
 - You may remove roles, but never add roles or change any company, title, start_date, or end_date.
+- Keep demonstration_projects only when the draft entry has a valid URL; preserve that exact URL. Never turn professional experience into a demonstration project.
 - Do not invent facts, metrics, or qualifications.
 - Return the same JSON structure and keys as the draft.
 
@@ -1422,6 +1431,9 @@ PROMPT;
     $resume['professional_experience'] = array_column(
       $this->resumeLengthPolicy->selectExperience($resume['professional_experience'] ?? []),
       'entry'
+    );
+    $resume['demonstration_projects'] = DemonstrationProjectPolicy::filter(
+      $resume['demonstration_projects'] ?? []
     );
     return $resume;
   }
@@ -1459,7 +1471,7 @@ Job description:
 Candidate profile JSON:
 {$resume_json}
 
-Budgets: executive profile summary is 3 sentences and at most 70 words; at most 4 strategic differentiators, each description one sentence of at most 25 words; leadership philosophy is one sentence of at most 30 words; at most 2 demonstration projects, each description one sentence of at most 30 words. Preserve candidate facts and do not invent qualifications.
+Budgets: executive profile summary is 3 sentences and at most 70 words; at most 4 strategic differentiators, each description one sentence of at most 25 words; leadership philosophy is one sentence of at most 30 words; at most 2 demonstration projects, each description one sentence of at most 30 words. Include a demonstration project only when it appears in the candidate profile with a valid URL, and preserve that URL exactly. If no source project has a URL, return an empty demonstration_projects array. Never convert work performed in a professional role into a demonstration project. Preserve candidate facts and do not invent qualifications.
 
 Return a JSON object that matches the canonical resume schema exactly. Use these field names and structures:
 {
@@ -1484,7 +1496,7 @@ Return a JSON object that matches the canonical resume schema exactly. Use these
   "executive_profile": {"summary": "3 sentences, at most 70 words, aligned to the role."},
   "strategic_differentiators": [{"title": "Differentiator", "description": "short description aligned to requirements"}],
   "leadership_philosophy": "One sentence, at most 30 words.",
-  "demonstration_projects": [{"name": "Project name", "description": "relevant project summary"}]
+  "demonstration_projects": [{"name": "Project name", "description": "relevant project summary", "url": "https://source-project-url.example"}]
 }
 PROMPT;
   }

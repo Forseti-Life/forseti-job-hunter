@@ -812,71 +812,10 @@ class ResumePdfService {
   }
 
   /**
-   * Normalize demonstration_projects: drop items with no name, description,
-   * URL, or technologies at all, and dedupe/collapse near-duplicate project
-   * names (e.g. a project listed both standalone and as part of a longer,
-   * more descriptive combined name).
+   * Keep only demonstration projects backed by a valid HTTP(S) URL.
    */
   protected function normalizeDemonstrationProjects($content): ?array {
-    if (!is_array($content)) {
-      return NULL;
-    }
-
-    $accepted = [];
-    foreach ($content as $project) {
-      if (!is_array($project)) {
-        continue;
-      }
-      $name = trim($project['name'] ?? '');
-      $description = trim($project['description'] ?? '');
-      $url = trim($project['url'] ?? '');
-      $technologies = $project['technologies'] ?? [];
-
-      if ($name === '' && $description === '' && $url === '' && empty($technologies)) {
-        continue;
-      }
-
-      $normalizedName = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $name));
-      $normalizedName = trim(preg_replace('/\s+/', ' ', $normalizedName));
-
-      $isSubsumed = FALSE;
-      foreach ($accepted as $index => $existing) {
-        if ($normalizedName === '' || $existing['_normalized_name'] === '') {
-          continue;
-        }
-        if ($normalizedName === $existing['_normalized_name']) {
-          $isSubsumed = TRUE;
-          break;
-        }
-        // If this name is fully contained within an already-accepted,
-        // more descriptive name (or vice versa), keep only the longer one.
-        if (str_contains($existing['_normalized_name'], $normalizedName)) {
-          $isSubsumed = TRUE;
-          break;
-        }
-        if (str_contains($normalizedName, $existing['_normalized_name'])) {
-          unset($accepted[$index]);
-        }
-      }
-
-      if ($isSubsumed) {
-        continue;
-      }
-
-      $accepted[] = [
-        'name' => $name,
-        'description' => $description,
-        'url' => $url,
-        'technologies' => $technologies,
-        '_normalized_name' => $normalizedName,
-      ];
-    }
-
-    $accepted = array_values(array_map(function ($item) {
-      unset($item['_normalized_name']);
-      return $item;
-    }, $accepted));
-
+    $accepted = DemonstrationProjectPolicy::filter($content);
     return $accepted ?: NULL;
   }
 
