@@ -5,7 +5,7 @@ namespace Drupal\job_hunter\Service;
 /**
  * Single source of truth for profile skill lookup, skills gap, and skill adds.
  *
- * consolidated_profile_json.technical_expertise is stored in several shapes:
+ * Consolidated profile technical expertise is stored in several shapes:
  * - Associative: {"Category Name": ["skill", ...]} (resume consolidation).
  * - Canonical list: {"categories": [{"name": ..., "skills": ["skill", ...]}]}.
  * - Numeric: {"0": {"category": ..., "skills": [{"name": ..., ...}]}}
@@ -128,7 +128,10 @@ class ProfileSkillsService {
 
     foreach ($profile_json['technical_expertise'] as $key => $entry) {
       if ($key !== 'categories' && is_array($entry) && ($entry['category'] ?? NULL) === $label) {
-        $profile_json['technical_expertise'][$key]['skills'][] = ['name' => $skill_name, 'proficiency' => 'intermediate'];
+        $profile_json['technical_expertise'][$key]['skills'][] = [
+          'name' => $skill_name,
+          'proficiency' => 'intermediate',
+        ];
         return TRUE;
       }
     }
@@ -160,15 +163,33 @@ class ProfileSkillsService {
    */
   private function skillMatches(string $skill_name, array $user_skills): bool {
     $normalized = mb_strtolower(trim($skill_name));
+    if ($normalized === '') {
+      return FALSE;
+    }
     if (in_array($normalized, $user_skills, TRUE)) {
       return TRUE;
     }
     foreach ($user_skills as $user_skill) {
-      if (str_contains($user_skill, $normalized) || str_contains($normalized, $user_skill)) {
+      // A more-specific profile skill satisfies a broader requirement
+      // ("AI/ML" satisfies "AI"), but not the reverse.
+      if ($this->containsWholeSkill($user_skill, $normalized)) {
         return TRUE;
       }
     }
     return FALSE;
+  }
+
+  /**
+   * TRUE when $needle appears on letter/number boundaries in $haystack.
+   */
+  private function containsWholeSkill(string $haystack, string $needle): bool {
+    if ($needle === '') {
+      return FALSE;
+    }
+    return preg_match(
+      '/(?<![\p{L}\p{N}])' . preg_quote($needle, '/') . '(?![\p{L}\p{N}])/u',
+      $haystack
+    ) === 1;
   }
 
 }

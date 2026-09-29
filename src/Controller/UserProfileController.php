@@ -1956,7 +1956,15 @@ PROMPT;
         ], 400);
       }
 
-      $profile_json = json_decode($job_seeker_profile->consolidated_profile_json, TRUE) ?: [];
+      $profile_json = json_decode(
+        (string) $job_seeker_profile->consolidated_profile_json,
+        TRUE,
+        512,
+        JSON_THROW_ON_ERROR
+      );
+      if (!is_array($profile_json)) {
+        throw new \UnexpectedValueException('Consolidated profile JSON must decode to an object.');
+      }
 
       if (!\Drupal::service('job_hunter.profile_skills')->addSkill($profile_json, (string) $skill_name, (string) $skill_category)) {
         return new \Symfony\Component\HttpFoundation\JsonResponse([
