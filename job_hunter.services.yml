@@ -19,6 +19,10 @@ services:
     class: Drupal\job_hunter\Service\UserProfileService
     arguments: []
 
+  job_hunter.profile_skills:
+    class: Drupal\job_hunter\Service\ProfileSkillsService
+    arguments: []
+
   job_hunter.user_job_profile_service:
     class: Drupal\job_hunter\Service\UserJobProfileService
     arguments: ['@entity_type.manager', '@entity_field.manager']

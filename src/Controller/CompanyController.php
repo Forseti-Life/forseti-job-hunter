@@ -2417,17 +2417,7 @@ class CompanyController extends ControllerBase {
       $profile_json = $this->safeJsonDecode($job_seeker_profile->consolidated_profile_json, 'job seeker profile', $user->id()) ?? [];
     }
 
-    // Calculate skills gap
-    $skills_gap = [];
-    if (!empty($skills['must_have']) && !empty($profile_json['skills'])) {
-      $user_skills_lower = array_map('strtolower', array_column($profile_json['skills'], 'name'));
-      foreach ($skills['must_have'] as $required_skill) {
-        $skill_name = $required_skill['skill'] ?? '';
-        if ($skill_name && !in_array(strtolower($skill_name), $user_skills_lower)) {
-          $skills_gap[] = $required_skill;
-        }
-      }
-    }
+    $skills_gap = \Drupal::service('job_hunter.profile_skills')->calculateSkillsGap(is_array($skills) ? $skills : [], $profile_json);
     
     // Build combined content
     $save_resume_url = Url::fromRoute('job_hunter.job_tailoring_save_resume', ['job_id' => $job_id])->toString();

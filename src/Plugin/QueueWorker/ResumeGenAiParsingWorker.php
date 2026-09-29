@@ -503,6 +503,79 @@ class ResumeGenAiParsingWorker extends QueueWorkerBase implements ContainerFacto
   }
 
   /**
+   * Union incoming technical_expertise into existing without dropping skills.
+   *
+   * Handles all stored shapes: "categories" list, numeric {category, skills}
+   * entries, and associative "Category" => [skills]. Category-level dedupe of
+   * the "categories" list happens later in normalizeTechnicalExpertise().
+   */
+  private function mergeTechnicalExpertise(array $existing, array $incoming): array {
+    $skill_key = static function ($skill): string {
+      $name = is_array($skill) ? ($skill['name'] ?? $skill['skill'] ?? '') : $skill;
+      return mb_strtolower(trim((string) $name));
+    };
+    $union = static function (array $base, array $add) use ($skill_key): array {
+      $seen = [];
+      foreach ($base as $skill) {
+        $seen[$skill_key($skill)] = TRUE;
+      }
+      foreach ($add as $skill) {
+        $key = $skill_key($skill);
+        if ($key !== '' && !isset($seen[$key])) {
+          $seen[$key] = TRUE;
+          $base[] = $skill;
+        }
+      }
+      return $base;
+    };
+
+    foreach ($incoming as $key => $value) {
+      if (!is_array($value)) {
+        continue;
+      }
+
+      if ($key === 'categories') {
+        $existing['categories'] = array_merge(
+          is_array($existing['categories'] ?? NULL) ? $existing['categories'] : [],
+          $value
+        );
+        continue;
+      }
+
+      if (is_int($key) && isset($value['category'])) {
+        foreach ($existing as $existing_key => $existing_entry) {
+          if (is_int($existing_key) && is_array($existing_entry) && ($existing_entry['category'] ?? NULL) === $value['category']) {
+            $existing[$existing_key]['skills'] = $union(
+              is_array($existing_entry['skills'] ?? NULL) ? $existing_entry['skills'] : [],
+              is_array($value['skills'] ?? NULL) ? $value['skills'] : []
+            );
+            continue 2;
+          }
+        }
+        $existing[] = $value;
+        continue;
+      }
+
+      if (is_int($key)) {
+        if (isset($value['name'])) {
+          $existing['categories'][] = $value;
+        }
+        else {
+          $existing['General'] = $union(is_array($existing['General'] ?? NULL) ? $existing['General'] : [], $value);
+        }
+        continue;
+      }
+
+      $existing[$key] = $union(
+        is_array($existing[$key] ?? NULL) ? $existing[$key] : [],
+        $value
+      );
+    }
+
+    return $existing;
+  }
+
+  /**
    * Parse professional experience in smaller passes with split retries.
    */
   private function parseProfessionalExperienceChunks($extracted_text, $filename, $uid, $username) {
@@ -1288,6 +1361,13 @@ class ResumeGenAiParsingWorker extends QueueWorkerBase implements ContainerFacto
 
           if (!isset($consolidated[$section])) {
             $consolidated[$section] = $section_value;
+            continue;
+          }
+
+          // Skills are cumulative: user-added and previously parsed skills
+          // must survive re-consolidation.
+          if ($section === 'technical_expertise' && is_array($consolidated[$section]) && is_array($section_value)) {
+            $consolidated[$section] = $this->mergeTechnicalExpertise($consolidated[$section], $section_value);
             continue;
           }
 

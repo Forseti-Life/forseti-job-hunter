@@ -1169,6 +1169,9 @@ RULES;
           'job_id' => $job_id,
           'queue' => 'job_hunter_resume_tailoring',
           'item_key' => "resume_tailoring_{$uid}_{$job_id}_{$section_name}",
+          // Cache hits only for an identical prompt, so profile edits (e.g.
+          // added skills) reach later tailoring runs for the same job.
+          'prompt_hash' => hash('sha256', $prompt),
         ],
         $options
       );

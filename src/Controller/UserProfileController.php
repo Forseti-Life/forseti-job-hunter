@@ -1238,7 +1238,7 @@ class UserProfileController extends ControllerBase {
     $profile_json = json_decode($job_seeker_profile->consolidated_profile_json, TRUE) ?: [];
 
     // Calculate skills gap - find job skills not in user's profile
-    $skills_gap = $this->calculateSkillsGap($skills, $profile_json);
+    $skills_gap = \Drupal::service('job_hunter.profile_skills')->calculateSkillsGap($skills, $profile_json);
 
     // Load existing tailoring feedback (if any) for pre-population.
     $tailored_resume_id = $tailored_record ? (int) $tailored_record->id : 0;
@@ -1927,123 +1927,6 @@ PROMPT;
   }
 
   /**
-   * Calculate skills gap between job requirements and user profile.
-   *
-   * @param array $job_skills
-   *   The job skills from skills_required_json.
-   * @param array $profile_json
-   *   The user's consolidated profile JSON.
-   *
-   * @return array
-   *   Array with 'must_have' and 'nice_to_have' missing skills.
-   */
-  private function calculateSkillsGap(array $job_skills, array $profile_json): array {
-    $gap = [
-      'must_have' => [],
-      'nice_to_have' => [],
-    ];
-
-    // Build a list of user's skills (normalized to lowercase for comparison)
-    $user_skills = [];
-    
-    // From technical_expertise categories
-    if (!empty($profile_json['technical_expertise'])) {
-      foreach ($profile_json['technical_expertise'] as $category) {
-        if (!empty($category['skills'])) {
-          foreach ($category['skills'] as $skill) {
-            $skill_name = is_array($skill) ? ($skill['name'] ?? '') : $skill;
-            if ($skill_name) {
-              $user_skills[] = strtolower(trim($skill_name));
-            }
-          }
-        }
-      }
-    }
-
-    // From skills array (flat list)
-    if (!empty($profile_json['skills'])) {
-      foreach ($profile_json['skills'] as $skill) {
-        $skill_name = is_array($skill) ? ($skill['name'] ?? $skill['skill'] ?? '') : $skill;
-        if ($skill_name) {
-          $user_skills[] = strtolower(trim($skill_name));
-        }
-      }
-    }
-
-    // From certifications
-    if (!empty($profile_json['certifications'])) {
-      foreach ($profile_json['certifications'] as $cert) {
-        $cert_name = is_array($cert) ? ($cert['name'] ?? '') : $cert;
-        if ($cert_name) {
-          $user_skills[] = strtolower(trim($cert_name));
-        }
-      }
-    }
-
-    // Check must_have skills
-    if (!empty($job_skills['must_have'])) {
-      foreach ($job_skills['must_have'] as $skill) {
-        $skill_name = is_array($skill) ? ($skill['skill'] ?? $skill['name'] ?? '') : $skill;
-        if ($skill_name && !$this->skillExistsInProfile($skill_name, $user_skills)) {
-          $gap['must_have'][] = [
-            'skill' => $skill_name,
-            'category' => is_array($skill) ? ($skill['category'] ?? 'technical') : 'technical',
-          ];
-        }
-      }
-    }
-
-    // Check nice_to_have skills
-    if (!empty($job_skills['nice_to_have'])) {
-      foreach ($job_skills['nice_to_have'] as $skill) {
-        $skill_name = is_array($skill) ? ($skill['skill'] ?? $skill['name'] ?? '') : $skill;
-        if ($skill_name && !$this->skillExistsInProfile($skill_name, $user_skills)) {
-          $gap['nice_to_have'][] = [
-            'skill' => $skill_name,
-            'category' => is_array($skill) ? ($skill['category'] ?? 'technical') : 'technical',
-          ];
-        }
-      }
-    }
-
-    // Check tech_stack
-    if (!empty($job_skills['tech_stack'])) {
-      foreach ($job_skills['tech_stack'] as $tech) {
-        $tech_name = is_array($tech) ? ($tech['name'] ?? '') : $tech;
-        if ($tech_name && !$this->skillExistsInProfile($tech_name, $user_skills)) {
-          $gap['nice_to_have'][] = [
-            'skill' => $tech_name,
-            'category' => 'technical',
-          ];
-        }
-      }
-    }
-
-    return $gap;
-  }
-
-  /**
-   * Check if a skill exists in the user's profile (fuzzy match).
-   */
-  private function skillExistsInProfile(string $skill_name, array $user_skills): bool {
-    $normalized = strtolower(trim($skill_name));
-    
-    // Direct match
-    if (in_array($normalized, $user_skills)) {
-      return TRUE;
-    }
-
-    // Fuzzy match - check if skill is contained in any user skill or vice versa
-    foreach ($user_skills as $user_skill) {
-      if (strpos($user_skill, $normalized) !== FALSE || strpos($normalized, $user_skill) !== FALSE) {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
    * AJAX endpoint to add a skill to user's profile.
    */
   public function addSkillToProfileAjax() {
@@ -2075,49 +1958,12 @@ PROMPT;
 
       $profile_json = json_decode($job_seeker_profile->consolidated_profile_json, TRUE) ?: [];
 
-      // Add skill to technical_expertise
-      if (!isset($profile_json['technical_expertise'])) {
-        $profile_json['technical_expertise'] = [];
-      }
-
-      // Find or create the category
-      $category_found = FALSE;
-      $category_map = [
-        'technical' => 'Technical Skills',
-        'soft' => 'Soft Skills',
-        'domain' => 'Domain Expertise',
-        'tools' => 'Tools & Platforms',
-      ];
-      $category_label = $category_map[$skill_category] ?? 'Technical Skills';
-
-      foreach ($profile_json['technical_expertise'] as &$category) {
-        if (isset($category['category']) && $category['category'] === $category_label) {
-          if (!isset($category['skills'])) {
-            $category['skills'] = [];
-          }
-          // Check if skill already exists
-          foreach ($category['skills'] as $existing) {
-            $existing_name = is_array($existing) ? ($existing['name'] ?? '') : $existing;
-            if (strtolower($existing_name) === strtolower($skill_name)) {
-              return new \Symfony\Component\HttpFoundation\JsonResponse([
-                'success' => TRUE,
-                'message' => "Skill '{$skill_name}' already exists in your profile.",
-                'already_exists' => TRUE,
-              ]);
-            }
-          }
-          $category['skills'][] = ['name' => $skill_name, 'proficiency' => 'intermediate'];
-          $category_found = TRUE;
-          break;
-        }
-      }
-
-      if (!$category_found) {
-        // Create new category
-        $profile_json['technical_expertise'][] = [
-          'category' => $category_label,
-          'skills' => [['name' => $skill_name, 'proficiency' => 'intermediate']],
-        ];
+      if (!\Drupal::service('job_hunter.profile_skills')->addSkill($profile_json, (string) $skill_name, (string) $skill_category)) {
+        return new \Symfony\Component\HttpFoundation\JsonResponse([
+          'success' => TRUE,
+          'message' => "Skill '{$skill_name}' already exists in your profile.",
+          'already_exists' => TRUE,
+        ]);
       }
 
       // Save updated profile - use 'changed' column (not 'updated')
@@ -2198,7 +2044,7 @@ PROMPT;
       $profile_json = json_decode($job_seeker_profile->consolidated_profile_json, TRUE) ?: [];
 
       // Recalculate skills gap
-      $skills_gap = $this->calculateSkillsGap($skills, $profile_json);
+      $skills_gap = \Drupal::service('job_hunter.profile_skills')->calculateSkillsGap($skills, $profile_json);
 
       return new \Symfony\Component\HttpFoundation\JsonResponse([
         'success' => TRUE,

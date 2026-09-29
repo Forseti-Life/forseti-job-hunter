@@ -358,6 +358,7 @@ class CoverLetterTailoringWorker extends QueueWorkerBase implements ContainerFac
           'job_id' => $job_id,
           'queue' => 'job_hunter_cover_letter_tailoring',
           'item_key' => "cover_letter_{$uid}_{$job_id}",
+          'prompt_hash' => hash('sha256', $prompt),
         ],
         [
           'max_tokens' => $max_tokens,
