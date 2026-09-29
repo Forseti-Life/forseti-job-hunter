@@ -46,6 +46,11 @@
         <a href="{{ path('job_hunter.my_jobs') }}" class="btn btn-link btn-sm">← {{ 'Back to Jobs'|t }}</a>
       </div>
     </div>
+
+    {# Keep bulk skills actions visible before the long requirements content. #}
+    {% if skills_gap.must_have|length > 0 or skills_gap.nice_to_have|length > 0 %}
+      {% include '@job_hunter/skills-gap-actions.html.twig' with {'job_id': job_id} only %}
+    {% endif %}
     
     {# Full Job Requirements Display - Collapsible #}
     <div class="job-requirements-panel">
@@ -402,17 +407,6 @@
           </div>
         {% endif %}
 
-        <div class="skills-gap-actions">
-          <button type="button" class="button button--primary" id="add-all-must-have-skills">
-            {{ 'Add All Must-Have Skills'|t }}
-          </button>
-          <button type="button" class="button button--secondary" id="add-all-skills">
-            {{ 'Add All Missing Skills'|t }}
-          </button>
-          <button type="button" class="button button--outline" id="refresh-skills-gap" data-job-id="{{ job_id }}">
-            🔄 {{ 'Refresh Skills Gap'|t }}
-          </button>
-        </div>
       </div>
     </div>
   </div>

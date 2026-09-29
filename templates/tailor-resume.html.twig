@@ -183,6 +183,11 @@
     
     <div id="pdf-generation-status" class="status-message pdf-status hidden"></div>
   </div>
+
+  {# Keep bulk skills actions visible before the long page content. #}
+  {% if skills_gap.must_have|length > 0 or skills_gap.nice_to_have|length > 0 %}
+    {% include '@job_hunter/skills-gap-actions.html.twig' with {'job_id': job_id} only %}
+  {% endif %}
   
   {# PDF History (if exists, shown below status header) #}
   {% if pdf_history|length > 0 %}
@@ -425,17 +430,6 @@
           </div>
         {% endif %}
 
-        <div class="skills-gap-actions">
-          <button type="button" class="button button--primary" id="add-all-must-have-skills">
-            {{ 'Add All Must-Have Skills'|t }}
-          </button>
-          <button type="button" class="button button--secondary" id="add-all-skills">
-            {{ 'Add All Missing Skills'|t }}
-          </button>
-          <button type="button" class="button button--outline" id="refresh-skills-gap" data-job-id="{{ job_id }}">
-            🔄 {{ 'Refresh Skills Gap'|t }}
-          </button>
-        </div>
       </div>
     </div>
   </div>
