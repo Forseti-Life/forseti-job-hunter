@@ -715,6 +715,8 @@ class ApplicationSubmissionController extends ControllerBase {
    * Known derived workflow_status values (used for enum validation of filter_status).
    */
   private const WORKFLOW_STATUS_ENUM = [
+    'parsing_pending',
+    'parsing_failed',
     'profile_pending',
     'tailoring_pending',
     'tailoring_processing',
@@ -729,6 +731,8 @@ class ApplicationSubmissionController extends ControllerBase {
    * Human-readable labels for each pipeline stage, in display order.
    */
   private const PIPELINE_STAGE_LABELS = [
+    'parsing_pending'      => 'AI Parsing Pending',
+    'parsing_failed'       => 'AI Parsing Failed',
     'profile_pending'      => 'Profile Pending',
     'tailoring_pending'    => 'Tailoring Pending',
     'tailoring_processing' => 'Tailoring Processing',
@@ -775,6 +779,9 @@ class ApplicationSubmissionController extends ControllerBase {
     $today_str = date('Y-m-d');
     foreach ($all_jobs as $job) {
       $job->workflow_status = $this->deriveWorkflowStatus($job, $has_profile);
+      $job->parsing_status_label = str_starts_with($job->workflow_status, 'parsing_')
+        ? $this->getParsingStatusLabel($job)
+        : '';
       $job->display_platform = !empty($job->via) ? $job->via : (!empty($job->source_platform) ? $job->source_platform : '');
       $job->submit_csrf_token = \Drupal::csrfToken()->get('jobhunter/jobs/' . (int) $job->id . '/apply');
       $target_context = $this->loadSubmissionTargetContext($uid, $job);
@@ -864,11 +871,12 @@ class ApplicationSubmissionController extends ControllerBase {
    * Status priority (first match wins):
    *   1. closed        – job.status == 'closed'
    *   2. pending_response – application submitted successfully
-  *   3. approval_pending – tailoring complete, awaiting user PDF generation
-  *   4. application_pending – PDF generated, no application yet
-  *   5. tailoring_processing – tailoring queued / in progress
-  *   6. tailoring_pending – profile done, no tailoring started
-  *   7. profile_pending – user has no consolidated profile
+   *   3. approval_pending – tailoring complete, awaiting user PDF generation
+   *   4. application_pending – PDF generated, no application yet
+   *   5. parsing_pending/failed – structured job data is unavailable
+   *   6. tailoring_processing – tailoring queued / in progress
+   *   7. profile_pending – user has no consolidated profile
+   *   8. tailoring_pending – profile done, no tailoring started
    *
    * @param object $job
    *   Job row from getSavedJobs().
@@ -876,8 +884,9 @@ class ApplicationSubmissionController extends ControllerBase {
    *   Whether the user has a completed profile.
    *
    * @return string
-   *   One of: profile_pending, tailoring_pending, tailoring_processing,
-  *   approval_pending, application_pending, pending_response, closed.
+   *   One of: parsing_pending, parsing_failed, profile_pending,
+   *   tailoring_pending, tailoring_processing, approval_pending,
+   *   application_pending, pending_response, interview, closed.
    */
   private function deriveWorkflowStatus(object $job, bool $has_profile): string {
     // Closed takes priority.
@@ -907,6 +916,15 @@ class ApplicationSubmissionController extends ControllerBase {
       return 'approval_pending';
     }
 
+    // Resume tailoring requires structured job data. Jobs without it remain
+    // in a parsing stage instead of being presented as ready to tailor.
+    if (empty($job->extracted_data)) {
+      $ai_status = strtolower(trim((string) ($job->ai_extraction_status ?? 'pending')));
+      return in_array($ai_status, ['failed', 'error'], TRUE)
+        ? 'parsing_failed'
+        : 'parsing_pending';
+    }
+
     // If tailoring is actively queued or processing in the DB.
     if (in_array($tailoring, ['processing', 'queued'], TRUE)) {
       return 'tailoring_processing';
@@ -932,6 +950,22 @@ class ApplicationSubmissionController extends ControllerBase {
 
     // Default: profile exists but no tailoring started.
     return 'tailoring_pending';
+  }
+
+  /**
+   * Human-readable AI parsing state for My Jobs.
+   */
+  private function getParsingStatusLabel(object $job): string {
+    if (!empty($job->extracted_data)) {
+      return '';
+    }
+
+    return match (strtolower(trim((string) ($job->ai_extraction_status ?? 'pending')))) {
+      'queued' => '⏳ AI parsing queued',
+      'processing' => '⚙️ AI parsing in progress',
+      'failed', 'error' => '⚠️ AI parsing failed',
+      default => '⏳ AI parsing pending',
+    };
   }
 
   /**
