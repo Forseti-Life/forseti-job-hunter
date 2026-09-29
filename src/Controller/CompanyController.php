@@ -844,10 +844,23 @@ class CompanyController extends ControllerBase {
         'manual_required' => ['label' => '📋 Apply Manually', 'class' => 'btn-secondary'],
       ];
       $btn_info = $status_labels[$app_status] ?? ['label' => '📤 Apply', 'class' => 'button--primary'];
-      $apply_button_html = '<button class="button ' . $btn_info['class'] . ' btn-apply-job" data-job-id="' . $job_id . '" data-apply-url="' . $apply_url_route . '" data-status-url="' . $status_url_route . '" data-token="' . $csrf_token . '">' . $btn_info['label'] . '</button>';
     } else {
-      $apply_button_html = '<button class="button button--primary btn-apply-job" data-job-id="' . $job_id . '" data-apply-url="' . $apply_url_route . '" data-status-url="' . $status_url_route . '" data-token="' . $csrf_token . '">📤 Apply</button>';
+      $btn_info = ['label' => '📤 Apply', 'class' => 'button--primary'];
     }
+    // Rendered as html_tag: a raw <button> in #markup is stripped by Xss::filterAdmin().
+    $apply_button = [
+      '#type' => 'html_tag',
+      '#tag' => 'button',
+      '#value' => $btn_info['label'],
+      '#attributes' => [
+        'type' => 'button',
+        'class' => ['button', $btn_info['class'], 'btn-apply-job'],
+        'data-job-id' => (string) $job_id,
+        'data-apply-url' => $apply_url_route,
+        'data-status-url' => $status_url_route,
+        'data-token' => $csrf_token,
+      ],
+    ];
 
     $content['header'] = [
       '#type' => 'container',
@@ -873,9 +886,7 @@ class CompanyController extends ControllerBase {
           '#url' => Url::fromRoute('job_hunter.tailor_resume', ['job' => $job_id]),
           '#attributes' => ['class' => ['button', 'button--primary']],
         ],
-        'apply' => [
-          '#markup' => $apply_button_html,
-        ],
+        'apply' => $apply_button,
       ],
     ];
 
@@ -1208,6 +1219,15 @@ class CompanyController extends ControllerBase {
           .job-subsection { margin-bottom: 20px; }
           .job-view-header { margin-bottom: 20px; }
           .job-company { color: #666; font-size: 1.1em; margin-top: -10px; }
+          .job-view-header .job-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 20px; }
+          .job-view-header .job-actions > a.button { display: inline-block; margin: 0; padding: 8px 18px; border: 1px solid #667eea; border-radius: 4px; background: #fff; color: #667eea; font-size: 0.95em; line-height: 1.2; text-decoration: none; }
+          .job-view-header .job-actions > a.button:hover { background: #eef0fd; }
+          .job-view-header .job-actions > a.button--primary { background: #667eea; color: #fff; }
+          .job-view-header .job-actions > a.button--primary:hover { background: #5563d0; }
+          .job-view-header .job-actions > a.button--secondary { border-color: #6b7280; color: #374151; }
+          .job-view-header .job-actions > a.button--danger { border-color: #ef4444; color: #ef4444; }
+          .job-view-header .job-actions > a.button--danger:hover { background: #fee2e2; }
+          .job-view-header .job-actions > button { margin: 0; line-height: 1.2; }
           .job-source-info { margin-bottom: 20px; }
           .job-info-box { background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; border-radius: 4px; }
           .job-info-box strong { color: #333; }
