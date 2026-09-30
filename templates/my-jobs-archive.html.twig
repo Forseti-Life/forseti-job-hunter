@@ -8,6 +8,7 @@
  * - current_page: Current page number (0-indexed)
  * - total_pages: Total number of pages
  * - total_jobs: Total archived job count
+ * - statistics: User-scoped statistics across the complete archive
  */
 #}
 
@@ -16,6 +17,33 @@
   <p>
     <a href="/jobhunter/my-jobs" class="button button--secondary">← {{ 'Back to My Jobs'|t }}</a>
   </p>
+
+  <section class="archive-statistics" aria-label="{{ 'Archive statistics'|t }}">
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.total|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Archived Roles'|t }}</span>
+    </div>
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.companies|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Companies'|t }}</span>
+    </div>
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.tailored|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Tailored Resumes'|t }}</span>
+    </div>
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.applied|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Applications Submitted'|t }}</span>
+    </div>
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.interviews|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Interview Stage'|t }}</span>
+    </div>
+    <div class="archive-stat-card">
+      <span class="archive-stat-value">{{ statistics.recent|default(0) }}</span>
+      <span class="archive-stat-label">{{ 'Archived in 30 Days'|t }}</span>
+    </div>
+  </section>
 
   {% if jobs %}
     <p class="results-summary">{{ 'Showing %count archived job(s).'|t({'%count': jobs|length}) }}</p>
@@ -52,6 +80,37 @@
     <div class="empty-state">
       <p>{{ 'No archived jobs.'|t }}</p>
     </div>
+
+    <style>
+    .archive-statistics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 12px;
+      margin: 18px 0 24px;
+    }
+    .archive-stat-card {
+      padding: 16px;
+      border: 1px solid #d7dce2;
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+    }
+    .archive-stat-value,
+    .archive-stat-label {
+      display: block;
+    }
+    .archive-stat-value {
+      color: #1f4f7a;
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .archive-stat-label {
+      margin-top: 6px;
+      color: #4b5563;
+      font-size: 0.88rem;
+    }
+    </style>
   {% endif %}
 
   {% if total_pages > 1 %}

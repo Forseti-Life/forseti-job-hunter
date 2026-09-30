@@ -1058,6 +1058,7 @@ class ApplicationSubmissionController extends ControllerBase {
 
     $total = $this->jobDiscoveryService->getArchivedJobsCount();
     $jobs = $this->jobDiscoveryService->getArchivedJobs($page, $per_page);
+    $statistics = $this->jobDiscoveryService->getArchivedJobsStatistics();
     $total_pages = $total > 0 ? (int) ceil($total / $per_page) : 1;
 
     $content = [
@@ -1066,9 +1067,10 @@ class ApplicationSubmissionController extends ControllerBase {
       '#current_page' => $page,
       '#total_pages' => $total_pages,
       '#total_jobs' => $total,
+      '#statistics' => $statistics,
       '#cache' => [
         'contexts' => ['user', 'url.query_args'],
-        'tags' => ['job_hunter:jobs'],
+        'max-age' => 0,
       ],
     ];
 

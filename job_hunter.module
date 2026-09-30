@@ -172,6 +172,7 @@ function job_hunter_theme() {
         'current_page' => 0,
         'total_pages' => 1,
         'total_jobs' => 0,
+        'statistics' => [],
         'user_has_skills' => FALSE,
       ],
       'template' => 'my-jobs',

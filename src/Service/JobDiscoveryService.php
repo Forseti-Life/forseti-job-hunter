@@ -452,6 +452,58 @@ class JobDiscoveryService {
   }
 
   /**
+   * Get user-scoped statistics across the complete archived-job history.
+   *
+   * @return array<string, int>
+   *   Archive totals for display on the Archived Jobs page.
+   */
+  public function getArchivedJobsStatistics(): array {
+    $query = $this->database->select('jobhunter_saved_jobs', 'sj');
+    $query->innerJoin('jobhunter_job_requirements', 'j', 'sj.job_id = j.id');
+    $query->leftJoin(
+      'jobhunter_tailored_resumes',
+      'tr',
+      'tr.job_id = sj.job_id AND tr.uid = sj.uid'
+    );
+    $query->leftJoin(
+      'jobhunter_applications',
+      'app',
+      'app.job_id = sj.job_id AND app.uid = sj.uid'
+    );
+    $query->condition('sj.uid', $this->currentUser->id())
+      ->condition('sj.archived', 1);
+    $query->addExpression('COUNT(DISTINCT sj.id)', 'total');
+    $query->addExpression('COUNT(DISTINCT j.company_id)', 'companies');
+    $query->addExpression(
+      "COUNT(DISTINCT CASE WHEN tr.tailoring_status = 'completed' THEN sj.job_id END)",
+      'tailored'
+    );
+    $query->addExpression(
+      "COUNT(DISTINCT CASE WHEN app.submission_status IN ('submitted', 'confirmed', 'manual_completed', 'interview_scheduled', 'interview_completed') THEN sj.job_id END)",
+      'applied'
+    );
+    $query->addExpression(
+      "COUNT(DISTINCT CASE WHEN app.submission_status IN ('interview_scheduled', 'interview_completed') THEN sj.job_id END)",
+      'interviews'
+    );
+    $query->addExpression(
+      'COUNT(DISTINCT CASE WHEN sj.updated >= :recent_cutoff THEN sj.id END)',
+      'recent',
+      [':recent_cutoff' => time() - 2592000]
+    );
+
+    $row = $query->execute()->fetchAssoc() ?: [];
+    return [
+      'total' => (int) ($row['total'] ?? 0),
+      'companies' => (int) ($row['companies'] ?? 0),
+      'tailored' => (int) ($row['tailored'] ?? 0),
+      'applied' => (int) ($row['applied'] ?? 0),
+      'interviews' => (int) ($row['interviews'] ?? 0),
+      'recent' => (int) ($row['recent'] ?? 0),
+    ];
+  }
+
+  /**
    * Get list of all company names for filter dropdown.
    *
    * @return array
