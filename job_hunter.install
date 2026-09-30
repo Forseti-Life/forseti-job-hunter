@@ -4067,6 +4067,7 @@ function job_hunter_update_9067() {
     if (!is_array($profile)) {
       throw new \UnexpectedValueException("jobhunter_job_seeker row {$row->id} holds invalid consolidated_profile_json.");
     }
+
     $template = $profile['job_search_preferences']['cover_letter_template'] ?? '';
     if (!is_string($template) || $template === '') {
       continue;
@@ -4095,5 +4096,46 @@ function job_hunter_update_9067() {
 
   return t('Removed generic company header artifacts from @count cover-letter templates.', [
     '@count' => $updated,
+  ]);
+}
+
+/**
+ * Reconcile recent user/title/company duplicate saved jobs.
+ */
+function job_hunter_update_9068() {
+  $database = \Drupal::database();
+  $linker = \Drupal::service('job_hunter.recent_job_duplicate_linker');
+
+  $query = $database->select('jobhunter_saved_jobs', 'sj');
+  $query->innerJoin('jobhunter_job_requirements', 'j', 'j.id = sj.job_id');
+  $query->innerJoin('jobhunter_companies', 'c', 'c.id = j.company_id');
+  $query->addField('sj', 'job_id');
+  $query->addField('sj', 'created', 'saved_created');
+  $query->addField('j', 'job_title');
+  $query->addField('c', 'name', 'company_name');
+  $query->condition('j.ai_extraction_status', 'completed')
+    ->distinct()
+    ->orderBy('sj.created', 'ASC');
+
+  $linked = 0;
+  foreach ($query->execute()->fetchAll() as $job) {
+    $links = $linker->linkToRecentMatches(
+      (int) $job->job_id,
+      (string) $job->job_title,
+      (string) $job->company_name
+    );
+    if (!$links) {
+      continue;
+    }
+
+    $database->update('jobhunter_job_requirements')
+      ->fields(['potential_duplicates_json' => json_encode($links)])
+      ->condition('id', (int) $job->job_id)
+      ->execute();
+    $linked += count($links);
+  }
+
+  return t('Linked @count recent duplicate saved-job mappings to their prior user/title/company records.', [
+    '@count' => $linked,
   ]);
 }

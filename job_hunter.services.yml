@@ -30,6 +30,10 @@ services:
   job_hunter.job_discovery_service:
     class: Drupal\job_hunter\Service\JobDiscoveryService
     arguments: ['@database', '@config.factory', '@current_user', '@logger.factory']
+
+  job_hunter.recent_job_duplicate_linker:
+    class: Drupal\job_hunter\Service\RecentJobDuplicateLinker
+    arguments: ['@database', '@logger.channel.job_hunter']
   
   job_hunter.abbvie_job_scraping_service:
     class: Drupal\job_hunter\Service\AbbVieJobScrapingService

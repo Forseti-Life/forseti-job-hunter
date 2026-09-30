@@ -37,12 +37,20 @@ class JobPostingParsingWorker extends QueueWorkerBase implements ContainerFactor
   protected $aiApiService;
 
   /**
+   * Links new jobs to matching records in each user's recent history.
+   *
+   * @var \Drupal\job_hunter\Service\RecentJobDuplicateLinker
+   */
+  protected $recentJobDuplicateLinker;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->configFactory = $container->get('config.factory');
     $instance->aiApiService = $container->get('ai_conversation.ai_api_service');
+    $instance->recentJobDuplicateLinker = $container->get('job_hunter.recent_job_duplicate_linker');
     return $instance;
   }
 
@@ -169,17 +177,28 @@ class JobPostingParsingWorker extends QueueWorkerBase implements ContainerFactor
         ->condition('id', $job_id)
         ->execute();
 
-      // Check for duplicate jobs after parsing is complete
+      // Relink exact user + title + company duplicates to the prior saved job.
       if (!empty($parsed_data['extracted_json'])) {
-        $duplicates = $this->findDuplicateJobs($job_id, $parsed_data['extracted_json'], $connection);
-        if (!empty($duplicates)) {
+        $extracted = $parsed_data['extracted_json'];
+        $job_title = $this->extractStringValue(
+          $extracted['position']['title'] ?? $extracted['job_title'] ?? ''
+        );
+        $company_name = $this->extractStringValue(
+          $extracted['company']['name'] ?? $extracted['company_name'] ?? ''
+        );
+        $links = $this->recentJobDuplicateLinker->linkToRecentMatches(
+          (int) $job_id,
+          $job_title,
+          $company_name
+        );
+        if ($links) {
           $connection->update('jobhunter_job_requirements')
-            ->fields(['potential_duplicates_json' => json_encode($duplicates)])
+            ->fields(['potential_duplicates_json' => json_encode($links)])
             ->condition('id', $job_id)
             ->execute();
-          
-          $logger->info('📋 Found @count potential duplicate(s) for job @id', [
-            '@count' => count($duplicates),
+
+          $logger->info('Linked @count saved-job mapping(s) for duplicate job @id to prior records.', [
+            '@count' => count($links),
             '@id' => $job_id,
           ]);
         }
@@ -438,200 +457,6 @@ PROMPT;
       ]);
       return NULL;
     }
-  }
-
-  /**
-   * Find potential duplicate jobs by comparing extracted JSON.
-   *
-   * @param int $current_job_id
-   *   The current job ID to exclude from comparison.
-   * @param array $extracted_json
-   *   The extracted JSON data for the current job.
-   * @param \Drupal\Core\Database\Connection $connection
-   *   Database connection.
-   *
-   * @return array
-   *   Array of potential duplicates with job_id and similarity_score.
-   */
-  private function findDuplicateJobs($current_job_id, array $extracted_json, $connection) {
-    $duplicates = [];
-    
-    // Get key fields for comparison (handle arrays by converting to string)
-    $current_title = $this->extractStringValue($extracted_json['position']['title'] ?? $extracted_json['job_title'] ?? '');
-    $current_company = $this->extractStringValue($extracted_json['company']['name'] ?? $extracted_json['company_name'] ?? '');
-    $current_location = $this->extractStringValue($extracted_json['position']['location_requirements'] ?? $extracted_json['location'] ?? '');
-    $current_requirements = $extracted_json['requirements'] ?? [];
-    $current_responsibilities = $extracted_json['responsibilities'] ?? [];
-    
-    if (empty($current_title) && empty($current_company)) {
-      return [];
-    }
-
-    try {
-    // Query other jobs with extracted_json populated (already parsed)
-    $query = $connection->select('jobhunter_job_requirements', 'j')
-      ->fields('j', ['id', 'job_title', 'extracted_json'])
-      ->condition('id', $current_job_id, '<>')
-      ->condition('extracted_json', '', '<>')
-      ->isNotNull('extracted_json');
-    
-    $results = $query->execute()->fetchAll();
-    
-    $skipped_count = 0;
-    foreach ($results as $job) {
-      $other_json = json_decode($job->extracted_json, TRUE);
-      if (!$other_json) {
-        $skipped_count++;
-        continue;
-      }
-      
-      // Get comparison fields (handle arrays by converting to string)
-      $other_title = $this->extractStringValue($other_json['position']['title'] ?? $other_json['job_title'] ?? '');
-      $other_company = $this->extractStringValue($other_json['company']['name'] ?? $other_json['company_name'] ?? '');
-      $other_location = $this->extractStringValue($other_json['position']['location_requirements'] ?? $other_json['location'] ?? '');
-      $other_requirements = $other_json['requirements'] ?? [];
-      $other_responsibilities = $other_json['responsibilities'] ?? [];
-      
-      // Calculate similarity score
-      $score = $this->calculateSimilarityScore(
-        $current_title, $other_title,
-        $current_company, $other_company,
-        $current_location, $other_location,
-        $current_requirements, $other_requirements,
-        $current_responsibilities, $other_responsibilities
-      );
-      
-      // 95%+ match is a potential duplicate
-      if ($score >= 95) {
-        $duplicates[] = [
-          'job_id' => (int) $job->id,
-          'job_title' => $job->job_title ?: ($other_json['position']['title'] ?? 'Unknown'),
-          'company' => $other_json['company']['name'] ?? $other_json['company_name'] ?? 'Unknown',
-          'similarity_score' => $score,
-          'is_exact_match' => ($score === 100),
-        ];
-      }
-    }
-
-    if ($skipped_count > 0) {
-      \Drupal::logger('job_hunter')->warning(
-        'Skipped @count job(s) with invalid JSON during duplicate detection for job @id',
-        ['@count' => $skipped_count, '@id' => $current_job_id]
-      );
-    }
-
-    // Sort by similarity score descending
-    usort($duplicates, fn($a, $b) => $b['similarity_score'] <=> $a['similarity_score']);
-
-    return $duplicates;
-
-    } catch (\Exception $e) {
-      \Drupal::logger('job_hunter')->error(
-        'Duplicate detection failed for job @id: @error',
-        ['@id' => $current_job_id, '@error' => $e->getMessage()]
-      );
-      return [];
-    }
-  }
-
-  /**
-   * Calculate similarity score between two jobs.
-   *
-   * @return int
-   *   Similarity score from 0-100.
-   */
-  private function calculateSimilarityScore(
-    string $title1, string $title2,
-    string $company1, string $company2,
-    string $location1, string $location2,
-    array $requirements1, array $requirements2,
-    array $responsibilities1, array $responsibilities2
-  ): int {
-    $score = 0;
-    $max_score = 0;
-    
-    // Title comparison (40% weight)
-    $max_score += 40;
-    if (!empty($title1) && !empty($title2)) {
-      $title_similarity = $this->stringSimilarity($title1, $title2);
-      $score += (int) ($title_similarity * 40);
-    }
-    
-    // Company comparison (30% weight)
-    $max_score += 30;
-    if (!empty($company1) && !empty($company2)) {
-      $company_similarity = $this->stringSimilarity($company1, $company2);
-      $score += (int) ($company_similarity * 30);
-    }
-    
-    // Location comparison (10% weight)
-    $max_score += 10;
-    if (!empty($location1) && !empty($location2)) {
-      $location_similarity = $this->stringSimilarity($location1, $location2);
-      $score += (int) ($location_similarity * 10);
-    }
-    
-    // Requirements comparison (10% weight)
-    $max_score += 10;
-    if (!empty($requirements1) && !empty($requirements2)) {
-      $req_similarity = $this->arrayContentSimilarity($requirements1, $requirements2);
-      $score += (int) ($req_similarity * 10);
-    }
-    
-    // Responsibilities comparison (10% weight)
-    $max_score += 10;
-    if (!empty($responsibilities1) && !empty($responsibilities2)) {
-      $resp_similarity = $this->arrayContentSimilarity($responsibilities1, $responsibilities2);
-      $score += (int) ($resp_similarity * 10);
-    }
-    
-    return $max_score > 0 ? (int) round(($score / $max_score) * 100) : 0;
-  }
-
-  /**
-   * Calculate string similarity using Levenshtein distance.
-   *
-   * @return float
-   *   Similarity from 0.0 to 1.0.
-   */
-  private function stringSimilarity(string $str1, string $str2): float {
-    if ($str1 === $str2) {
-      return 1.0;
-    }
-    
-    $max_len = max(strlen($str1), strlen($str2));
-    if ($max_len === 0) {
-      return 1.0;
-    }
-    
-    $distance = levenshtein($str1, $str2);
-    return 1.0 - ($distance / $max_len);
-  }
-
-  /**
-   * Calculate array content similarity.
-   *
-   * @return float
-   *   Similarity from 0.0 to 1.0.
-   */
-  private function arrayContentSimilarity(array $arr1, array $arr2): float {
-    // Flatten arrays to strings for comparison
-    $str1 = strtolower(implode(' ', array_map(function($item) {
-      return is_array($item) ? json_encode($item) : (string) $item;
-    }, $arr1)));
-    
-    $str2 = strtolower(implode(' ', array_map(function($item) {
-      return is_array($item) ? json_encode($item) : (string) $item;
-    }, $arr2)));
-    
-    // Use similar_text for longer content
-    if (strlen($str1) > 255 || strlen($str2) > 255) {
-      $percent = 0;
-      similar_text($str1, $str2, $percent);
-      return $percent / 100;
-    }
-    
-    return $this->stringSimilarity($str1, $str2);
   }
 
   /**
