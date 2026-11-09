@@ -2388,6 +2388,10 @@ function job_hunter_update_9022() {
 function job_hunter_update_9023() {
   $database = \Drupal::database();
   $schema = $database->schema();
+
+  if (!$schema->tableExists('jobhunter_job_requirements')) {
+    return t('Skipped job_hunter_update_9023 because jobhunter_job_requirements table does not exist.');
+  }
   
   // Add job_hash column if it doesn't exist
   if (!$schema->fieldExists('jobhunter_job_requirements', 'job_hash')) {
